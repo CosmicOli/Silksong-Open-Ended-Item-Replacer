@@ -12,15 +12,19 @@ using UnityEngine.SceneManagement;
 
 namespace Open_Ended_Item_Replacer
 {
+    // This object defines the item that replaces intended items
+    // TODO: 
+    // -> Show popup
+    // -> Make functions make open ended requests
     public class GenericSavedItem : SavedItem
     {
         public override void Get(bool showPopup = true)
         {
-            ManualLogSource logSource = new ManualLogSource("logSource");
+            ManualLogSource logSource = Open_Ended_Item_Replacer.logSource;
 
             // Show popup (if showPopup)
             // Send get request
-            logSource.LogMessage("Item get");
+            logSource.LogInfo("Item get");
         }
 
         public override bool CanGetMore()
@@ -49,10 +53,11 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
+    // I'm sure I'll update the version number at some point, right?
     [BepInPlugin("com.oli.OEIR", "OEIR", "1.0.0")]
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
-        private static ManualLogSource logSource = new ManualLogSource("logSource");
+        public static ManualLogSource logSource = new ManualLogSource("logSource");
 
         private void Awake()
         {
@@ -63,8 +68,9 @@ namespace Open_Ended_Item_Replacer
             Harmony.CreateAndPatchAll(typeof(Open_Ended_Item_Replacer), null);
         }
 
-        List<GameObject> startingGameObjects = new List<GameObject>();
-        
+        // This is used for getting familiar with what objects are in rooms with checks; will be removed later
+        // It is a simple depth first search on all root game objects, putting all that are found in a list I output the contents of easily
+        private List<GameObject> startingGameObjects = new List<GameObject>();
         public static List<GameObject> FindAllObjectsInCurrentScene()
         {
             List<GameObject> FindChildren(Transform parentTransform)
@@ -97,6 +103,7 @@ namespace Open_Ended_Item_Replacer
             return gameObjects;
         }
 
+        // Similarly used for debugging, will be removed later
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameManager), "LevelActivated")]
         public static void LevelActivatedPostfix(GameManager __instance)
@@ -114,8 +121,9 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        // Seems to have issues replacing more than one item in a room
-        static bool replacing = true;
+        // Initially drafted code for replacing CollectableItemPickups
+        // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
+        private static bool replacing = true;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
         private static void OnEnablePostfix(CollectableItemPickup __instance)
@@ -135,7 +143,7 @@ namespace Open_Ended_Item_Replacer
                 GenericSavedItem testItem = ScriptableObject.CreateInstance<GenericSavedItem>();
                 testItem.name = "testItem";
 
-                SpawnItemDrop(testItem, 1, null, __instance.gameObject.transform, 1, new Vector3(0, 0, 0));
+                SpawnGenericItemDrop(testItem, null, __instance.gameObject.transform, new Vector3(0, 0, 0));
                 logSource.LogInfo("Item Drop Attempted");
             }
             else
@@ -144,54 +152,32 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void SpawnItemDrop(SavedItem dropItem, int count, CollectableItemPickup prefab, Transform spawnPoint, int limit, Vector3 effectOrigin)
+        private static void SpawnGenericItemDrop(SavedItem dropItem, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
         {
-            if (!dropItem || !dropItem.CanGetMore())
-            {
-                return;
-            }
-
             if (!prefab)
             {
+                logSource.LogInfo("No prefab provided, using CollectableItemPickupPrefab");
                 prefab = Gameplay.CollectableItemPickupPrefab;
             }
 
-            if (!prefab)
+            Vector3 vector = spawnPoint.TransformPoint(offset);
+            Vector3 position = vector;
+
+            PrefabCollectable prefabCollectable = dropItem as PrefabCollectable;
+
+            if (prefabCollectable != null)
             {
-                return;
+                prefabCollectable.Spawn();
             }
-
-            Vector3 vector = spawnPoint.TransformPoint(effectOrigin);
-            for (int i = 0; i < count; i++)
+            else
             {
-                Vector3 position = vector;
-                PrefabCollectable prefabCollectable = dropItem as PrefabCollectable;
-                GameObject gameObject;
-                bool flag;
-                if (prefabCollectable != null)
-                {
-                    gameObject = prefabCollectable.Spawn();
-                    flag = false;
-                }
-                else
-                {
-                    CollectableItemPickup collectableItemPickup;
-                    if (limit > 0)
-                    {
-                        collectableItemPickup = ObjectPool.Spawn(prefab.gameObject, null, position, Quaternion.identity, stealActiveSpawned: true).GetComponent<CollectableItemPickup>();
-                    }
-                    else
-                    {
-                        collectableItemPickup = UnityEngine.Object.Instantiate(prefab);
-                        collectableItemPickup.transform.position = position;
-                    }
+                CollectableItemPickup collectableItemPickup;
 
-                    flag = true;
-                    collectableItemPickup.SetItem(dropItem);
-                    logSource.LogInfo("Pickup Item Set: " + dropItem.name);
-                    gameObject = collectableItemPickup.gameObject;
-                    //logSource.LogInfo(collectableItemPickup.Item.name);
-                }
+                collectableItemPickup = Instantiate(prefab);
+                collectableItemPickup.transform.position = position;
+
+                collectableItemPickup.SetItem(dropItem);
+                logSource.LogInfo("Pickup Item Set: " + dropItem.name);
             }
         }
     }
