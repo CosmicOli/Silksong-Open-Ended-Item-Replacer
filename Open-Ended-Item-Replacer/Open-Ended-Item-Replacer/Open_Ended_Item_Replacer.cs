@@ -5,6 +5,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -12,15 +13,53 @@ using UnityEngine.SceneManagement;
 
 namespace Open_Ended_Item_Replacer
 {
+    public class UniqueID
+    {
+        public string PickupName
+        {
+            get;
+            private set;
+        }
+
+        public string SceneName
+        {
+            get;
+            private set;
+        }
+
+        public UniqueID(string PickupName, string SceneName)
+        {
+            this.PickupName = PickupName;
+            this.SceneName = SceneName;
+        }
+    }
+
     // This object defines the item that replaces intended items
     // TODO: 
     // -> Show popup
     // -> Make functions make open ended requests
     public class GenericSavedItem : SavedItem
     {
+        private UniqueID uniqueID;
+        public UniqueID UniqueID
+        {
+            get 
+            { 
+                return uniqueID; 
+            }
+
+            set
+            {
+                uniqueID = value;
+                name = "Generic_Item-" + uniqueID.PickupName + "-" + uniqueID.SceneName;
+            }
+        }
+
         public override void Get(bool showPopup = true)
         {
             ManualLogSource logSource = Open_Ended_Item_Replacer.logSource;
+
+            SceneData sceneData = SceneData.instance;
 
             // Show popup (if showPopup)
             // Send get request
@@ -90,7 +129,7 @@ namespace Open_Ended_Item_Replacer
             }
 
             Scene CurrentScene = SceneManager.GetActiveScene();
-            GameObject [] rootObjects = CurrentScene.GetRootGameObjects();
+            GameObject[] rootObjects = CurrentScene.GetRootGameObjects();
 
             List<GameObject> gameObjects = new List<GameObject>();
 
@@ -128,57 +167,79 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
         private static void OnEnablePostfix(CollectableItemPickup __instance)
         {
-            GameManager GameManager = GameManager.instance;
-            HeroController heroControl = GameManager.hero_ctrl;
+            GameManager gameManager = GameManager.instance;
 
             logSource.LogMessage("Pickup Enabled");
             logSource.LogInfo("Pickup At: " + __instance.transform.position);
 
+            // When replacing a CollectableItemPickup with a CollectableItemPickup, whether the item enabled is supposed to be replaced needs to be temporarily tracked
             if (replacing)
             {
+                // Using Harmony's traverse tool, the private field "persistent" can be copied
+                // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
+                PersistentBoolItem persistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
+                
+                // Sets up the replacement object to not be replaced itself
                 replacing = false;
-                Destroy(__instance.gameObject);
-                logSource.LogInfo("Deleted Pickup Containing: " + __instance.Item.name);
 
-                GenericSavedItem testItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                testItem.name = "testItem";
+                // Removes the original object
+                __instance.gameObject.SetActive(false);
+                logSource.LogInfo("Deactivated Pickup Containing: " + __instance.Item.name);
 
-                SpawnGenericItemDrop(testItem, null, __instance.gameObject.transform, new Vector3(0, 0, 0));
+                string pickupName = __instance.gameObject.name;
+                string sceneName = gameManager.GetSceneNameString();
+
+                UniqueID uniqueID = new UniqueID(pickupName, sceneName);
+
+                // Renaming old CollectableItemPickup to avoid persistent bool tracking issues
+                // This is because for some reason the ID saved to the player's save data is not PersistentBoolItem.ItemData.ID but instead CollectableItemPickup.gameObject.name
+                __instance.gameObject.name = __instance.gameObject.name + "_(OLD)";
+                __instance.Item.name = __instance.Item.name + "_(OLD)";
+
+                // Attempts to spawn the replacement object
+                SpawnGenericItemDrop(uniqueID, persistent, null, __instance.gameObject.transform, new Vector3(0, 0, 0));
                 logSource.LogInfo("Item Drop Attempted");
-            }
-            else
-            {
+
+                // The next CollectableItemPickup enabled will need replacing
                 replacing = true;
             }
         }
 
-        private static void SpawnGenericItemDrop(SavedItem dropItem, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
+        // Spawns a replacement pickup, defining the item with uniqueID
+        private static void SpawnGenericItemDrop(UniqueID uniqueID, PersistentBoolItem persistent, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
         {
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            // If no prefab is provided, a generic pickup prefab is used
             if (!prefab)
             {
                 logSource.LogInfo("No prefab provided, using CollectableItemPickupPrefab");
                 prefab = Gameplay.CollectableItemPickupPrefab;
             }
-
+            
+            // Defines the spawn location of the replacement pickup
             Vector3 vector = spawnPoint.TransformPoint(offset);
             Vector3 position = vector;
 
-            PrefabCollectable prefabCollectable = dropItem as PrefabCollectable;
+            CollectableItemPickup collectableItemPickup;
+            
+            // Creates the new pickup and sets its position
+            collectableItemPickup = Instantiate(prefab);
+            collectableItemPickup.transform.position = position;
 
-            if (prefabCollectable != null)
-            {
-                prefabCollectable.Spawn();
-            }
-            else
-            {
-                CollectableItemPickup collectableItemPickup;
+            // Rename the new CollectableItemPickup to have the name of the old one
+            // This is because for some reason the ID saved to the player's save data is not PersistentBoolItem.ItemData.ID but instead CollectableItemPickup.gameObject.name
+            collectableItemPickup.gameObject.name = uniqueID.PickupName;
 
-                collectableItemPickup = Instantiate(prefab);
-                collectableItemPickup.transform.position = position;
+            // Persistance data is transfered to the new handler
+            Traverse.Create(collectableItemPickup).Field("persistent").SetValue(persistent);
 
-                collectableItemPickup.SetItem(dropItem);
-                logSource.LogInfo("Pickup Item Set: " + dropItem.name);
-            }
+            // Sets the item granted upon pickup
+            collectableItemPickup.SetItem(genericItem);
+
+            logSource.LogInfo("Pickup Item Set: " + genericItem.name);
         }
     }
 }
