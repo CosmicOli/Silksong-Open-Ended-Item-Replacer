@@ -169,6 +169,9 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
         private static void OnEnablePostfix(CollectableItemPickup __instance)
         {
+            string replacementFlag = "_(Replacement)";
+            string replacedFlag = "_(Replaced)";
+
             GameManager gameManager = GameManager.instance;
 
             logSource.LogMessage("Pickup Enabled");
@@ -182,14 +185,25 @@ namespace Open_Ended_Item_Replacer
                 // Sets up the replacement object to not be replaced itself
                 replacing = false;
 
-                // I NEED TO PICK A BETTER UNIQUE ID: ORIGINAL ITEM + PICKUP + SCENE + PHYSICAL LOCATION?
-                // SOME ITEMS CHANGE LOCATION
-                // Defining the unique id for the new pickup
-                string pickupName = __instance.gameObject.name + "-" + __instance.Item.name;
-                string sceneName = __instance.gameObject.scene.name;
 
-                // This sets the pickup name and hence the ItemData.ID
-                __instance.gameObject.name = pickupName;
+                // Removing flags for processing
+                string currentInstanceName = __instance.gameObject.name;
+                if (currentInstanceName.EndsWith(replacedFlag))
+                {
+                    currentInstanceName = currentInstanceName.Substring(0, currentInstanceName.Length - replacedFlag.Length);
+                }
+
+                string currentItemName = __instance.Item.name;
+                if (currentItemName.EndsWith(replacedFlag))
+                {
+                    currentItemName = currentItemName.Substring(0, currentItemName.Length - replacedFlag.Length);
+                }
+
+                logSource.LogFatal(currentInstanceName);
+
+                // Defining the unique id for the new pickup
+                string pickupName = currentInstanceName + "-" + currentItemName;
+                string sceneName = GameManager.GetBaseSceneName(__instance.gameObject.scene.name);
 
                 UniqueID uniqueID = new UniqueID(pickupName, sceneName);
 
@@ -204,6 +218,11 @@ namespace Open_Ended_Item_Replacer
                     GameObject dummyGameObject = new GameObject();
                     persistent = dummyGameObject.AddComponent<PersistentBoolItem>();
 
+                    // This sets the pickup name and hence the ItemData.ID
+                    // Despite replacing __instant's persistent with the new one, the new one's base is always the original dummy object, so the ID name needs to be pulled from the dummy instead
+                    // I could add the new persistent to the "correct" object, but Team Cherry specifically made code to put an error logged if it sees more than one at once on an object, so I think it's best not to risk it
+                    dummyGameObject.gameObject.name = pickupName + replacementFlag;
+
                     Traverse.Create(__instance).Field("persistent").SetValue(persistent);
 
                     PersistentItemData<bool> itemData = new PersistentItemData<bool>();
@@ -217,25 +236,35 @@ namespace Open_Ended_Item_Replacer
 
                     persistent.LoadIfNeverStarted();
                 }
+                else
+                {
+                    // This sets the pickup name and hence the ItemData.ID
+                    __instance.gameObject.name = pickupName + replacementFlag;
+                }
 
                 // The safest way of running EnsureSetup, which will automatically assign the ItemData.ID
                 persistent.ItemData.ToString();
 
-                persistent.ItemData.ID += "_(Replacement)";
-
                 // Removes the original object
                 __instance.gameObject.SetActive(false);
-                logSource.LogInfo("Deactivated Pickup Containing: " + __instance.Item.name);
+                logSource.LogInfo("Deactivated Pickup Containing: " + currentItemName);
 
                 // Renaming old CollectableItemPickup to avoid persistent bool tracking issues
                 // This is because for some reason the ID saved to the player's save data is not PersistentBoolItem.ItemData.ID but instead CollectableItemPickup.gameObject.name
-                __instance.gameObject.name = __instance.gameObject.name + "_(Replaced)";
-                __instance.Item.name = __instance.Item.name + "_(Replaced)";
+                // Also strictly speaking if either one of these ends with replaced they both should, but I am not taking any chances
+                if (!__instance.gameObject.name.EndsWith(replacedFlag))
+                {
+                    __instance.gameObject.name += replacedFlag;
+                }
+                if (!__instance.Item.name.EndsWith(replacedFlag))
+                {
+                    __instance.Item.name += replacedFlag;
+                }
 
                 // Attempts to spawn the replacement object
-                logSource.LogInfo("Item Drop Attemp Start");
+                logSource.LogInfo("Item Drop Attempt Start");
                 SpawnGenericItemDrop(uniqueID, persistent, null, __instance.gameObject.transform, new Vector3(0, 0, 0));
-                logSource.LogInfo("Item Drop Attemp End");
+                logSource.LogInfo("Item Drop Attempt End");
 
                 // The next CollectableItemPickup enabled will need replacing
                 replacing = true;
