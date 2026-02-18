@@ -13,6 +13,24 @@ using UnityEngine.SceneManagement;
 
 namespace Open_Ended_Item_Replacer
 {
+    public class testPB : PersistentBoolItem
+    {
+        public testPB()
+        {
+
+        }
+
+        public void forceAwake()
+        {
+            Awake();
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+        }
+    }
+
     public class UniqueID
     {
         public string PickupName
@@ -98,8 +116,16 @@ namespace Open_Ended_Item_Replacer
     {
         public static ManualLogSource logSource = new ManualLogSource("logSource");
 
+        //public static Scene FirstScene;
+        //public static GameObject templatePickup;
+        //public static PersistentBoolItem templatePersistentBoolItem;
+
         private void Awake()
         {
+            //FirstScene = SceneManager.GetSceneByName("Tut_01");
+            //templatePickup = Array.Find(FirstScene.GetRootGameObjects(), x => x.name == "Collectable Item Pickup");
+            //templatePersistentBoolItem = Traverse.Create(templatePickup).Field("persistent").GetValue<PersistentBoolItem>();
+
             Logger.LogInfo("Plugin loaded and initualised.");
 
             BepInEx.Logging.Logger.Sources.Add(logSource);
@@ -160,6 +186,13 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PersistentBoolItem), "Awake")]
+        private static void AwakeTest(PersistentBoolItem __instance)
+        {
+            //logSource.LogFatal("AWAKE RAN");
+        }
+
         // Initially drafted code for replacing CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
         private static bool replacing = true;
@@ -175,26 +208,78 @@ namespace Open_Ended_Item_Replacer
             // When replacing a CollectableItemPickup with a CollectableItemPickup, whether the item enabled is supposed to be replaced needs to be temporarily tracked
             if (replacing)
             {
-                // Using Harmony's traverse tool, the private field "persistent" can be copied
-                // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
-                PersistentBoolItem persistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
-                
                 // Sets up the replacement object to not be replaced itself
                 replacing = false;
 
-                // Removes the original object
-                __instance.gameObject.SetActive(false);
-                logSource.LogInfo("Deactivated Pickup Containing: " + __instance.Item.name);
-
+                // Defining the unique id for the new pickup
                 string pickupName = __instance.gameObject.name;
                 string sceneName = gameManager.GetSceneNameString();
 
                 UniqueID uniqueID = new UniqueID(pickupName, sceneName);
 
+                // Using Harmony's traverse tool, the private field "persistent" can be copied
+                // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
+                PersistentBoolItem persistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
+
+                // Pickups for items like relics and tools are tracked internally by checking for possession
+                // Hence, to track pickups independantly, persistence has to be created
+                if (!(bool)persistent)
+                {
+                    //testPB persistent2 = new testPB();
+                    //MethodInfo AwakeMethod = Traverse.Create(persistent).Method("Awake").GetValue<MethodInfo>();
+                    //MethodInfo AwakeMethod = AccessTools.Method(typeof(PersistentBoolItem), "Awake");
+                    //AwakeMethod.Invoke(persistent, new object[0]);
+
+                    //logSource.LogMessage("Attempted to make new pb");
+
+                    //persistent2.forceAwake();
+                    //logSource.LogMessage("Attempted to awake");
+
+                    //logSource.LogMessage("Attempted to awake");
+
+                    //persistent = persistent2;
+                    //logSource.LogMessage(persistent2.ItemData);
+
+                    GameObject dummyGameObject = new GameObject();
+                    persistent = dummyGameObject.AddComponent<PersistentBoolItem>();
+
+                    Traverse.Create(__instance).Field("persistent").SetValue(persistent);
+
+                    PersistentItemData<bool> itemData = new PersistentItemData<bool>();
+
+                    itemData.ID = pickupName;
+                    itemData.SceneName = sceneName;
+                    itemData.IsSemiPersistent = false;
+                    itemData.Value = true;
+                    itemData.Mutator = SceneData.PersistentMutatorTypes.None;
+
+                    Traverse.Create(persistent).Field("SerializedItemData").SetValue(itemData);
+
+                    logSource.LogMessage("Attempted to set value");
+
+                    persistent.PreSetup();
+
+                    logSource.LogMessage("Attempted to setup");
+
+                    /*persistent.ItemData.ID = pickupName;
+                    persistent.ItemData.SceneName = sceneName;
+                    persistent.ItemData.IsSemiPersistent = false;
+                    persistent.ItemData.Value = true;
+                    persistent.ItemData.Mutator = SceneData.PersistentMutatorTypes.None;*/
+
+                    //logSource.LogMessage("Attempted to change data");
+                }
+
+                persistent.ItemData.ID += "_(Replacement)";
+
+                // Removes the original object
+                __instance.gameObject.SetActive(false);
+                logSource.LogInfo("Deactivated Pickup Containing: " + __instance.Item.name);
+
                 // Renaming old CollectableItemPickup to avoid persistent bool tracking issues
                 // This is because for some reason the ID saved to the player's save data is not PersistentBoolItem.ItemData.ID but instead CollectableItemPickup.gameObject.name
-                __instance.gameObject.name = __instance.gameObject.name + "_(OLD)";
-                __instance.Item.name = __instance.Item.name + "_(OLD)";
+                __instance.gameObject.name = __instance.gameObject.name + "_(Replaced)";
+                __instance.Item.name = __instance.Item.name + "_(Replaced)";
 
                 // Attempts to spawn the replacement object
                 SpawnGenericItemDrop(uniqueID, persistent, null, __instance.gameObject.transform, new Vector3(0, 0, 0));
@@ -229,9 +314,9 @@ namespace Open_Ended_Item_Replacer
             collectableItemPickup = Instantiate(prefab);
             collectableItemPickup.transform.position = position;
 
-            // Rename the new CollectableItemPickup to have the name of the old one
+            // Rename the new CollectableItemPickup
             // This is because for some reason the ID saved to the player's save data is not PersistentBoolItem.ItemData.ID but instead CollectableItemPickup.gameObject.name
-            collectableItemPickup.gameObject.name = uniqueID.PickupName;
+            collectableItemPickup.gameObject.name = uniqueID.PickupName + "_(Replacement)";
 
             // Persistance data is transfered to the new handler
             Traverse.Create(collectableItemPickup).Field("persistent").SetValue(persistent);
