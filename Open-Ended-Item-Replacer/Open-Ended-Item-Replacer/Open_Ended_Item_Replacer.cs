@@ -62,8 +62,6 @@ namespace Open_Ended_Item_Replacer
         {
             ManualLogSource logSource = Open_Ended_Item_Replacer.logSource;
 
-            SceneData sceneData = SceneData.instance;
-
             // Show popup (if showPopup)
             // Send get request
             logSource.LogInfo("Item get: " + persistentItemBool.ItemData.ID);
@@ -197,9 +195,38 @@ namespace Open_Ended_Item_Replacer
             logSource.LogFatal(__instance.name);
         }*/
 
+        /*[HarmonyPostfix]
+        [HarmonyPatch(typeof(NailSlash), "StartSlash")]
+        private static void StartSlashPostfix(NailSlash __instance)
+        {
+            logSource.LogMessage("Slash Postfix");
+
+            HeroController heroControl = GameManager.instance.hero_ctrl;
+
+            UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
+            spawningReplacementCollectableItemPickup = true;
+            SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
+            spawningReplacementCollectableItemPickup = false;
+        }*/
+
         private static string replacementFlag = "_(Replacement)";
         private static string replacedFlag = "_(Replaced)";
-        private static void Replace(GameObject replacedObject, PersistentBoolItem replacedPersistent, UnityEngine.Object replacedItem, CollectableItemPickup replacementPrefab)
+        
+        // Some pickups have 'items', and others do not
+        // Those that do need to have their item's name changed
+        private static void Replace(GameObject replacedObject, UnityEngine.Object replacedItem, bool interactable, CollectableItemPickup replacementPrefab)
+        {
+            // Removing flags for processing
+            if (!replacedItem.name.EndsWith(replacedFlag))
+            {
+                replacedItem.name += replacedFlag;
+            }
+
+            Replace(replacedObject, replacedItem.name, interactable, replacementPrefab);
+        }
+
+        // Deactivates and replaces a given object
+        private static void Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
         {
             // Sets up the replacement object to not be replaced itself
             spawningReplacementCollectableItemPickup = true;
@@ -218,14 +245,10 @@ namespace Open_Ended_Item_Replacer
                 replacedObject.name += replacedFlag;
             }
 
-            string currentItemName = replacedItem.name;
+            string currentItemName = replacedItemName;
             if (currentItemName.EndsWith(replacedFlag))
             {
                 currentItemName = currentItemName.Substring(0, currentItemName.Length - replacedFlag.Length);
-            }
-            else
-            {
-                replacedItem.name += replacedFlag;
             }
 
             // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
@@ -241,9 +264,16 @@ namespace Open_Ended_Item_Replacer
             UniqueID uniqueID = new UniqueID(pickupName, sceneName);
 
             // Attempts to spawn the replacement object
-            logSource.LogInfo("Item Drop Attempt Start");
-            SpawnGenericItemDrop(uniqueID, replacedPersistent, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
-            logSource.LogInfo("Item Drop Attempt End");
+            logSource.LogInfo("Pickup Drop Attempt Start");
+            if (interactable)
+            {
+                SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+            }
+            else
+            {
+                SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+            }
+            logSource.LogInfo("Pickup Drop Attempt End");
 
             spawningReplacementCollectableItemPickup = false;
         }
@@ -256,12 +286,14 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.ItemData.ID.StartsWith("Heart Piece"))
             {
-                logSource.LogInfo("Heart Piece");
+                //logSource.LogInfo("Heart Piece");
+                Replace(__instance.gameObject, "Heart Piece", false, null);
             }
 
             if (__instance.ItemData.ID.StartsWith("Silk Spool"))
             {
-                logSource.LogInfo("Silk Spool");
+                //logSource.LogInfo("Silk Spool");
+                Replace(__instance.gameObject, "Silk Spool", false, null);
             }
         }
 
@@ -282,17 +314,13 @@ namespace Open_Ended_Item_Replacer
                 // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
                 PersistentBoolItem replacedPersistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
 
-                Replace(__instance.gameObject, replacedPersistent, __instance.Item, null);
+                Replace(__instance.gameObject, __instance.Item, true, null);
             }
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
-        private static void SpawnGenericItemDrop(UniqueID uniqueID, PersistentBoolItem replacedPersistent, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
+        private static void SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
         {
-            // Generates a generic item using the uniqueID
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
-
             // If no prefab is provided, a generic pickup prefab is used
             if (!prefab)
             {
@@ -310,6 +338,40 @@ namespace Open_Ended_Item_Replacer
             collectableItemPickup = Instantiate(prefab);
             collectableItemPickup.transform.position = position;
             collectableItemPickup.gameObject.name = uniqueID.PickupName + replacementFlag;
+
+            SetGenericPickupInfo(uniqueID, collectableItemPickup);
+        }
+
+        // Spawns a replacement pickup, defining the item with uniqueID
+        private static void SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
+        {
+            // If no prefab is provided, a generic pickup prefab is used
+            if (!prefab)
+            {
+                logSource.LogInfo("No prefab provided, using CollectableItemPickupInstantPrefab");
+                prefab = Gameplay.CollectableItemPickupInstantPrefab;
+            }
+
+            // Defines the spawn location of the replacement pickup
+            Vector3 vector = spawnPoint.TransformPoint(offset);
+            Vector3 position = vector;
+
+            CollectableItemPickup collectableItemPickup;
+
+            // Creates the new pickup and sets its position
+            collectableItemPickup = Instantiate(prefab);
+            collectableItemPickup.transform.position = position;
+            collectableItemPickup.gameObject.name = uniqueID.PickupName + replacementFlag;
+            collectableItemPickup.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
+
+            SetGenericPickupInfo(uniqueID, collectableItemPickup);
+        }
+
+        private static void SetGenericPickupInfo(UniqueID uniqueID, CollectableItemPickup collectableItemPickup)
+        {
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
 
             // This logs where the pickup has been placed
             logSource.LogInfo("New Pickup Placed At: " + collectableItemPickup.transform.position);
