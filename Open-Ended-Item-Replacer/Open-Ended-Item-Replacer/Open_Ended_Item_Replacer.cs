@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using GenericVariableExtension;
 using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
@@ -39,6 +40,22 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             Open_Ended_Item_Replacer.logSource.LogWarning("action ran");
+        }
+    }
+
+    public class AllowPickup : FsmStateAction
+    {
+        CollectableItemPickup pickup;
+
+        public AllowPickup(CollectableItemPickup pickup)
+        {
+            this.pickup = pickup;
+        }
+
+        public override void OnEnter()
+        {
+            Traverse.Create(pickup).Field("canPickupTime").SetValue((double) 0);
+            Traverse.Create(pickup).Field("canPickupDelay").SetValue(Traverse.Create(Gameplay.CollectableItemPickupPrefab).Field("canPickupDelay").GetValue<float>());
         }
     }
 
@@ -676,11 +693,10 @@ namespace Open_Ended_Item_Replacer
                                     {
                                         FsmState nextState = parentFSM.Fsm.GetState(transition.ToState);
 
-                                        FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + 1];
+                                        FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + 2];
 
                                         SetGravity2dScaleV2 setGravity2dScaleV2 = new SetGravity2dScaleV2();
                                         setGravity2dScaleV2.gravityScale = replacmentTransform.GetComponent<Rigidbody2D>().gravityScale;
-                                        logSource.LogMessage(setGravity2dScaleV2.gravityScale);
 
                                         setGravity2dScaleV2.everyFrame = false;
 
@@ -688,11 +704,10 @@ namespace Open_Ended_Item_Replacer
                                         setGravity2dScaleV2.gameObject.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
                                         setGravity2dScaleV2.gameObject.GameObject = replacmentTransform.gameObject;
 
-                                        testAction = setGravity2dScaleV2;
-
                                         newActions[0] = setGravity2dScaleV2;
+                                        newActions[1] = new AllowPickup(replacmentTransform.GetComponent<CollectableItemPickup>());
 
-                                        Array.Copy(nextState.Actions, 0, newActions, 1, nextState.Actions.Length);
+                                        Array.Copy(nextState.Actions, 0, newActions, 2, nextState.Actions.Length);
 
                                         nextState.Actions = newActions;
                                     }
@@ -700,10 +715,17 @@ namespace Open_Ended_Item_Replacer
                             }
                         }
 
-                        // Should only drop when container broken
+                        // Should only drop and be interactable when container broken
                         replacmentTransform.GetComponent<Rigidbody2D>().gravityScale = 0;
+                        Traverse.Create(replacmentTransform.GetComponent<CollectableItemPickup>()).Field("canPickupTime").SetValue(double.PositiveInfinity);
+                        Traverse.Create(replacmentTransform.GetComponent<CollectableItemPickup>()).Field("canPickupDelay").SetValue(float.PositiveInfinity);
 
-                        test = replacmentTransform;
+                        Collider2D[] a = replacmentTransform.GetComponents<Collider2D>();
+
+                        foreach (Collider2D c in a)
+                        {
+                            logSource.LogInfo(c);
+                        }
 
                         break;
 
