@@ -2,9 +2,12 @@
 using BepInEx.Logging;
 using GlobalSettings;
 using HarmonyLib;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -76,7 +79,7 @@ namespace Open_Ended_Item_Replacer
         {
             if (Application.isPlaying)
             {
-                Debug.LogException(new NotImplementedException());
+                UnityEngine.Debug.LogException(new NotImplementedException());
             }
 
             return null;
@@ -86,7 +89,7 @@ namespace Open_Ended_Item_Replacer
         {
             if (Application.isPlaying)
             {
-                Debug.LogException(new NotImplementedException());
+                UnityEngine.Debug.LogException(new NotImplementedException());
             }
 
             return null;
@@ -156,13 +159,84 @@ namespace Open_Ended_Item_Replacer
             bool logging = false;
             if (logging)
             {
+                Scene CurrentScene = SceneManager.GetActiveScene();
+                GameObject[] rootObjects = CurrentScene.GetRootGameObjects();
+
+                foreach (GameObject rootObject in rootObjects)
+                {
+                    logSource.LogInfo(rootObject.name);
+                }
+
                 List<GameObject> gameObjectsInCurrentScene = FindAllObjectsInCurrentScene();
 
                 foreach (GameObject gameObject in gameObjectsInCurrentScene)
                 {
                     //logSource.LogInfo(gameObject.transform.name);
 
-                    if (gameObject.transform.name == "Heart Piece")
+                    if (false)//gameObject.transform.name == "Flea Rescue Branches" || gameObject.transform.name == "Flea Rescue Cage" || gameObject.transform.name == "Flea Rescue Barrel")
+                    {
+                        logSource.LogWarning(gameObject.transform.name);
+
+                        /*UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }*/
+
+                        PlayMakerFSM fsm = gameObject.GetComponent<PlayMakerFSM>();
+
+                        //logSource.LogWarning(fsm.FsmName);
+                        FsmState[] states = fsm.FsmStates;
+
+                        List<FsmEvent> events = FsmEvent.EventList;
+
+                        FsmVariables variables = fsm.FsmVariables;
+
+                        NamedVariable[] named = variables.GetAllNamedVariables();
+
+                        foreach (NamedVariable namedVar in named)
+                        {
+                            //logSource.LogInfo(namedVar.Name);
+                        }
+
+                        //FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
+                        //GameObject flea = fleaFsmGameObject.Value;
+
+                        NamedVariable QuestTracker = variables.GetVariable("Quest Tracker");
+                        //logSource.LogInfo(QuestTracker.ObjectType);
+
+                        /*UnityEngine.Component[] components = (variables.GetFsmObject("Quest Tracker").Value as QuestTargetPlayerDataBools).Get;
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }*/
+
+                        
+
+                        /*foreach (FsmEvent Event in events)
+                        {
+                            logSource.LogWarning(Event.Name);
+                            logSource.LogInfo(Event.Path);
+                            logSource.LogInfo(Event.ToString());
+                        }*/
+
+                        /*foreach (FsmState state in states)
+                        {
+                            logSource.LogInfo(state.Name);
+                            if (state.Name == "Activate Flea")
+                            {
+                                FsmStateAction[] test = state.Actions;
+
+                                foreach (FsmStateAction action in test)
+                                {
+                                    logSource.LogInfo(action.DisplayName);
+                                    action.Event()
+                                }
+                            }
+                        }*/
+                    }
+
+                    /*if (gameObject.transform.name == "Heart Piece")
                     {
                         logSource.LogWarning("Heart Piece");
 
@@ -182,10 +256,12 @@ namespace Open_Ended_Item_Replacer
                         {
                             logSource.LogInfo(component);
                         }
-                    }
+                    }*/
                 }
             }
         }
+
+
 
         /*
         [HarmonyPostfix]
@@ -284,18 +360,143 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(PersistentBoolItem), "Awake")]
         private static void PersistentBoolItem_AwakePostfix(PersistentBoolItem __instance)
         {
-            if (__instance.ItemData.ID.StartsWith("Heart Piece"))
+            if (__instance.ItemData.ID.ToLower().StartsWith("heart piece"))
             {
                 //logSource.LogInfo("Heart Piece");
                 Replace(__instance.gameObject, "Heart Piece", false, null);
             }
 
-            if (__instance.ItemData.ID.StartsWith("Silk Spool"))
+            if (__instance.ItemData.ID.ToLower().StartsWith("silk spool"))
             {
                 //logSource.LogInfo("Silk Spool");
                 Replace(__instance.gameObject, "Silk Spool", false, null);
             }
         }
+
+        // Handles anything that contains a flea object
+        private static void HandleFleaContainer(PlayMakerFSM __instance)
+        {
+            if (__instance == null) { return; }
+
+            FsmVariables variables = __instance.FsmVariables;
+
+            if (variables.Contains("Flea"))
+            {
+                logSource.LogFatal("Flea holder found");
+
+                FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
+                if (fleaFsmGameObject?.Value == null) { return; }
+
+                if (fleaFsmGameObject.Value?.transform?.parent)
+                {
+                    Transform parent = fleaFsmGameObject.Value.transform.parent;
+                    logSource.LogFatal("Parent found: " + parent.name);
+
+                    for (int i = 0; i < parent.childCount; i++)
+                    {
+                        logSource.LogInfo(parent.GetChild(i).name);
+
+                        if (parent.GetChild(i).name.ToLower().Contains("flea"))
+                        {
+                            parent.GetChild(i).gameObject.SetActive(false);
+
+                            PlayMakerFSM[] fleaFSMs = parent.GetChild(i).GetComponents<PlayMakerFSM>();
+                            // Disables any fsms relating to getting a flea
+                            if (fleaFSMs != null)
+                            {
+                                foreach (PlayMakerFSM fleaFSM in fleaFSMs)
+                                {
+                                    fleaFSM.enabled = false;
+                                }
+                            }
+                        }
+                    }
+
+                    // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
+                    PlayMakerFSM[] parentFSMs = parent.GetComponents<PlayMakerFSM>();
+                    foreach (PlayMakerFSM parentFSM in parentFSMs)
+                    {
+                        FsmState[] parentFsmStates = parentFSM.FsmStates;
+                        foreach (FsmState parentFsmState in parentFsmStates)
+                        {
+                            FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
+                            foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
+                            {
+                                ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
+                                if (activateGameObject != null)
+                                {
+                                    string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
+                                    if (associatedGameObjectName.ToLower().Contains("flea"))
+                                    {
+                                        parentFsmStateAction.Enabled = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Handles anything that is a flea
+        // Distinct from containers as some fleas are not contained
+        private static void HandleFlea(PlayMakerFSM __instance)
+        {
+
+        }
+
+        // Handles FSM checks
+        // All fleas have SavedItems that are gotten at the end of their fsms
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PlayMakerFSM), "Awake")]
+        private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
+        {
+            HandleFleaContainer(__instance);
+            /*FsmState[] states = __instance.FsmStates;
+            if (states == null) { return; }
+
+            foreach (FsmState state in states)
+            {
+                FsmStateAction[] actions = state.Actions;
+                if (actions == null) { continue; }
+
+                foreach (FsmStateAction action in actions)
+                {
+                    ActivateGameObject actionActivateGameObject = action as ActivateGameObject;
+
+                    if (actionActivateGameObject == null) { continue; }
+                    if (actionActivateGameObject.gameObject == null) { continue; }
+                    if (actionActivateGameObject.gameObject.GameObject == null) { continue; }
+
+                    FsmGameObject fleaFsmGameObject = actionActivateGameObject.gameObject.GameObject;
+
+                    if (fleaFsmGameObject.Name.ToLower().StartsWith("flea"))
+                    {
+                        logSource.LogFatal("Flea holder found");
+
+                        fleaFsmGameObject.
+                    }
+                }
+            }*/
+
+
+            /*if (__instance.gameObject.name.StartsWith("Aspid Collector"))
+            {
+                UnityEngine.Component[] components = __instance.gameObject.GetComponents<UnityEngine.Component>();
+
+                foreach (var component in components)
+                {
+                    logSource.LogMessage(component);
+                }
+
+                int count = __instance.gameObject.transform.childCount;
+                for (int i = 0; i < count; i++)
+                {
+                    logSource.LogMessage(__instance.gameObject.transform.GetChild(i));
+                }
+            }*/
+        }
+
 
         // Replaces CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
