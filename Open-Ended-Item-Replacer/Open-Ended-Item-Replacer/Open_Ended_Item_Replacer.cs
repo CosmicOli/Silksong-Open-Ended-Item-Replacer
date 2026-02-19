@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using GenericVariableExtension;
 using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
@@ -382,54 +383,82 @@ namespace Open_Ended_Item_Replacer
 
             if (variables.Contains("Flea"))
             {
-                logSource.LogFatal("Flea holder found");
+                logSource.LogMessage("Flea holder found");
 
                 FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
-                if (fleaFsmGameObject?.Value == null) { return; }
 
-                if (fleaFsmGameObject.Value?.transform?.parent)
+                // Checks for the precence of bools containing "flea"
+                // To be honest, this is probably redundant, but the idea is that if a flea container lacks a flea but has bools relating to fleas, then this means it could make it later
+                // We cannot know whether true or false is what instantiates a flea, so we just check for presense then handle as usual
+                NamedVariable[] fleaFsmBools = variables.GetNamedVariables(VariableType.Bool);
+                if (fleaFsmGameObject?.Value == null)
                 {
-                    Transform parent = fleaFsmGameObject.Value.transform.parent;
-                    logSource.LogFatal("Parent found: " + parent.name);
-
-                    for (int i = 0; i < parent.childCount; i++)
+                    if (fleaFsmBools.Length == 0)
                     {
-                        logSource.LogInfo(parent.GetChild(i).name);
+                        logSource.LogInfo("No flea bools found");
+                        return;
+                    }
 
-                        if (parent.GetChild(i).name.ToLower().Contains("flea"))
+                    logSource.LogInfo("Flea bools found");
+                }
+
+                Transform parent;
+                // Check for a parent
+                if (!fleaFsmGameObject.Value?.transform?.parent)
+                {
+                    // Assume the instance object is the parent as it will have to instantiate the flea itself later
+                    // To be honest, this is probably always the case, but better safe than sorry ig
+                    parent = __instance.transform;
+                    logSource.LogMessage("Assumed parent found: " + parent.name);
+                }
+                else
+                {
+                    parent = fleaFsmGameObject.Value.transform.parent;
+                    logSource.LogMessage("Parent found: " + parent.name);
+                }
+
+                if (parent.GetComponent<tk2dSpriteAnimator>())
+                {
+                    Replace(parent.gameObject, "Flea", false, null);
+                    return;
+                }
+
+                for (int i = 0; i < parent.childCount; i++)
+                {
+                    // Disable any children relating to fleas
+                    if (parent.GetChild(i).name.ToLower().Contains("flea"))
+                    {
+                        parent.GetChild(i).gameObject.SetActive(false);
+
+                        PlayMakerFSM[] fleaFSMs = parent.GetChild(i).GetComponents<PlayMakerFSM>();
+                        // Disables any fsms relating to getting a flea
+                        if (fleaFSMs != null)
                         {
-                            parent.GetChild(i).gameObject.SetActive(false);
-
-                            PlayMakerFSM[] fleaFSMs = parent.GetChild(i).GetComponents<PlayMakerFSM>();
-                            // Disables any fsms relating to getting a flea
-                            if (fleaFSMs != null)
+                            foreach (PlayMakerFSM fleaFSM in fleaFSMs)
                             {
-                                foreach (PlayMakerFSM fleaFSM in fleaFSMs)
-                                {
-                                    fleaFSM.enabled = false;
-                                }
+                                fleaFSM.enabled = false;
                             }
                         }
                     }
+                }
 
-                    // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
-                    PlayMakerFSM[] parentFSMs = parent.GetComponents<PlayMakerFSM>();
-                    foreach (PlayMakerFSM parentFSM in parentFSMs)
+                // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
+                PlayMakerFSM[] parentFSMs = parent.GetComponents<PlayMakerFSM>();
+                foreach (PlayMakerFSM parentFSM in parentFSMs)
+                {
+                    FsmState[] parentFsmStates = parentFSM.FsmStates;
+                    foreach (FsmState parentFsmState in parentFsmStates)
                     {
-                        FsmState[] parentFsmStates = parentFSM.FsmStates;
-                        foreach (FsmState parentFsmState in parentFsmStates)
+                        FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
+                        foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
                         {
-                            FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
-                            foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
+                            ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
+                            if (activateGameObject != null)
                             {
-                                ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
-                                if (activateGameObject != null)
+                                string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
+                                if (associatedGameObjectName.ToLower().Contains("flea"))
                                 {
-                                    string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
-                                    if (associatedGameObjectName.ToLower().Contains("flea"))
-                                    {
-                                        parentFsmStateAction.Enabled = false;
-                                    }
+                                    parentFsmStateAction.Enabled = false;
                                 }
                             }
                         }
