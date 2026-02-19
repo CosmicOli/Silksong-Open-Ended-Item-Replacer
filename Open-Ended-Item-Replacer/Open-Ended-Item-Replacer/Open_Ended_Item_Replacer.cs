@@ -54,6 +54,7 @@ namespace Open_Ended_Item_Replacer
 
         public override void OnEnter()
         {
+            pickup.transform.GetComponent<Collider2D>().enabled = true;
             Traverse.Create(pickup).Field("canPickupTime").SetValue((double) 0);
             Traverse.Create(pickup).Field("canPickupDelay").SetValue(Traverse.Create(Gameplay.CollectableItemPickupPrefab).Field("canPickupDelay").GetValue<float>());
         }
@@ -657,11 +658,7 @@ namespace Open_Ended_Item_Replacer
                             replacmentTransform = Replace(fleaFsmGameObject.Value, genericFleaItemName, true, null);
                         }
 
-                        Collider2D containerCollider = gameObject.GetComponent<Collider2D>();
-                        if (containerCollider != null)
-                        {
-                            Physics2D.IgnoreCollision(containerCollider, replacmentTransform.GetComponent<Collider2D>());
-                        }
+                        replacmentTransform.GetComponent<Collider2D>().enabled = false;
 
                         // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
                         // Also checks for any BREAK transitions
