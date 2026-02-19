@@ -1,21 +1,15 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
-using GenericVariableExtension;
 using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static HutongGames.PlayMaker.Actions.HeroInvulnerability;
+using static FullQuestBase;
 
 namespace Open_Ended_Item_Replacer
 {
@@ -281,18 +275,20 @@ namespace Open_Ended_Item_Replacer
 
             HeroController heroControl = GameManager.instance.hero_ctrl;
 
-            UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
+            //logSource.LogInfo(lastFlea);
+
+            /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
             spawningReplacementCollectableItemPickup = true;
             SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
-            spawningReplacementCollectableItemPickup = false;
-        }*/
+            spawningReplacementCollectableItemPickup = false;*/
+        //}
 
         private static string replacementFlag = "_(Replacement)";
         private static string replacedFlag = "_(Replaced)";
         
         // Some pickups have 'items', and others do not
         // Those that do need to have their item's name changed
-        private static void Replace(GameObject replacedObject, UnityEngine.Object replacedItem, bool interactable, CollectableItemPickup replacementPrefab)
+        private static Transform Replace(GameObject replacedObject, UnityEngine.Object replacedItem, bool interactable, CollectableItemPickup replacementPrefab)
         {
             // Removing flags for processing
             if (!replacedItem.name.EndsWith(replacedFlag))
@@ -300,11 +296,11 @@ namespace Open_Ended_Item_Replacer
                 replacedItem.name += replacedFlag;
             }
 
-            Replace(replacedObject, replacedItem.name, interactable, replacementPrefab);
+            return Replace(replacedObject, replacedItem.name, interactable, replacementPrefab);
         }
 
         // Deactivates and replaces a given object
-        private static void Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
+        private static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
         {
             // Sets up the replacement object to not be replaced itself
             spawningReplacementCollectableItemPickup = true;
@@ -341,19 +337,23 @@ namespace Open_Ended_Item_Replacer
 
             UniqueID uniqueID = new UniqueID(pickupName, sceneName);
 
+            Transform output;
+
             // Attempts to spawn the replacement object
             logSource.LogInfo("Pickup Drop Attempt Start");
             if (interactable)
             {
-                SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
             }
             else
             {
-                SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                output = SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
             }
             logSource.LogInfo("Pickup Drop Attempt End");
 
             spawningReplacementCollectableItemPickup = false;
+
+            return output;
         }
 
         // Replaces physical Mask Shards and Spool Fragments
@@ -460,7 +460,7 @@ namespace Open_Ended_Item_Replacer
                     }
                 }
 
-
+                // Replaces containers that look like fleas
                 if (parent.GetComponent<tk2dSpriteAnimator>())
                 {
                     bool containsFleaSprite = false;
@@ -476,6 +476,7 @@ namespace Open_Ended_Item_Replacer
                     if (!containsFleaSprite)
                     {
                         Replace(parent.gameObject, "Flea", false, null);
+                        return;
                     }
                 }
 
@@ -503,21 +504,137 @@ namespace Open_Ended_Item_Replacer
                 }
 
                 // Replace the flea
-                if (fleaFsmGameObject?.Value == null)
+                if (fleaFsmGameObject.Value == null)
                 {
+                    GameObject dummyFlea = new GameObject();
+                    dummyFlea.transform.position = parent.position;
 
+                    Replace(dummyFlea, "Flea", false, null);
+                    return;
                 }
                 else
                 {
-
+                    Replace(fleaFsmGameObject.Value, "Flea", false, null);
+                    return;
                 }
             }
         }
 
+
+        private static CheckQuestPdSceneBool SearchForCheckQuestPdSceneBool(FsmState state, string questTargetName)
+        {
+            List<CheckQuestPdSceneBool> actions = state?.Actions?.OfType<CheckQuestPdSceneBool>().ToList();
+            if (actions == null) { return null; }
+
+            foreach (var action in actions)
+            {
+                QuestTargetPlayerDataBools questTarget = (action.QuestTarget?.RawValue as QuestTargetPlayerDataBools);
+                if (questTarget == null) { continue; }
+
+                if (questTarget.name.Contains("FleasCollected Target"))
+                {
+                    return action;
+                }
+            }
+
+            return null;
+        }
+
+        private static PlayerDataBoolTest SearchForPlayerDataBoolTest(FsmState state, string boolName)
+        {
+            List<PlayerDataBoolTest> actions = state?.Actions?.OfType<PlayerDataBoolTest>().ToList();
+            if (actions == null) { return null; }
+
+            foreach (var action in actions)
+            {
+                FsmString fsmBoolName = action?.boolName;
+                if (fsmBoolName == null) { continue; }
+
+                if (fsmBoolName.Value == boolName)
+                {
+                    return action;
+                }
+            }
+
+            return null;
+        }
+
+        private static PlayerDataVariableTest SearchForPlayerDataVariableTest(FsmState state, string variableName)
+        {
+            List<PlayerDataVariableTest> actions = state?.Actions?.OfType<PlayerDataVariableTest>().ToList();
+            if (actions == null) { return null; }
+
+            foreach (var action in actions)
+            {
+                FsmString fsmVariableName = action?.VariableName;
+                if (fsmVariableName == null) { continue; }
+
+                if (fsmVariableName.Value == variableName)
+                {
+                    return action;
+                }
+            }
+
+            return null;
+        }
+
+        private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker)
+        {
+            if (genericPersistenceChecker != null)
+            {
+                logSource.LogFatal("Generic flea flagged " + genericPersistenceChecker.State.Name);
+                genericPersistenceChecker.trueEvent = new FsmEvent("");
+            }
+        }
+
         // Handles anything that is a flea
-        // Distinct from containers as some fleas are not contained
         private static void HandleFlea(PlayMakerFSM __instance)
         {
+            FsmVariables variables = __instance.FsmVariables;
+
+            FsmState initState = __instance.Fsm.GetState("Init");
+            FsmState checkState = __instance.Fsm.GetState("Check State");
+            FsmState sleepState = __instance.Fsm.GetState("Sleeping");
+            FsmState idleState = __instance.Fsm.GetState("Idle");
+
+            // Should flag every flea except
+            // -> Giant flea
+            // -> Vog
+            // -> Kratt
+            // -> That one aspid flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, "FleasCollected Target")); // Misc fleas
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, "FleasCollected Target")); // Like bellhart flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, "FleasCollected Target")); // Seepy fleas
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, "FleasCollected Target")); // Fancy citadel cage fleas and slab cell flea
+
+            // Specifically for Kratt
+            PlayerDataBoolTest krattPersistenceChecker = SearchForPlayerDataBoolTest(initState, "CaravanLechSaved");
+            if (krattPersistenceChecker != null)
+            {
+                logSource.LogFatal("Kratt flagged");
+                krattPersistenceChecker.isTrue = new FsmEvent("");
+            }
+
+            // Specifically for giant flea
+            PlayerDataBoolTest giantFleaPersistenceChecker = SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea");
+            if (giantFleaPersistenceChecker != null)
+            {
+                logSource.LogFatal("Giant flea flagged");
+                giantFleaPersistenceChecker.isTrue = new FsmEvent("");
+
+                Transform giantFlea = (variables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
+                giantFlea?.gameObject?.SetActive(true);
+            }
+
+            // Specifically for Vog
+            FsmState stillHereState = __instance.Fsm.GetState("Still Here?");
+            PlayerDataVariableTest vogPersistenceChecker = SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild");
+            if (vogPersistenceChecker != null)
+            {
+                logSource.LogFatal("Vog flagged");
+                vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
+            }
+
 
         }
 
@@ -527,7 +644,7 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(PlayMakerFSM), "Awake")]
         private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
         {
-            HandleFleaContainer(__instance);
+            HandleFlea(__instance);
             /*FsmState[] states = __instance.FsmStates;
             if (states == null) { return; }
 
@@ -596,7 +713,7 @@ namespace Open_Ended_Item_Replacer
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
-        private static void SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
+        private static Transform SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
         {
             // If no prefab is provided, a generic pickup prefab is used
             if (!prefab)
@@ -617,10 +734,12 @@ namespace Open_Ended_Item_Replacer
             collectableItemPickup.gameObject.name = uniqueID.PickupName + replacementFlag;
 
             SetGenericPickupInfo(uniqueID, collectableItemPickup);
+
+            return collectableItemPickup.transform;
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
-        private static void SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
+        private static Transform SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
         {
             // If no prefab is provided, a generic pickup prefab is used
             if (!prefab)
@@ -642,6 +761,8 @@ namespace Open_Ended_Item_Replacer
             collectableItemPickup.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
 
             SetGenericPickupInfo(uniqueID, collectableItemPickup);
+
+            return collectableItemPickup.transform;
         }
 
         private static void SetGenericPickupInfo(UniqueID uniqueID, CollectableItemPickup collectableItemPickup)
