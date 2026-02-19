@@ -34,6 +34,14 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
+    public class testAction : FsmStateAction
+    {
+        public override void OnEnter()
+        {
+            Open_Ended_Item_Replacer.logSource.LogWarning("action ran");
+        }
+    }
+
     // This object defines the item that replaces intended items
     // TODO: 
     // -> Show popup
@@ -267,21 +275,22 @@ namespace Open_Ended_Item_Replacer
             logSource.LogFatal(__instance.name);
         }*/
 
-        /*[HarmonyPostfix]
+        [HarmonyPostfix]
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void StartSlashPostfix(NailSlash __instance)
         {
-            logSource.LogMessage("Slash Postfix");
+            //logSource.LogMessage("Slash Postfix");
 
-            HeroController heroControl = GameManager.instance.hero_ctrl;
+            //HeroController heroControl = GameManager.instance.hero_ctrl;
 
-            //logSource.LogInfo(lastFlea);
+            //logSource.LogInfo(test.GetComponent<Rigidbody2D>().gravityScale);
+            //logSource.LogInfo(testAction.gravityScale);
 
             /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
             spawningReplacementCollectableItemPickup = true;
             SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
             spawningReplacementCollectableItemPickup = false;*/
-        //}
+        }
 
         private static string replacementFlag = "_(Replacement)";
         private static string replacedFlag = "_(Replaced)";
@@ -578,16 +587,140 @@ namespace Open_Ended_Item_Replacer
             return null;
         }
 
-        private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker)
+        private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker, PlayMakerFSM __instance)
         {
             if (genericPersistenceChecker != null)
             {
-                logSource.LogFatal("Generic flea flagged " + genericPersistenceChecker.State.Name);
+                string stateName = genericPersistenceChecker.State.Name;
+
+                logSource.LogFatal("Generic flea flagged " + stateName);
                 genericPersistenceChecker.trueEvent = new FsmEvent("");
+
+                GameObject gameObject = __instance.gameObject;
+
+                switch (stateName)
+                {
+                    case "Init":
+                    case "Check State":
+                    case "Idle":
+                        NamedVariable[] fsmGameObjects = __instance.FsmVariables.GetNamedVariables(VariableType.GameObject);
+
+                        bool containsFleaSprite = false;
+                        // Replaces containers that look like fleas
+                        if (gameObject.GetComponent<tk2dSpriteAnimator>())
+                        {
+                            foreach (NamedVariable variable in fsmGameObjects)
+                            {
+                                if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
+                                {
+                                    containsFleaSprite = true;
+                                }
+
+                                if (!containsFleaSprite)
+                                {
+                                    Replace(gameObject, "Flea", false, null);
+                                    return;
+                                }
+                            }
+                        }
+
+                        Transform replacmentTransform;
+
+                        // Replace any contained fleas
+                        FsmGameObject fleaFsmGameObject = __instance.FsmVariables.GetFsmGameObject("Flea");
+                        if (fleaFsmGameObject.Value == null)
+                        {
+                            GameObject dummyFlea = new GameObject();
+                            dummyFlea.transform.position = __instance.transform.position;
+
+                            replacmentTransform = Replace(dummyFlea, genericFleaItemName, true, null);
+                        }
+                        else
+                        {
+                            replacmentTransform = Replace(fleaFsmGameObject.Value, genericFleaItemName, true, null);
+                        }
+
+                        Collider2D containerCollider = gameObject.GetComponent<Collider2D>();
+                        if (containerCollider != null)
+                        {
+                            Physics2D.IgnoreCollision(containerCollider, replacmentTransform.GetComponent<Collider2D>());
+                        }
+
+                        // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
+                        // Also checks for any BREAK transitions
+                        PlayMakerFSM[] parentFSMs = gameObject.GetComponents<PlayMakerFSM>();
+                        foreach (PlayMakerFSM parentFSM in parentFSMs)
+                        {
+                            FsmState[] parentFsmStates = parentFSM.FsmStates;
+                            foreach (FsmState parentFsmState in parentFsmStates)
+                            {
+                                FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
+                                foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
+                                {
+                                    ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
+                                    if (activateGameObject != null)
+                                    {
+                                        string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
+                                        if (associatedGameObjectName.ToLower().Contains("flea"))
+                                        {
+                                            parentFsmStateAction.Enabled = false;
+                                        }
+                                    }
+                                }
+
+                                // Any state with transition named break should add an action to the next state at the beginning that reenables gravity
+                                FsmTransition[] transitions = parentFsmState.Transitions;
+                                foreach (FsmTransition transition in transitions)
+                                {
+                                    if (transition.EventName == "BREAK")
+                                    {
+                                        FsmState nextState = parentFSM.Fsm.GetState(transition.ToState);
+
+                                        FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + 1];
+
+                                        SetGravity2dScaleV2 setGravity2dScaleV2 = new SetGravity2dScaleV2();
+                                        setGravity2dScaleV2.gravityScale = replacmentTransform.GetComponent<Rigidbody2D>().gravityScale;
+                                        logSource.LogMessage(setGravity2dScaleV2.gravityScale);
+
+                                        setGravity2dScaleV2.everyFrame = false;
+
+                                        setGravity2dScaleV2.gameObject = new FsmOwnerDefault();
+                                        setGravity2dScaleV2.gameObject.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+                                        setGravity2dScaleV2.gameObject.GameObject = replacmentTransform.gameObject;
+
+                                        testAction = setGravity2dScaleV2;
+
+                                        newActions[0] = setGravity2dScaleV2;
+
+                                        Array.Copy(nextState.Actions, 0, newActions, 1, nextState.Actions.Length);
+
+                                        nextState.Actions = newActions;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Should only drop when container broken
+                        replacmentTransform.GetComponent<Rigidbody2D>().gravityScale = 0;
+
+                        test = replacmentTransform;
+
+                        break;
+
+                    case "Sleeping":
+                        // Sleeping fleas have to be on a floor, so they will be interactable
+                        Replace(gameObject, genericFleaItemName, true, null);
+                        break;
+
+                    default:
+                        logSource.LogError("State handled with incorrect name");
+                        break;
+                }
             }
         }
 
         // Handles anything that is a flea
+        private static string genericFleaItemName = "FleasCollected Target";
         private static void HandleFlea(PlayMakerFSM __instance)
         {
             FsmVariables variables = __instance.FsmVariables;
@@ -603,10 +736,10 @@ namespace Open_Ended_Item_Replacer
             // -> Kratt
             // -> That one aspid flea
             // -> That one frozen flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, "FleasCollected Target")); // Misc fleas
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, "FleasCollected Target")); // Like bellhart flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, "FleasCollected Target")); // Seepy fleas
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, "FleasCollected Target")); // Fancy citadel cage fleas and slab cell flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, "FleasCollected Target"), __instance); // Misc fleas
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, "FleasCollected Target"), __instance); // Like bellhart and karak flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, "FleasCollected Target"), __instance); // Seepy fleas -> gameObject can be replaced with no restrictions
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, "FleasCollected Target"), __instance); // Fancy citadel cage fleas and slab cell flea
 
             // Specifically for Kratt
             PlayerDataBoolTest krattPersistenceChecker = SearchForPlayerDataBoolTest(initState, "CaravanLechSaved");
@@ -661,7 +794,6 @@ namespace Open_Ended_Item_Replacer
                         {
                             hasBerry = true;
                         }
-                        
                     }
 
                     if (variables.GetFsmBool("Flea Carrier").Value && !hasBerry)
