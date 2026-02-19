@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static HutongGames.PlayMaker.Actions.HeroInvulnerability;
 
 namespace Open_Ended_Item_Replacer
 {
@@ -374,6 +375,25 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static bool HandleFleaContainerPersistence(PlayMakerFSM __instance, string action = "Init")
+        {
+            bool flag = true;
+            FsmStateAction[] instanceFsmStateActions = __instance.Fsm.GetState(action).Actions;
+            foreach (FsmStateAction fsmStateAction in instanceFsmStateActions)
+            {
+                CheckQuestPdSceneBool checkQuestPdSceneBool = fsmStateAction as CheckQuestPdSceneBool;
+                if (checkQuestPdSceneBool == null) { continue; }
+
+                if (checkQuestPdSceneBool.QuestTarget.Name.ToLower().Contains("Flea"))
+                {
+                    checkQuestPdSceneBool.trueEvent = new FsmEvent("");
+                    flag = false;
+                }
+            }
+
+            return flag;
+        }
+
         // Handles anything that contains a flea object
         private static void HandleFleaContainer(PlayMakerFSM __instance)
         {
@@ -383,23 +403,28 @@ namespace Open_Ended_Item_Replacer
 
             if (variables.Contains("Flea"))
             {
-                logSource.LogMessage("Flea holder found");
+                logSource.LogMessage("Flea container found");
+
+                // Makes the flea container's persistence not dependant on the original flea
+                try { __instance.Fsm.GetState("Init").Actions.OfType<CheckQuestPdSceneBool>().First().trueEvent = new FsmEvent(""); } catch (Exception) { }
+
+                // Specifically for giant flea
+                var actions = __instance.Fsm.GetState("Idle").Actions.OfType<PlayerDataBoolTest>();
+                if (actions != null)
+                {
+                    foreach (var action in actions)
+                    {
+                        if (action?.boolName?.Value == "tamedGiantFlea")
+                        {
+                            action.isTrue = new FsmEvent("");
+
+                            Transform giantFlea = (variables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
+                            giantFlea?.gameObject?.SetActive(true);
+                        }
+                    }
+                }
 
                 FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
-
-                // Checks for the precence of bools containing "flea"
-                /* Removed as the ability to enable a null gets disabled later
-                NamedVariable[] fleaFsmBools = variables.GetNamedVariables(VariableType.Bool);
-                if (fleaFsmGameObject?.Value == null)
-                {
-                    if (fleaFsmBools.Length == 0)
-                    {
-                        logSource.LogInfo("No flea bools found");
-                        return;
-                    }
-
-                    logSource.LogInfo("Flea bools found");
-                }*/
 
                 Transform parent;
                 // Check for a parent
