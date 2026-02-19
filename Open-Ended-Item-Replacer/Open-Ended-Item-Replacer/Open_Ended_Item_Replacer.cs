@@ -388,8 +388,7 @@ namespace Open_Ended_Item_Replacer
                 FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
 
                 // Checks for the precence of bools containing "flea"
-                // To be honest, this is probably redundant, but the idea is that if a flea container lacks a flea but has bools relating to fleas, then this means it could make it later
-                // We cannot know whether true or false is what instantiates a flea, so we just check for presense then handle as usual
+                /* Removed as the ability to enable a null gets disabled later
                 NamedVariable[] fleaFsmBools = variables.GetNamedVariables(VariableType.Bool);
                 if (fleaFsmGameObject?.Value == null)
                 {
@@ -400,7 +399,7 @@ namespace Open_Ended_Item_Replacer
                     }
 
                     logSource.LogInfo("Flea bools found");
-                }
+                }*/
 
                 Transform parent;
                 // Check for a parent
@@ -415,12 +414,6 @@ namespace Open_Ended_Item_Replacer
                 {
                     parent = fleaFsmGameObject.Value.transform.parent;
                     logSource.LogMessage("Parent found: " + parent.name);
-                }
-
-                if (parent.GetComponent<tk2dSpriteAnimator>())
-                {
-                    Replace(parent.gameObject, "Flea", false, null);
-                    return;
                 }
 
                 for (int i = 0; i < parent.childCount; i++)
@@ -439,6 +432,25 @@ namespace Open_Ended_Item_Replacer
                                 fleaFSM.enabled = false;
                             }
                         }
+                    }
+                }
+
+
+                if (parent.GetComponent<tk2dSpriteAnimator>())
+                {
+                    bool containsFleaSprite = false;
+                    NamedVariable[] fsmGameObjects = variables.GetNamedVariables(VariableType.GameObject);
+                    foreach (NamedVariable variable in fsmGameObjects)
+                    {
+                        if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
+                        {
+                            containsFleaSprite = true;
+                        }
+                    }
+
+                    if (!containsFleaSprite)
+                    {
+                        Replace(parent.gameObject, "Flea", false, null);
                     }
                 }
 
@@ -463,6 +475,16 @@ namespace Open_Ended_Item_Replacer
                             }
                         }
                     }
+                }
+
+                // Replace the flea
+                if (fleaFsmGameObject?.Value == null)
+                {
+
+                }
+                else
+                {
+
                 }
             }
         }
