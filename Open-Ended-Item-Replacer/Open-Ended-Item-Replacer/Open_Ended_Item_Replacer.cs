@@ -602,6 +602,7 @@ namespace Open_Ended_Item_Replacer
             // -> Vog
             // -> Kratt
             // -> That one aspid flea
+            // -> That one frozen flea
             HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, "FleasCollected Target")); // Misc fleas
             HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, "FleasCollected Target")); // Like bellhart flea
             HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, "FleasCollected Target")); // Seepy fleas
@@ -635,7 +636,40 @@ namespace Open_Ended_Item_Replacer
                 vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
             }
 
+            // Specifically for frozen flea
+            FsmState idleBlizState = __instance.Fsm.GetState("Idle Bliz");
+            if (__instance.gameObject != null)
+            {
+                if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.name.Contains("Control"))
+                {
+                    logSource.LogFatal("Frozen flea flagged");
 
+                    idleBlizState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
+                    idleState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
+                }
+            }
+
+            // Specifically for aspid flea
+            if (__instance.gameObject != null)
+            {
+                if (__instance.gameObject.name.Contains("Aspid Collector"))
+                {
+                    bool hasBerry = false;
+                    for (int i = 0; i < __instance.transform.childCount; i++)
+                    {
+                        if (__instance.transform.GetChild(i).name.Contains("Mossberry Pickup"))
+                        {
+                            hasBerry = true;
+                        }
+                        
+                    }
+
+                    if (variables.GetFsmBool("Flea Carrier").Value && !hasBerry)
+                    {
+                        logSource.LogFatal("Aspid flea flagged");
+                    }
+                }
+            }
         }
 
         // Handles FSM checks
