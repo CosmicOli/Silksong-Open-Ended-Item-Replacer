@@ -723,6 +723,16 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleVogFlea(PlayerDataVariableTest vogPersistenceChecker, PlayMakerFSM __instance)
+        {
+            if (vogPersistenceChecker == null) { return; }
+
+            logSource.LogInfo("Vog flagged");
+            vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
+
+            Replace(__instance.gameObject, genericFleaItemName, true, null);
+        }
+
         // Handles anything that is or contains a flea
         private static string genericFleaItemName = "FleasCollected Target";
         private static void HandleFlea(PlayMakerFSM __instance)
@@ -751,15 +761,9 @@ namespace Open_Ended_Item_Replacer
             // Specifically for giant flea
             HandleGiantFlea(SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea"), __instance);
             
-
             // Specifically for Vog
             FsmState stillHereState = __instance.Fsm.GetState("Still Here?");
-            PlayerDataVariableTest vogPersistenceChecker = SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild");
-            if (vogPersistenceChecker != null)
-            {
-                logSource.LogInfo("Vog flagged");
-                vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
-            }
+            HandleVogFlea(SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild"), __instance);
 
             // Specifically for frozen flea
             FsmState idleBlizState = __instance.Fsm.GetState("Idle Bliz");
