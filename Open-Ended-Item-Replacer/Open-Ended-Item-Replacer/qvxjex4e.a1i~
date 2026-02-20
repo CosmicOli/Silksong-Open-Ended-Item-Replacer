@@ -6,7 +6,6 @@ using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using InControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +55,7 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
-    /*public class TempGrantAbilities : FsmStateAction
+    public class TempGrantAbilities : FsmStateAction
     {
         static bool hasNeedolin;
         static bool hasDash;
@@ -111,7 +110,7 @@ namespace Open_Ended_Item_Replacer
             Finished = true;
             Finish();
         }
-    }*/
+    }
 
     public class ReplacePickup : FsmStateAction
     {
@@ -284,176 +283,117 @@ namespace Open_Ended_Item_Replacer
             return gameObjects;
         }
 
-        private static void LevelActivatedDebugging()
-        {
-            GameManager GameManager = GameManager.instance;
-            HeroController heroControl = GameManager.hero_ctrl;
-
-            Scene CurrentScene = SceneManager.GetActiveScene();
-            GameObject[] rootObjects = CurrentScene.GetRootGameObjects();
-
-            foreach (GameObject rootObject in rootObjects)
-            {
-                logSource.LogInfo(rootObject.name);
-            }
-
-            List<GameObject> gameObjectsInCurrentScene = FindAllObjectsInCurrentScene();
-
-            foreach (GameObject gameObject in gameObjectsInCurrentScene)
-            {
-                //logSource.LogInfo(gameObject.transform.name);
-
-                if (false)//gameObject.transform.name == "Flea Rescue Branches" || gameObject.transform.name == "Flea Rescue Cage" || gameObject.transform.name == "Flea Rescue Barrel")
-                {
-                    logSource.LogWarning(gameObject.transform.name);
-
-                    /*UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
-                    foreach (UnityEngine.Component component in components)
-                    {
-                        logSource.LogInfo(component);
-                    }*/
-
-                    PlayMakerFSM fsm = gameObject.GetComponent<PlayMakerFSM>();
-
-                    //logSource.LogWarning(fsm.FsmName);
-                    FsmState[] states = fsm.FsmStates;
-
-                    List<FsmEvent> events = FsmEvent.EventList;
-
-                    FsmVariables variables = fsm.FsmVariables;
-
-                    NamedVariable[] named = variables.GetAllNamedVariables();
-
-                    foreach (NamedVariable namedVar in named)
-                    {
-                        //logSource.LogInfo(namedVar.Name);
-                    }
-
-                    //FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
-                    //GameObject flea = fleaFsmGameObject.Value;
-
-                    NamedVariable QuestTracker = variables.GetVariable("Quest Tracker");
-                    //logSource.LogInfo(QuestTracker.ObjectType);
-
-                    /*UnityEngine.Component[] components = (variables.GetFsmObject("Quest Tracker").Value as QuestTargetPlayerDataBools).Get;
-                    foreach (UnityEngine.Component component in components)
-                    {
-                        logSource.LogInfo(component);
-                    }*/
-
-
-
-                    /*foreach (FsmEvent Event in events)
-                    {
-                        logSource.LogWarning(Event.Name);
-                        logSource.LogInfo(Event.Path);
-                        logSource.LogInfo(Event.ToString());
-                    }*/
-
-                    /*foreach (FsmState state in states)
-                    {
-                        logSource.LogInfo(state.Name);
-                        if (state.Name == "Activate Flea")
-                        {
-                            FsmStateAction[] test = state.Actions;
-
-                            foreach (FsmStateAction action in test)
-                            {
-                                logSource.LogInfo(action.DisplayName);
-                                action.Event()
-                            }
-                        }
-                    }*/
-                }
-
-                /*if (gameObject.transform.name == "Heart Piece")
-                {
-                    logSource.LogWarning("Heart Piece");
-
-                    UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
-                    foreach (UnityEngine.Component component in components)
-                    {
-                        logSource.LogInfo(component);
-                    }
-                }
-
-                if (gameObject.transform.name == "Silk Spool")
-                {
-                    logSource.LogWarning("Silk Spool");
-
-                    UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
-                    foreach (UnityEngine.Component component in components)
-                    {
-                        logSource.LogInfo(component);
-                    }
-                }*/
-            }
-        }
-
-        private static bool hasHarpoonDash;
-        private static bool hasNeedolin;
-        private static bool hasDash;
-        private static bool hasBrolly;
-        private static bool hasWalljump;
-        private static bool hasDoubleJump;
-        private static bool hasSuperJump;
-
-        static bool hasGranted;
-
         // Similarly used for debugging, will be removed later
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameManager), "LevelActivated")]
         public static void GameManager_LevelActivatedPostfix(GameManager __instance)
         {
-            string sceneName = SceneManager.GetActiveScene().name;
+            logSource.LogMessage("Level Activated: " + SceneManager.GetActiveScene().name);
 
-            logSource.LogMessage("Level Activated: " + sceneName);
+            GameManager GameManager = GameManager.instance;
+            HeroController heroControl = GameManager.hero_ctrl;
 
-            bool debugging = false;
-            if (debugging)
+            bool logging = false;
+            if (logging)
             {
-                LevelActivatedDebugging();
-            }
+                Scene CurrentScene = SceneManager.GetActiveScene();
+                GameObject[] rootObjects = CurrentScene.GetRootGameObjects();
 
-            PlayerData playerData = PlayerData.instance;
-
-            // Stops softlocking in memories
-            if (!hasGranted)
-            {
-                if (sceneName.ToLower().Contains("memory") && (sceneName.ToLower().Contains("silk_heart") || sceneName.ToLower().Contains("needolin") || sceneName.ToLower().Contains("first_sinner")))
+                foreach (GameObject rootObject in rootObjects)
                 {
-                    hasGranted = true;
-
-                    hasHarpoonDash = playerData.hasHarpoonDash;
-                    hasNeedolin = playerData.hasNeedolin;
-                    hasDash = playerData.hasDash;
-                    hasBrolly = playerData.hasBrolly;
-                    hasWalljump = playerData.hasWalljump;
-                    hasDoubleJump = playerData.hasDoubleJump;
-                    hasSuperJump = playerData.hasSuperJump;
-
-                    playerData.hasHarpoonDash = true;
-                    playerData.hasNeedolin = true;
-                    playerData.hasDash = true;
-                    playerData.hasBrolly = true;
-                    playerData.hasWalljump = true;
-                    playerData.hasDoubleJump = true;
-                    playerData.hasSuperJump = true;
+                    logSource.LogInfo(rootObject.name);
                 }
-            }
-            else
-            {
-                if (!sceneName.ToLower().Contains("memory"))
-                {
-                    hasGranted = false;
 
-                    playerData.hasHarpoonDash = hasHarpoonDash;
-                    playerData.hasNeedolin = hasNeedolin;
-                    playerData.hasDash = hasDash;
-                    playerData.hasBrolly = hasBrolly;
-                    playerData.hasWalljump = hasWalljump;
-                    playerData.hasDoubleJump = hasDoubleJump;
-                    playerData.hasSuperJump = hasSuperJump;
+                List<GameObject> gameObjectsInCurrentScene = FindAllObjectsInCurrentScene();
+
+                foreach (GameObject gameObject in gameObjectsInCurrentScene)
+                {
+                    //logSource.LogInfo(gameObject.transform.name);
+
+                    if (false)//gameObject.transform.name == "Flea Rescue Branches" || gameObject.transform.name == "Flea Rescue Cage" || gameObject.transform.name == "Flea Rescue Barrel")
+                    {
+                        logSource.LogWarning(gameObject.transform.name);
+
+                        /*UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }*/
+
+                        PlayMakerFSM fsm = gameObject.GetComponent<PlayMakerFSM>();
+
+                        //logSource.LogWarning(fsm.FsmName);
+                        FsmState[] states = fsm.FsmStates;
+
+                        List<FsmEvent> events = FsmEvent.EventList;
+
+                        FsmVariables variables = fsm.FsmVariables;
+
+                        NamedVariable[] named = variables.GetAllNamedVariables();
+
+                        foreach (NamedVariable namedVar in named)
+                        {
+                            //logSource.LogInfo(namedVar.Name);
+                        }
+
+                        //FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
+                        //GameObject flea = fleaFsmGameObject.Value;
+
+                        NamedVariable QuestTracker = variables.GetVariable("Quest Tracker");
+                        //logSource.LogInfo(QuestTracker.ObjectType);
+
+                        /*UnityEngine.Component[] components = (variables.GetFsmObject("Quest Tracker").Value as QuestTargetPlayerDataBools).Get;
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }*/
+
+                        
+
+                        /*foreach (FsmEvent Event in events)
+                        {
+                            logSource.LogWarning(Event.Name);
+                            logSource.LogInfo(Event.Path);
+                            logSource.LogInfo(Event.ToString());
+                        }*/
+
+                        /*foreach (FsmState state in states)
+                        {
+                            logSource.LogInfo(state.Name);
+                            if (state.Name == "Activate Flea")
+                            {
+                                FsmStateAction[] test = state.Actions;
+
+                                foreach (FsmStateAction action in test)
+                                {
+                                    logSource.LogInfo(action.DisplayName);
+                                    action.Event()
+                                }
+                            }
+                        }*/
+                    }
+
+                    /*if (gameObject.transform.name == "Heart Piece")
+                    {
+                        logSource.LogWarning("Heart Piece");
+
+                        UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }
+                    }
+
+                    if (gameObject.transform.name == "Silk Spool")
+                    {
+                        logSource.LogWarning("Silk Spool");
+
+                        UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
+                        foreach (UnityEngine.Component component in components)
+                        {
+                            logSource.LogInfo(component);
+                        }
+                    }*/
                 }
             }
         }
@@ -1094,6 +1034,69 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleMemory(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
+            {
+                logSource.LogMessage("Found Memory Control");
+                logSource.LogMessage(__instance.Fsm.Active);
+
+                Fsm fsm = __instance.Fsm;
+
+                // To avoid softlocking, temporarily grant all abilities
+                FsmState initState = fsm.GetState("Init");
+
+                int numberOfNewActionsInit = 1;
+                FsmStateAction[] newActionsInit = new FsmStateAction[initState.Actions.Length + numberOfNewActionsInit];
+
+                newActionsInit[0] = new TempGrantAbilities();
+
+                Array.Copy(initState.Actions, 0, newActionsInit, numberOfNewActionsInit, initState.Actions.Length);
+
+                // Skip memory message (replace with grant)
+
+                // End scene revert abilities
+                FsmState endSceneState = fsm.GetState("End Scene");
+
+                int numberOfNewActionsEndScene = 1;
+                FsmStateAction[] newActionsEndScene = new FsmStateAction[initState.Actions.Length + numberOfNewActionsEndScene];
+
+                newActionsEndScene[0] = new TempGrantAbilities();
+
+                Array.Copy(initState.Actions, 0, newActionsEndScene, numberOfNewActionsEndScene, initState.Actions.Length);
+            }
+            else if (__instance.Fsm.Name == "Wake Up" && __instance.gameObject?.name == "door_wakeOnGround")
+            {
+                logSource.LogMessage("Found Memory Wake Up");
+                logSource.LogMessage(__instance.Fsm.Active);
+
+                Fsm fsm = __instance.Fsm;
+
+                // To avoid softlocking, temporarily grant all abilities
+                FsmState takeControlState = fsm.GetState("Take Control");
+
+                int numberOfNewActionsInit = 1;
+                FsmStateAction[] newActionsInit = new FsmStateAction[takeControlState.Actions.Length + numberOfNewActionsInit];
+
+                newActionsInit[0] = new TempGrantAbilities();
+
+                Array.Copy(takeControlState.Actions, 0, newActionsInit, numberOfNewActionsInit, takeControlState.Actions.Length);
+
+                // Skip memory message (replace with grant)
+
+                // End scene revert abilities
+                /*FsmState endSceneState = fsm.GetState("End Scene");
+
+                int numberOfNewActionsEndScene = 1;
+                FsmStateAction[] newActionsEndScene = new FsmStateAction[takeControlState.Actions.Length + numberOfNewActionsEndScene];
+
+                newActionsEndScene[0] = new TempGrantAbilities();
+
+                Array.Copy(takeControlState.Actions, 0, newActionsEndScene, numberOfNewActionsEndScene, takeControlState.Actions.Length);*/
+            }
+        }
+
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -1105,6 +1108,7 @@ namespace Open_Ended_Item_Replacer
             HandleCrest(__instance);
             HandleCrestDoor(__instance);
             HandleSilkNeedle(__instance);
+            HandleMemory(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
