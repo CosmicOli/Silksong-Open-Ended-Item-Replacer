@@ -898,6 +898,36 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleCrest(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Crest Get Shrine")
+            {
+                Fsm fsm = __instance.Fsm;
+
+                // Removes original persistence checking
+                FsmState checkUnlockedState = fsm.GetState("Check Unlocked");
+                (checkUnlockedState.Actions[0] as GetIsCrestUnlocked).trueEvent = new FsmEvent("");
+
+                Replace(__instance.gameObject, fsm.Variables.GetFsmEnum("Crest Type").Value.ToString(), true, null);
+            }
+        }
+
+        private static void HandleSilkNeedle(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Needle Spell Get")
+            {
+                Fsm fsm = __instance.Fsm;
+
+                // Removes original persistence checking
+                FsmState checkUnlockedState = fsm.GetState("Check Unlocked");
+                (checkUnlockedState.Actions[0] as GetIsCrestUnlocked).trueEvent = new FsmEvent("");
+
+                Replace(__instance.gameObject, fsm.Variables.GetFsmEnum("Silk Needle").Value.ToString(), true, null);
+            }
+        }
+
+
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -906,6 +936,8 @@ namespace Open_Ended_Item_Replacer
         {
             HandleFlea(__instance);
             HandleWeaverStatue(__instance);
+            HandleCrest(__instance);
+            HandleSilkNeedle(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
@@ -1031,6 +1063,11 @@ namespace Open_Ended_Item_Replacer
                 //PersistentBoolItem replacedPersistent = ___persistent;
                 
                 // Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
+
+                if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
+                {
+                    return;
+                }
 
                 Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
