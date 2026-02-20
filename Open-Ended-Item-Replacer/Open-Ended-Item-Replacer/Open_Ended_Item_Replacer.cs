@@ -489,6 +489,74 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
+        {
+            GameObject gameObject = new GameObject();
+            gameObject.name = __instance.Owner?.gameObject?.name;
+            gameObject.transform.position = HeroController.instance.transform.position;
+
+            if (gameObject.name == null)
+            {
+                gameObject.name = "dummyName";
+            }
+
+            UniqueID uniqueID = new UniqueID(gameObject, item.name);
+
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentBoolItem = persistent;
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            {
+                logSource.LogInfo("Replacement set inactive");
+            }
+            else
+            {
+                genericItem.Get();
+            }
+        }
+
+        private static void ReplaceFsmToolGet(SetToolUnlocked __instance)
+        {
+            GameObject gameObject = new GameObject();
+            gameObject.name = __instance.Owner?.gameObject?.name;
+            gameObject.transform.position = HeroController.instance.transform.position;
+
+            if (gameObject.name == null)
+            {
+                gameObject.name = "dummyName";
+            }
+
+            UniqueID uniqueID = new UniqueID(gameObject, (__instance.Tool.Value as ToolItem).name);
+
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentBoolItem = persistent;
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            {
+                logSource.LogInfo("Replacement set inactive");
+            }
+            else
+            {
+                genericItem.Get();
+            }
+        }
+
         // Replaces physical Mask Shards and Spool Fragments
         // All physically placed mask shards (heart piece) and spool fragments (silk spool) have persistent bools attributed to them
         [HarmonyPostfix]
@@ -825,42 +893,6 @@ namespace Open_Ended_Item_Replacer
             HandleFlea(__instance);
         }
 
-        private static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
-        {
-            GameObject gameObject = new GameObject();
-            gameObject.name = __instance.Owner?.gameObject?.name;
-            gameObject.transform.position = HeroController.instance.transform.position;
-
-            if (gameObject.name == null)
-            {
-                gameObject.name = "dummyName";
-            }
-
-            //Replace(gameObject, item.name, false, null);
-
-            UniqueID uniqueID = new UniqueID(gameObject, item.name);
-
-            // Generates a generic item using the uniqueID
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
-
-            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-
-            SetGenericPersistentInfo(uniqueID, persistent);
-
-            genericItem.persistentBoolItem = persistent;
-
-            // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
-            {
-                logSource.LogInfo("Replacement set inactive");
-            }
-            else
-            {
-                genericItem.Get();
-            }
-        }
-
         // Handles when FSMs run CollectableItemCollect
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
@@ -880,6 +912,7 @@ namespace Open_Ended_Item_Replacer
         {
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
+            __instance.Finish();
             return false;
         }
 
@@ -896,6 +929,7 @@ namespace Open_Ended_Item_Replacer
 
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
+            __instance.Finish();
             return false;
         }
 
@@ -907,6 +941,29 @@ namespace Open_Ended_Item_Replacer
         {
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
+            __instance.Finish();
+            return false;
+        }
+
+        // Handles when FSMs run SetToolUnlocked
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SetToolUnlocked), "OnEnter")]
+        private static bool SetToolUnlocked_OnEnterPrefix(SetToolUnlocked __instance)
+        {
+            ReplaceFsmToolGet(__instance);
+
+            __instance.Finish();
+            return false;
+        }
+
+        // Handles when FSMs run SetToolLocked
+        // Stops NPCs locking tools when not actually replacing them
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SetToolLocked), "OnEnter")]
+        private static bool SetToolLocked_OnEnterPrefix(SetToolLocked __instance)
+        {
+            __instance.Finish();
             return false;
         }
 
