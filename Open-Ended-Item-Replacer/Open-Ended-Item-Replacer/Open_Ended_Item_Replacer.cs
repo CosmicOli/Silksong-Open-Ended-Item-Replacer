@@ -825,15 +825,11 @@ namespace Open_Ended_Item_Replacer
             HandleFlea(__instance);
         }
 
-        // Handles when FSMs run CollectableItemCollect
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CollectableItemCollect), "DoAction")]
-        private static bool CollectableItemCollect_DoActionPrefix(CollectableItemCollect __instance, CollectableItem item)
+        private static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
         {
             GameObject gameObject = new GameObject();
-            gameObject.transform.position = HeroController.instance.transform.position;
             gameObject.name = __instance.Owner?.gameObject?.name;
+            gameObject.transform.position = HeroController.instance.transform.position;
 
             if (gameObject.name == null)
             {
@@ -863,6 +859,48 @@ namespace Open_Ended_Item_Replacer
             {
                 genericItem.Get();
             }
+        }
+
+        // Handles when FSMs run CollectableItemCollect
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CollectableItemCollect), "DoAction")]
+        private static bool CollectableItemCollect_DoActionPrefix(CollectableItemCollect __instance, CollectableItem item)
+        {
+            ReplaceFsmItemGet(__instance, item);
+
+            return false;
+        }
+
+        // Handles when FSMs run SavedItemGet
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SavedItemGet), "OnEnter")]
+        private static bool SavedItemGet_OnEnterPrefix(SavedItemGet __instance)
+        {
+            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
+
+            return false;
+        }
+
+        // Handles when FSMs run SavedItemGetV2
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SavedItemGetV2), "OnEnter")]
+        private static bool SavedItemGetV2_OnEnterPrefix(SavedItemGet __instance)
+        {
+            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
+
+            return false;
+        }
+
+        // Handles when FSMs run SavedItemGetDelayed
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SavedItemGetDelayed), "DoGet")]
+        private static bool SavedItemGetDelayed_DoGetPrefix(SavedItemGet __instance)
+        {
+            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
             return false;
         }
@@ -904,7 +942,7 @@ namespace Open_Ended_Item_Replacer
         private static bool spawningReplacementCollectableItemPickup = false;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
-        private static void CollectableItemPickup_OnEnablePostfix(CollectableItemPickup __instance)
+        private static void CollectableItemPickup_OnEnablePostfix(CollectableItemPickup __instance) //, PersistentBoolItem ___persistent)
         {
             logSource.LogMessage("CollectableItemPickup Enabled");
 
@@ -913,9 +951,11 @@ namespace Open_Ended_Item_Replacer
             {
                 // Using Harmony's traverse tool, the private field "persistent" can be copied
                 // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
-                PersistentBoolItem replacedPersistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
+                //PersistentBoolItem replacedPersistent = ___persistent;
+                
+                // Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
 
-                //Replace(__instance.gameObject, __instance.Item.name, true, null);
+                Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
         }
 
