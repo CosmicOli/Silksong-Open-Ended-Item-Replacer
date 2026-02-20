@@ -884,6 +884,20 @@ namespace Open_Ended_Item_Replacer
             HandleAspidFlea(__instance);
         }
 
+        private static void HandleWeaverStatue(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine Weaver Ability")
+            {
+                Fsm fsm = __instance.Fsm;
+
+                // Removes original persistence checking
+                FsmState collectedCheckState = fsm.GetState("Collected Check");
+                (collectedCheckState.Actions[0] as PlayerDataBoolTest).isTrue = new FsmEvent("");
+
+                Replace(__instance.gameObject, fsm.Variables.GetFsmEnum("Ability").Value.ToString(), true, null);
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -891,6 +905,7 @@ namespace Open_Ended_Item_Replacer
         private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
         {
             HandleFlea(__instance);
+            HandleWeaverStatue(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
