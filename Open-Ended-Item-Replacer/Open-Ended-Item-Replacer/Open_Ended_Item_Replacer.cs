@@ -8,6 +8,7 @@ using HutongGames.PlayMaker.Actions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static FullQuestBase;
@@ -733,12 +734,46 @@ namespace Open_Ended_Item_Replacer
             Replace(__instance.gameObject, genericFleaItemName, true, null);
         }
 
+        private static void HandleFrozenFlea(PlayMakerFSM __instance)
+        {
+            if (__instance.gameObject == null) { return; }
+
+            if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.name.Contains("Control"))
+            {
+                logSource.LogInfo("Frozen flea flagged");
+
+                Replace(__instance.gameObject, genericFleaItemName, false, null);
+            }
+        }
+
+        private static void HandleAspidFlea(PlayMakerFSM __instance)
+        {
+            if (__instance.gameObject == null) { return; }
+
+            if (__instance.gameObject.name.Contains("Aspid Collector"))
+            {
+                bool hasBerry = false;
+                for (int i = 0; i < __instance.transform.childCount; i++)
+                {
+                    if (__instance.transform.GetChild(i).name.Contains("Mossberry Pickup"))
+                    {
+                        hasBerry = true;
+                    }
+                }
+
+                if (__instance.FsmVariables.GetFsmBool("Flea Carrier").Value && !hasBerry)
+                {
+                    logSource.LogInfo("Aspid flea flagged");
+
+                    Replace(__instance.gameObject, genericFleaItemName, false, null);
+                }
+            }
+        }
+
         // Handles anything that is or contains a flea
         private static string genericFleaItemName = "FleasCollected Target";
         private static void HandleFlea(PlayMakerFSM __instance)
         {
-            FsmVariables variables = __instance.FsmVariables;
-
             FsmState initState = __instance.Fsm.GetState("Init");
             FsmState checkState = __instance.Fsm.GetState("Check State");
             FsmState sleepState = __instance.Fsm.GetState("Sleeping");
@@ -766,38 +801,10 @@ namespace Open_Ended_Item_Replacer
             HandleVogFlea(SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild"), __instance);
 
             // Specifically for frozen flea
-            FsmState idleBlizState = __instance.Fsm.GetState("Idle Bliz");
-            if (__instance.gameObject != null)
-            {
-                if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.name.Contains("Control"))
-                {
-                    logSource.LogInfo("Frozen flea flagged");
-
-                    idleBlizState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
-                    idleState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
-                }
-            }
+            HandleFrozenFlea(__instance);
 
             // Specifically for aspid flea
-            if (__instance.gameObject != null)
-            {
-                if (__instance.gameObject.name.Contains("Aspid Collector"))
-                {
-                    bool hasBerry = false;
-                    for (int i = 0; i < __instance.transform.childCount; i++)
-                    {
-                        if (__instance.transform.GetChild(i).name.Contains("Mossberry Pickup"))
-                        {
-                            hasBerry = true;
-                        }
-                    }
-
-                    if (variables.GetFsmBool("Flea Carrier").Value && !hasBerry)
-                    {
-                        logSource.LogInfo("Aspid flea flagged");
-                    }
-                }
-            }
+            HandleAspidFlea(__instance);
         }
 
         // Handles FSM checks
