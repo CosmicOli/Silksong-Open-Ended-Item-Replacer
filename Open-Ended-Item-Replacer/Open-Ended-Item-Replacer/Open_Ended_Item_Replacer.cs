@@ -383,6 +383,66 @@ namespace Open_Ended_Item_Replacer
             return output;
         }
 
+        // Should just replace kratt physically
+        // Keeping code around for now as reference for changing dialogue
+        /*private static void ReplaceKrattPickup(PlayMakerFSM __instance)
+        {
+            // Removing flags for processing
+            string currentInstanceName = __instance.gameObject.name;
+            if (currentInstanceName.EndsWith(replacedFlag))
+            {
+                currentInstanceName = currentInstanceName.Substring(0, currentInstanceName.Length - replacedFlag.Length);
+            }
+            else
+            {
+                __instance.gameObject.name += replacedFlag;
+            }
+
+            string currentItemName = "FleasCollected Target";
+
+            // Defining the unique id for the new pickup
+            string pickupName = currentInstanceName + "-" + currentItemName;
+            string sceneName = GameManager.GetBaseSceneName(__instance.gameObject.scene.name);
+
+            UniqueID uniqueID = new UniqueID(pickupName, sceneName);
+
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = __instance.gameObject.AddComponent<PersistentBoolItem>();
+            SetGenericPersistentInfo(uniqueID, persistent);
+            genericItem.persistentItemBool = persistent;
+
+
+            // Handle actions on "Break" state
+            FsmStateAction[] breakActions = __instance.Fsm.GetState("Break").Actions;
+
+            foreach (FsmStateAction action in breakActions)
+            {
+                logSource.LogError(action.GetType());
+            }
+
+            FsmBool krattBool = new FsmBool();
+            krattBool.Value = false;
+
+            // Stops kratt being marked as saved in the player bools
+            HutongGames.PlayMaker.Actions.SetPlayerDataBool setKrattSaved = breakActions.OfType<HutongGames.PlayMaker.Actions.SetPlayerDataBool>().ToList()[0];
+            Traverse.Create(setKrattSaved).Field("value").SetValue(krattBool);
+
+            SavedItemGetV2 getItemBreak = breakActions.OfType<SavedItemGetV2>().ToList()[0];
+            getItemBreak.Item = genericItem;
+            getItemBreak.ShowPopup = true;
+            getItemBreak.Amount = 1;
+
+
+            // Handle actions on "NPC Ready" state
+            FsmStateAction[] NPCReadyActions = __instance.Fsm.GetState("NPC Ready").Actions;
+
+            SavedItemGetV2 getItemNPCReady = NPCReadyActions.OfType<SavedItemGetV2>().ToList()[0];
+            getItemNPCReady.Enabled = false;
+        }*/
+
         // Replaces physical Mask Shards and Spool Fragments
         // All physically placed mask shards (heart piece) and spool fragments (silk spool) have persistent bools attributed to them
         [HarmonyPostfix]
@@ -402,152 +462,6 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static bool HandleFleaContainerPersistence(PlayMakerFSM __instance, string action = "Init")
-        {
-            bool flag = true;
-            FsmStateAction[] instanceFsmStateActions = __instance.Fsm.GetState(action).Actions;
-            foreach (FsmStateAction fsmStateAction in instanceFsmStateActions)
-            {
-                CheckQuestPdSceneBool checkQuestPdSceneBool = fsmStateAction as CheckQuestPdSceneBool;
-                if (checkQuestPdSceneBool == null) { continue; }
-
-                if (checkQuestPdSceneBool.QuestTarget.Name.ToLower().Contains("Flea"))
-                {
-                    checkQuestPdSceneBool.trueEvent = new FsmEvent("");
-                    flag = false;
-                }
-            }
-
-            return flag;
-        }
-
-        // Handles anything that contains a flea object
-        private static void HandleFleaContainer(PlayMakerFSM __instance)
-        {
-            if (__instance == null) { return; }
-
-            FsmVariables variables = __instance.FsmVariables;
-
-            if (variables.Contains("Flea"))
-            {
-                logSource.LogMessage("Flea container found");
-
-                // Makes the flea container's persistence not dependant on the original flea
-                try { __instance.Fsm.GetState("Init").Actions.OfType<CheckQuestPdSceneBool>().First().trueEvent = new FsmEvent(""); } catch (Exception) { }
-
-                // Specifically for giant flea
-                var actions = __instance.Fsm.GetState("Idle").Actions.OfType<PlayerDataBoolTest>();
-                if (actions != null)
-                {
-                    foreach (var action in actions)
-                    {
-                        if (action?.boolName?.Value == "tamedGiantFlea")
-                        {
-                            action.isTrue = new FsmEvent("");
-
-                            Transform giantFlea = (variables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
-                            giantFlea?.gameObject?.SetActive(true);
-                        }
-                    }
-                }
-
-                FsmGameObject fleaFsmGameObject = variables.GetFsmGameObject("Flea");
-
-                Transform parent;
-                // Check for a parent
-                if (!fleaFsmGameObject.Value?.transform?.parent)
-                {
-                    // Assume the instance object is the parent as it will have to instantiate the flea itself later
-                    // To be honest, this is probably always the case, but better safe than sorry ig
-                    parent = __instance.transform;
-                    logSource.LogMessage("Assumed parent found: " + parent.name);
-                }
-                else
-                {
-                    parent = fleaFsmGameObject.Value.transform.parent;
-                    logSource.LogMessage("Parent found: " + parent.name);
-                }
-
-                for (int i = 0; i < parent.childCount; i++)
-                {
-                    // Disable any children relating to fleas
-                    if (parent.GetChild(i).name.ToLower().Contains("flea"))
-                    {
-                        parent.GetChild(i).gameObject.SetActive(false);
-
-                        PlayMakerFSM[] fleaFSMs = parent.GetChild(i).GetComponents<PlayMakerFSM>();
-                        // Disables any fsms relating to getting a flea
-                        if (fleaFSMs != null)
-                        {
-                            foreach (PlayMakerFSM fleaFSM in fleaFSMs)
-                            {
-                                fleaFSM.enabled = false;
-                            }
-                        }
-                    }
-                }
-
-                // Replaces containers that look like fleas
-                if (parent.GetComponent<tk2dSpriteAnimator>())
-                {
-                    bool containsFleaSprite = false;
-                    NamedVariable[] fsmGameObjects = variables.GetNamedVariables(VariableType.GameObject);
-                    foreach (NamedVariable variable in fsmGameObjects)
-                    {
-                        if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
-                        {
-                            containsFleaSprite = true;
-                        }
-                    }
-
-                    if (!containsFleaSprite)
-                    {
-                        Replace(parent.gameObject, "Flea", false, null);
-                        return;
-                    }
-                }
-
-                // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
-                PlayMakerFSM[] parentFSMs = parent.GetComponents<PlayMakerFSM>();
-                foreach (PlayMakerFSM parentFSM in parentFSMs)
-                {
-                    FsmState[] parentFsmStates = parentFSM.FsmStates;
-                    foreach (FsmState parentFsmState in parentFsmStates)
-                    {
-                        FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
-                        foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
-                        {
-                            ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
-                            if (activateGameObject != null)
-                            {
-                                string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
-                                if (associatedGameObjectName.ToLower().Contains("flea"))
-                                {
-                                    parentFsmStateAction.Enabled = false;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Replace the flea
-                if (fleaFsmGameObject.Value == null)
-                {
-                    GameObject dummyFlea = new GameObject();
-                    dummyFlea.transform.position = parent.position;
-
-                    Replace(dummyFlea, "Flea", false, null);
-                    return;
-                }
-                else
-                {
-                    Replace(fleaFsmGameObject.Value, "Flea", false, null);
-                    return;
-                }
-            }
-        }
-
-
         private static CheckQuestPdSceneBool SearchForCheckQuestPdSceneBool(FsmState state, string questTargetName)
         {
             List<CheckQuestPdSceneBool> actions = state?.Actions?.OfType<CheckQuestPdSceneBool>().ToList();
@@ -558,7 +472,7 @@ namespace Open_Ended_Item_Replacer
                 QuestTargetPlayerDataBools questTarget = (action.QuestTarget?.RawValue as QuestTargetPlayerDataBools);
                 if (questTarget == null) { continue; }
 
-                if (questTarget.name.Contains("FleasCollected Target"))
+                if (questTarget.name.Contains(genericFleaItemName))
                 {
                     return action;
                 }
@@ -611,7 +525,7 @@ namespace Open_Ended_Item_Replacer
             {
                 string stateName = genericPersistenceChecker.State.Name;
 
-                logSource.LogFatal("Generic flea flagged " + stateName);
+                logSource.LogInfo("Generic flea flagged " + stateName);
                 genericPersistenceChecker.trueEvent = new FsmEvent("");
 
                 GameObject gameObject = __instance.gameObject;
@@ -738,7 +652,18 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        // Handles anything that is a flea
+        private static void HandleKrattFlea(PlayerDataBoolTest krattPersistenceChecker, PlayMakerFSM __instance)
+        {
+            if (krattPersistenceChecker != null)
+            {
+                logSource.LogInfo("Kratt flagged");
+                krattPersistenceChecker.isTrue = new FsmEvent("");
+
+                Replace(__instance.gameObject, genericFleaItemName, true, null);
+            }
+        }
+
+        // Handles anything that is or contains a flea
         private static string genericFleaItemName = "FleasCollected Target";
         private static void HandleFlea(PlayMakerFSM __instance)
         {
@@ -755,24 +680,19 @@ namespace Open_Ended_Item_Replacer
             // -> Kratt
             // -> That one aspid flea
             // -> That one frozen flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, "FleasCollected Target"), __instance); // Misc fleas
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, "FleasCollected Target"), __instance); // Like bellhart and karak flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, "FleasCollected Target"), __instance); // Seepy fleas -> gameObject can be replaced with no restrictions
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, "FleasCollected Target"), __instance); // Fancy citadel cage fleas and slab cell flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, genericFleaItemName), __instance); // Misc fleas
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, genericFleaItemName), __instance); // Like bellhart and karak flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, genericFleaItemName), __instance); // Seepy fleas -> gameObject can be replaced with no restrictions
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, genericFleaItemName), __instance); // Fancy citadel cage fleas and slab cell flea
 
             // Specifically for Kratt
-            PlayerDataBoolTest krattPersistenceChecker = SearchForPlayerDataBoolTest(initState, "CaravanLechSaved");
-            if (krattPersistenceChecker != null)
-            {
-                logSource.LogFatal("Kratt flagged");
-                krattPersistenceChecker.isTrue = new FsmEvent("");
-            }
+            HandleKrattFlea(SearchForPlayerDataBoolTest(initState, "CaravanLechSaved"), __instance);
 
             // Specifically for giant flea
             PlayerDataBoolTest giantFleaPersistenceChecker = SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea");
             if (giantFleaPersistenceChecker != null)
             {
-                logSource.LogFatal("Giant flea flagged");
+                logSource.LogInfo("Giant flea flagged");
                 giantFleaPersistenceChecker.isTrue = new FsmEvent("");
 
                 Transform giantFlea = (variables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
@@ -784,7 +704,7 @@ namespace Open_Ended_Item_Replacer
             PlayerDataVariableTest vogPersistenceChecker = SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild");
             if (vogPersistenceChecker != null)
             {
-                logSource.LogFatal("Vog flagged");
+                logSource.LogInfo("Vog flagged");
                 vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
             }
 
@@ -794,7 +714,7 @@ namespace Open_Ended_Item_Replacer
             {
                 if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.name.Contains("Control"))
                 {
-                    logSource.LogFatal("Frozen flea flagged");
+                    logSource.LogInfo("Frozen flea flagged");
 
                     idleBlizState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
                     idleState.Actions.OfType<EnableFsmSelf>().First().SetEnabled = true;
@@ -817,7 +737,7 @@ namespace Open_Ended_Item_Replacer
 
                     if (variables.GetFsmBool("Flea Carrier").Value && !hasBerry)
                     {
-                        logSource.LogFatal("Aspid flea flagged");
+                        logSource.LogInfo("Aspid flea flagged");
                     }
                 }
             }
@@ -961,6 +881,18 @@ namespace Open_Ended_Item_Replacer
 
             PersistentBoolItem persistent = Traverse.Create(collectableItemPickup).Field("persistent").GetValue<PersistentBoolItem>();
 
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentItemBool = persistent;
+
+            // Sets the item granted upon pickup
+            collectableItemPickup.SetItem(genericItem, true);
+
+            logSource.LogInfo("Pickup Item Set: " + genericItem.name);
+        }
+
+        private static void SetGenericPersistentInfo(UniqueID uniqueID, PersistentBoolItem persistent)
+        {
             // Makes sure that persistent has loaded and that hasSetup = true
             persistent.LoadIfNeverStarted();
             persistent.ItemData.ToString();
@@ -971,13 +903,6 @@ namespace Open_Ended_Item_Replacer
             persistent.ItemData.IsSemiPersistent = false;
             persistent.ItemData.Value = true;
             persistent.ItemData.Mutator = SceneData.PersistentMutatorTypes.None;
-
-            genericItem.persistentItemBool = persistent;
-
-            // Sets the item granted upon pickup
-            collectableItemPickup.SetItem(genericItem, true);
-
-            logSource.LogInfo("Pickup Item Set: " + genericItem.name);
         }
     }
 }
