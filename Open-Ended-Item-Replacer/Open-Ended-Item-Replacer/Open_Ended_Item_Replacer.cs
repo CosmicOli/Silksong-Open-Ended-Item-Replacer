@@ -28,10 +28,18 @@ namespace Open_Ended_Item_Replacer
             private set;
         }
 
+        [Obsolete]
         public UniqueID(string PickupName, string SceneName)
         {
             this.PickupName = PickupName;
             this.SceneName = SceneName;
+        }
+
+        public UniqueID(GameObject replacedObject, string replacedItemName)
+        {
+            // Defining the unique id for the new pickup
+            this.PickupName = replacedObject.name + "-" + replacedItemName;
+            this.SceneName = GameManager.GetBaseSceneName(replacedObject.scene.name);
         }
     }
 
@@ -57,6 +65,30 @@ namespace Open_Ended_Item_Replacer
             pickup.transform.GetComponent<Collider2D>().enabled = true;
             Traverse.Create(pickup).Field("canPickupTime").SetValue((double) 0);
             Traverse.Create(pickup).Field("canPickupDelay").SetValue(Traverse.Create(Gameplay.CollectableItemPickupPrefab).Field("canPickupDelay").GetValue<float>());
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
+    }
+
+    public class SetContainerPersistence : FsmStateAction
+    {
+        PersistentBoolItem persistentBoolItem;
+
+        public SetContainerPersistence(PersistentBoolItem persistentBoolItem)
+        {
+            this.persistentBoolItem = persistentBoolItem;
+        }
+
+        public override void OnEnter()
+        {
+            persistentBoolItem.ItemData.Value = true;
+            SceneData.instance.PersistentBools.SetValue(persistentBoolItem.ItemData);
+
+            Active = false;
+            Finished = true;
+            Finish();
         }
     }
 
@@ -81,7 +113,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        public PersistentBoolItem persistentItemBool;
+        public PersistentBoolItem persistentBoolItem;
 
         public override void Get(bool showPopup = true)
         {
@@ -89,7 +121,9 @@ namespace Open_Ended_Item_Replacer
 
             // Show popup (if showPopup)
             // Send get request
-            logSource.LogInfo("Item get: " + persistentItemBool.ItemData.ID);
+            persistentBoolItem.ItemData.Value = true;
+            SceneData.instance.PersistentBools.SetValue(persistentBoolItem.ItemData);
+            logSource.LogInfo("Item get: " + persistentBoolItem.ItemData.ID);
         }
 
         public override bool CanGetMore()
@@ -310,22 +344,8 @@ namespace Open_Ended_Item_Replacer
             spawningReplacementCollectableItemPickup = false;*/
         }
 
-        private static string replacementFlag = "_(Replacement)";
-        private static string replacedFlag = "_(Replaced)";
+        public static string replacementFlag = "_(Replacement)";
         
-        // Some pickups have 'items', and others do not
-        // Those that do need to have their item's name changed
-        private static Transform Replace(GameObject replacedObject, UnityEngine.Object replacedItem, bool interactable, CollectableItemPickup replacementPrefab)
-        {
-            // Removing flags for processing
-            if (!replacedItem.name.EndsWith(replacedFlag))
-            {
-                replacedItem.name += replacedFlag;
-            }
-
-            return Replace(replacedObject, replacedItem.name, interactable, replacementPrefab);
-        }
-
         // Deactivates and replaces a given object
         private static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
         {
@@ -335,34 +355,13 @@ namespace Open_Ended_Item_Replacer
             // Removes the original object
             replacedObject.SetActive(false);
 
-            // Removing flags for processing
-            string currentInstanceName = replacedObject.name;
-            if (currentInstanceName.EndsWith(replacedFlag))
-            {
-                currentInstanceName = currentInstanceName.Substring(0, currentInstanceName.Length - replacedFlag.Length);
-            }
-            else
-            {
-                replacedObject.name += replacedFlag;
-            }
-
-            string currentItemName = replacedItemName;
-            if (currentItemName.EndsWith(replacedFlag))
-            {
-                currentItemName = currentItemName.Substring(0, currentItemName.Length - replacedFlag.Length);
-            }
-
             // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-            logSource.LogInfo("Pickup: " + currentInstanceName);
+            logSource.LogInfo("Pickup: " + replacedObject.name);
 
             // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
             logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
 
-            // Defining the unique id for the new pickup
-            string pickupName = currentInstanceName + "-" + currentItemName;
-            string sceneName = GameManager.GetBaseSceneName(replacedObject.scene.name);
-
-            UniqueID uniqueID = new UniqueID(pickupName, sceneName);
+            UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
 
             Transform output;
 
@@ -418,11 +417,6 @@ namespace Open_Ended_Item_Replacer
             // Handle actions on "Break" state
             FsmStateAction[] breakActions = __instance.Fsm.GetState("Break").Actions;
 
-            foreach (FsmStateAction action in breakActions)
-            {
-                logSource.LogError(action.GetType());
-            }
-
             FsmBool krattBool = new FsmBool();
             krattBool.Value = false;
 
@@ -442,6 +436,48 @@ namespace Open_Ended_Item_Replacer
             SavedItemGetV2 getItemNPCReady = NPCReadyActions.OfType<SavedItemGetV2>().ToList()[0];
             getItemNPCReady.Enabled = false;
         }*/
+
+        private static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance)
+        {
+            UniqueID uniqueID = new UniqueID(giantFlea.gameObject, genericFleaItemName);
+
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = __instance.gameObject.AddComponent<PersistentBoolItem>();
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentBoolItem = persistent;
+
+
+            // Handle actions on "Stun" state
+            FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
+
+            FsmBool giantFleaBool = new FsmBool();
+            giantFleaBool.Value = false;
+
+            // Stops the giant flea being marked as saved in the player bools
+            HutongGames.PlayMaker.Actions.SetPlayerDataBool setGiantFleaSaved = stunActions.OfType<HutongGames.PlayMaker.Actions.SetPlayerDataBool>().ToList()[0];
+            Traverse.Create(setGiantFleaSaved).Field("value").SetValue(giantFleaBool);
+
+
+            // Handle actions on "Deactivate" state
+            FsmStateAction[] deactivateActions = giantFleaFSM.Fsm.GetState("Deactivate").Actions;
+
+            SavedItemGetV2 getFleaItem = deactivateActions.OfType<SavedItemGetV2>().ToList()[0];
+            getFleaItem.Item = genericItem;
+            getFleaItem.ShowPopup = true;
+            getFleaItem.Amount = 1;
+
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            {
+                giantFlea.gameObject.SetActive(false);
+                __instance.gameObject.SetActive(false);
+            }
+        }
 
         // Replaces physical Mask Shards and Spool Fragments
         // All physically placed mask shards (heart piece) and spool fragments (silk spool) have persistent bools attributed to them
@@ -521,145 +557,169 @@ namespace Open_Ended_Item_Replacer
 
         private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker, PlayMakerFSM __instance)
         {
-            if (genericPersistenceChecker != null)
+            if (genericPersistenceChecker == null) { return; }
+
+            string stateName = genericPersistenceChecker.State.Name;
+
+            logSource.LogInfo("Generic flea flagged " + stateName);
+            genericPersistenceChecker.trueEvent = new FsmEvent("");
+
+            GameObject gameObject = __instance.gameObject;
+
+            switch (stateName)
             {
-                string stateName = genericPersistenceChecker.State.Name;
+                case "Init":
+                case "Check State":
+                case "Idle":
+                    NamedVariable[] fsmGameObjects = __instance.FsmVariables.GetNamedVariables(VariableType.GameObject);
 
-                logSource.LogInfo("Generic flea flagged " + stateName);
-                genericPersistenceChecker.trueEvent = new FsmEvent("");
-
-                GameObject gameObject = __instance.gameObject;
-
-                switch (stateName)
-                {
-                    case "Init":
-                    case "Check State":
-                    case "Idle":
-                        NamedVariable[] fsmGameObjects = __instance.FsmVariables.GetNamedVariables(VariableType.GameObject);
-
-                        bool containsFleaSprite = false;
-                        // Replaces containers that look like fleas
-                        if (gameObject.GetComponent<tk2dSpriteAnimator>())
+                    bool containsFleaSprite = false;
+                    // Replaces containers that look like fleas
+                    if (gameObject.GetComponent<tk2dSpriteAnimator>())
+                    {
+                        foreach (NamedVariable variable in fsmGameObjects)
                         {
-                            foreach (NamedVariable variable in fsmGameObjects)
+                            if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
                             {
-                                if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
-                                {
-                                    containsFleaSprite = true;
-                                }
+                                containsFleaSprite = true;
+                            }
 
-                                if (!containsFleaSprite)
-                                {
-                                    Replace(gameObject, "Flea", false, null);
-                                    return;
-                                }
+                            if (!containsFleaSprite)
+                            {
+                                Replace(gameObject, genericFleaItemName, false, null);
+                                return;
                             }
                         }
+                    }
 
-                        Transform replacmentTransform;
+                    PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+                    UniqueID uniqueID = new UniqueID(gameObject, genericFleaItemName);
+                    SetGenericPersistentInfo(uniqueID, persistent);
 
-                        // Replace any contained fleas
-                        FsmGameObject fleaFsmGameObject = __instance.FsmVariables.GetFsmGameObject("Flea");
-                        if (fleaFsmGameObject.Value == null)
+                    Transform replacmentTransform;
+
+                    // Replace any contained fleas
+                    FsmGameObject fleaFsmGameObject = __instance.FsmVariables.GetFsmGameObject("Flea");
+                    if (fleaFsmGameObject.Value == null)
+                    {
+                        GameObject dummyFlea = new GameObject();
+                        dummyFlea.transform.position = __instance.transform.position;
+
+                        replacmentTransform = Replace(dummyFlea, genericFleaItemName, true, null);
+                    }
+                    else
+                    {
+                        replacmentTransform = Replace(fleaFsmGameObject.Value, genericFleaItemName, true, null);
+                    }
+
+                    // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
+                    // Also checks for any BREAK transitions
+                    PlayMakerFSM[] parentFSMs = gameObject.GetComponents<PlayMakerFSM>();
+                    foreach (PlayMakerFSM parentFSM in parentFSMs)
+                    {
+                        FsmState[] parentFsmStates = parentFSM.FsmStates;
+                        foreach (FsmState parentFsmState in parentFsmStates)
                         {
-                            GameObject dummyFlea = new GameObject();
-                            dummyFlea.transform.position = __instance.transform.position;
-
-                            replacmentTransform = Replace(dummyFlea, genericFleaItemName, true, null);
-                        }
-                        else
-                        {
-                            replacmentTransform = Replace(fleaFsmGameObject.Value, genericFleaItemName, true, null);
-                        }
-
-                        replacmentTransform.GetComponent<Collider2D>().enabled = false;
-
-                        // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
-                        // Also checks for any BREAK transitions
-                        PlayMakerFSM[] parentFSMs = gameObject.GetComponents<PlayMakerFSM>();
-                        foreach (PlayMakerFSM parentFSM in parentFSMs)
-                        {
-                            FsmState[] parentFsmStates = parentFSM.FsmStates;
-                            foreach (FsmState parentFsmState in parentFsmStates)
+                            FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
+                            foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
                             {
-                                FsmStateAction[] parentFsmStateActions = parentFsmState.Actions;
-                                foreach (FsmStateAction parentFsmStateAction in parentFsmStateActions)
+                                ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
+                                if (activateGameObject != null)
                                 {
-                                    ActivateGameObject activateGameObject = parentFsmStateAction as ActivateGameObject;
-                                    if (activateGameObject != null)
+                                    string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
+                                    if (associatedGameObjectName.ToLower().Contains("flea"))
                                     {
-                                        string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
-                                        if (associatedGameObjectName.ToLower().Contains("flea"))
-                                        {
-                                            parentFsmStateAction.Enabled = false;
-                                        }
-                                    }
-                                }
-
-                                // Any state with transition named break should add an action to the next state at the beginning that reenables gravity
-                                FsmTransition[] transitions = parentFsmState.Transitions;
-                                foreach (FsmTransition transition in transitions)
-                                {
-                                    if (transition.EventName == "BREAK")
-                                    {
-                                        FsmState nextState = parentFSM.Fsm.GetState(transition.ToState);
-
-                                        FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + 2];
-
-                                        SetGravity2dScaleV2 setGravity2dScaleV2 = new SetGravity2dScaleV2();
-                                        setGravity2dScaleV2.gravityScale = replacmentTransform.GetComponent<Rigidbody2D>().gravityScale;
-
-                                        setGravity2dScaleV2.everyFrame = false;
-
-                                        setGravity2dScaleV2.gameObject = new FsmOwnerDefault();
-                                        setGravity2dScaleV2.gameObject.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
-                                        setGravity2dScaleV2.gameObject.GameObject = replacmentTransform.gameObject;
-
-                                        newActions[0] = setGravity2dScaleV2;
-                                        newActions[1] = new AllowPickup(replacmentTransform.GetComponent<CollectableItemPickup>());
-
-                                        Array.Copy(nextState.Actions, 0, newActions, 2, nextState.Actions.Length);
-
-                                        nextState.Actions = newActions;
+                                        parentFsmStateAction.Enabled = false;
                                     }
                                 }
                             }
-                        }
 
+                            // Any state with transition named break should add an action to the next state at the beginning that reenables gravity
+                            int numberOfNewActions = 3;
+                            FsmTransition[] transitions = parentFsmState.Transitions;
+                            foreach (FsmTransition transition in transitions)
+                            {
+                                if (transition.EventName == "BREAK")
+                                {
+                                    FsmState nextState = parentFSM.Fsm.GetState(transition.ToState);
+
+                                    FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + numberOfNewActions];
+
+                                    SetGravity2dScaleV2 setGravity2dScaleV2 = new SetGravity2dScaleV2();
+                                    setGravity2dScaleV2.gravityScale = replacmentTransform.GetComponent<Rigidbody2D>().gravityScale;
+
+                                    setGravity2dScaleV2.everyFrame = false;
+
+                                    setGravity2dScaleV2.gameObject = new FsmOwnerDefault();
+                                    setGravity2dScaleV2.gameObject.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+                                    setGravity2dScaleV2.gameObject.GameObject = replacmentTransform.gameObject;
+
+                                    newActions[0] = new SetContainerPersistence(persistent);
+                                    newActions[1] = setGravity2dScaleV2;
+                                    newActions[2] = new AllowPickup(replacmentTransform.GetComponent<CollectableItemPickup>()); 
+
+                                    Array.Copy(nextState.Actions, 0, newActions, numberOfNewActions, nextState.Actions.Length);
+
+                                    nextState.Actions = newActions;
+                                }
+                            }
+                        }
+                    }
+
+                    // Handles persistence for the container
+                    if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+                    {
+                        gameObject.SetActive(false);
+                        logSource.LogInfo("Container set inactive");
+                    }
+                    else
+                    {
                         // Should only drop and be interactable when container broken
+                        replacmentTransform.GetComponent<Collider2D>().enabled = false;
                         replacmentTransform.GetComponent<Rigidbody2D>().gravityScale = 0;
                         Traverse.Create(replacmentTransform.GetComponent<CollectableItemPickup>()).Field("canPickupTime").SetValue(double.PositiveInfinity);
                         Traverse.Create(replacmentTransform.GetComponent<CollectableItemPickup>()).Field("canPickupDelay").SetValue(float.PositiveInfinity);
+                    }
 
-                        Collider2D[] a = replacmentTransform.GetComponents<Collider2D>();
+                    break;
 
-                        foreach (Collider2D c in a)
-                        {
-                            logSource.LogInfo(c);
-                        }
+                case "Sleeping":
+                    // Sleeping fleas have to be on a floor, so they will be interactable
+                    Replace(gameObject, genericFleaItemName, true, null);
+                    break;
 
-                        break;
-
-                    case "Sleeping":
-                        // Sleeping fleas have to be on a floor, so they will be interactable
-                        Replace(gameObject, genericFleaItemName, true, null);
-                        break;
-
-                    default:
-                        logSource.LogError("State handled with incorrect name");
-                        break;
-                }
+                default:
+                    logSource.LogError("State handled with incorrect name");
+                    break;
             }
         }
 
         private static void HandleKrattFlea(PlayerDataBoolTest krattPersistenceChecker, PlayMakerFSM __instance)
         {
-            if (krattPersistenceChecker != null)
-            {
-                logSource.LogInfo("Kratt flagged");
-                krattPersistenceChecker.isTrue = new FsmEvent("");
+            if (krattPersistenceChecker == null) { return; }
 
-                Replace(__instance.gameObject, genericFleaItemName, true, null);
+            logSource.LogInfo("Kratt flagged");
+            krattPersistenceChecker.isTrue = new FsmEvent("");
+
+            Replace(__instance.gameObject, genericFleaItemName, true, null);
+        }
+
+        private static void HandleGiantFlea(PlayerDataBoolTest giantFleaPersistenceChecker, PlayMakerFSM __instance)
+        {
+            if (giantFleaPersistenceChecker == null) { return; }
+
+            logSource.LogInfo("Giant flea flagged");
+            giantFleaPersistenceChecker.isTrue = new FsmEvent("");
+
+            Transform giantFlea = (__instance.FsmVariables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
+
+            PlayMakerFSM[] giantFleaFSMs = giantFlea.GetComponents<PlayMakerFSM>();
+            foreach (PlayMakerFSM giantFleaFSM in giantFleaFSMs)
+            {
+                if (giantFleaFSM.FsmName == "Control")
+                {
+                    ReplaceGiantFleaPickup(giantFlea, giantFleaFSM, __instance);
+                }
             }
         }
 
@@ -689,15 +749,8 @@ namespace Open_Ended_Item_Replacer
             HandleKrattFlea(SearchForPlayerDataBoolTest(initState, "CaravanLechSaved"), __instance);
 
             // Specifically for giant flea
-            PlayerDataBoolTest giantFleaPersistenceChecker = SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea");
-            if (giantFleaPersistenceChecker != null)
-            {
-                logSource.LogInfo("Giant flea flagged");
-                giantFleaPersistenceChecker.isTrue = new FsmEvent("");
-
-                Transform giantFlea = (variables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
-                giantFlea?.gameObject?.SetActive(true);
-            }
+            HandleGiantFlea(SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea"), __instance);
+            
 
             // Specifically for Vog
             FsmState stillHereState = __instance.Fsm.GetState("Still Here?");
@@ -813,7 +866,7 @@ namespace Open_Ended_Item_Replacer
                 // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
                 PersistentBoolItem replacedPersistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
 
-                Replace(__instance.gameObject, __instance.Item, true, null);
+                Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
         }
 
@@ -883,12 +936,18 @@ namespace Open_Ended_Item_Replacer
 
             SetGenericPersistentInfo(uniqueID, persistent);
 
-            genericItem.persistentItemBool = persistent;
+            genericItem.persistentBoolItem = persistent;
 
             // Sets the item granted upon pickup
             collectableItemPickup.SetItem(genericItem, true);
-
             logSource.LogInfo("Pickup Item Set: " + genericItem.name);
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            {
+                collectableItemPickup.gameObject.SetActive(false);
+                logSource.LogInfo("Replacement set inactive");
+            }
         }
 
         private static void SetGenericPersistentInfo(UniqueID uniqueID, PersistentBoolItem persistent)
@@ -901,7 +960,7 @@ namespace Open_Ended_Item_Replacer
             persistent.ItemData.ID = uniqueID.PickupName + replacementFlag;
             persistent.ItemData.SceneName = uniqueID.SceneName;
             persistent.ItemData.IsSemiPersistent = false;
-            persistent.ItemData.Value = true;
+            persistent.ItemData.Value = false;
             persistent.ItemData.Mutator = SceneData.PersistentMutatorTypes.None;
         }
     }
