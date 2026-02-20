@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using GenericVariableExtension;
+using GlobalEnums;
 using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
@@ -51,6 +52,26 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             Open_Ended_Item_Replacer.logSource.LogWarning("action ran");
+        }
+    }
+
+    public class ReplacePickup : FsmStateAction
+    {
+        GameObject gameObject;
+        string itemName;
+
+        public ReplacePickup(GameObject gameObject, string itemName)
+        {
+            this.gameObject = gameObject;
+        }
+
+        public override void OnEnter()
+        {
+            Open_Ended_Item_Replacer.Replace(gameObject, itemName, true, null);
+
+            Active = false;
+            Finished = true;
+            Finish();
         }
     }
 
@@ -357,7 +378,7 @@ namespace Open_Ended_Item_Replacer
         public static string replacementFlag = "_(Replacement)";
         
         // Deactivates and replaces a given object
-        private static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
+        public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
         {
             // Sets up the replacement object to not be replaced itself
             spawningReplacementCollectableItemPickup = true;
@@ -912,6 +933,36 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleCrestDoor(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "chapel_door_control" && __instance.gameObject?.name == "Chapel Door Control")
+            {
+                Fsm fsm = __instance.Fsm;
+
+                // Removes original persistence checking
+                FsmState stateCheckState = fsm.GetState("State Check");
+
+                // Any state with transition named break should add an action to the next state at the beginning that reenables gravity
+                int numberOfNewActions = 1;
+                FsmTransition[] transitions = stateCheckState.Transitions;
+                foreach (FsmTransition transition in transitions)
+                {
+                    if (transition.EventName == "CLOSED" || transition.EventName == "DO CLOSE")
+                    {
+                        FsmState nextState = stateCheckState.Fsm.GetState(transition.ToState);
+
+                        FsmStateAction[] newActions = new FsmStateAction[nextState.Actions.Length + numberOfNewActions];
+
+                        newActions[0] = new ReplacePickup(__instance.gameObject, fsm.Variables.GetFsmEnum("Crest Type").Value.ToString());
+
+                        Array.Copy(nextState.Actions, 0, newActions, numberOfNewActions, nextState.Actions.Length);
+
+                        nextState.Actions = newActions;
+                    }
+                }
+            }
+        }
+
         private static void HandleSilkNeedle(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Needle Spell Get")
@@ -937,6 +988,7 @@ namespace Open_Ended_Item_Replacer
             HandleFlea(__instance);
             HandleWeaverStatue(__instance);
             HandleCrest(__instance);
+            HandleCrestDoor(__instance);
             HandleSilkNeedle(__instance);
         }
 
