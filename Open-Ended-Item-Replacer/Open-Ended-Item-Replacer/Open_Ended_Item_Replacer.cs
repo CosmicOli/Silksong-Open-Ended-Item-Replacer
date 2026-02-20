@@ -889,6 +889,11 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SavedItemGetV2), "OnEnter")]
         private static bool SavedItemGetV2_OnEnterPrefix(SavedItemGet __instance)
         {
+            if (__instance.Item.Name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
+            {
+                return true;
+            }
+
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
             return false;
