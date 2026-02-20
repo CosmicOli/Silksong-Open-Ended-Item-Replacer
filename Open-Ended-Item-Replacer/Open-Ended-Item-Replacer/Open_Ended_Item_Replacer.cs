@@ -8,9 +8,11 @@ using HutongGames.PlayMaker.Actions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TeamCherry.Localization;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static CollectableItem;
 using static FullQuestBase;
 
 namespace Open_Ended_Item_Replacer
@@ -332,6 +334,13 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void StartSlashPostfix(NailSlash __instance)
         {
+            /*var quests = QuestManager.GetAllQuests();
+
+            foreach (var quest in quests)
+            {
+                logSource.LogMessage(quest.DisplayName);
+            }*/
+
             //logSource.LogMessage("Slash Postfix");
 
             //HeroController heroControl = GameManager.instance.hero_ctrl;
@@ -814,51 +823,80 @@ namespace Open_Ended_Item_Replacer
         private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
         {
             HandleFlea(__instance);
-            /*FsmState[] states = __instance.FsmStates;
-            if (states == null) { return; }
-
-            foreach (FsmState state in states)
-            {
-                FsmStateAction[] actions = state.Actions;
-                if (actions == null) { continue; }
-
-                foreach (FsmStateAction action in actions)
-                {
-                    ActivateGameObject actionActivateGameObject = action as ActivateGameObject;
-
-                    if (actionActivateGameObject == null) { continue; }
-                    if (actionActivateGameObject.gameObject == null) { continue; }
-                    if (actionActivateGameObject.gameObject.GameObject == null) { continue; }
-
-                    FsmGameObject fleaFsmGameObject = actionActivateGameObject.gameObject.GameObject;
-
-                    if (fleaFsmGameObject.Name.ToLower().StartsWith("flea"))
-                    {
-                        logSource.LogFatal("Flea holder found");
-
-                        fleaFsmGameObject.
-                    }
-                }
-            }*/
-
-
-            /*if (__instance.gameObject.name.StartsWith("Aspid Collector"))
-            {
-                UnityEngine.Component[] components = __instance.gameObject.GetComponents<UnityEngine.Component>();
-
-                foreach (var component in components)
-                {
-                    logSource.LogMessage(component);
-                }
-
-                int count = __instance.gameObject.transform.childCount;
-                for (int i = 0; i < count; i++)
-                {
-                    logSource.LogMessage(__instance.gameObject.transform.GetChild(i));
-                }
-            }*/
         }
 
+        // Handles when FSMs run CollectableItemCollect
+        // Should handle the vast majority of cases of being given an item from an NPC
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CollectableItemCollect), "DoAction")]
+        private static bool CollectableItemCollect_DoActionPrefix(CollectableItemCollect __instance, CollectableItem item)
+        {
+            GameObject gameObject = new GameObject();
+            gameObject.transform.position = HeroController.instance.transform.position;
+            gameObject.name = __instance.Owner?.gameObject?.name;
+
+            if (gameObject.name == null)
+            {
+                gameObject.name = "dummyName";
+            }
+
+            //Replace(gameObject, item.name, false, null);
+
+            UniqueID uniqueID = new UniqueID(gameObject, item.name);
+
+            // Generates a generic item using the uniqueID
+            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentBoolItem = persistent;
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            {
+                logSource.LogInfo("Replacement set inactive");
+            }
+            else
+            {
+                genericItem.Get();
+            }
+
+            return false;
+        }
+
+        /*[HarmonyPostfix]
+        [HarmonyPatch(typeof(LocalisedString), "ToString", new Type[] { typeof(bool) })]
+        public static void LocalisedString_ToString(LocalisedString __instance, ref string __result)
+        {
+            if (__result.Contains("!!/!!"))
+            {
+                __result = "boingo";
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(QuestManager), "Start")]
+        public static void QuestManager_StartPostFix(FullQuestBase __instance)
+        {
+            var quests = QuestManager.GetAllQuests();
+
+            foreach (var quest in quests)
+            {
+                logSource.LogInfo(Traverse.Create(quest).Field("DisplayName").GetValue<LocalisedString>());
+
+                logSource.LogInfo(Traverse.Create(quest).Field("DisplayName").SetValue(new LocalisedString("", "")));
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(BasicQuestBase), "Init")]
+        public static void BasicQuestBase_InitPostFix(BasicQuestBase __instance)
+        {
+            logSource.LogInfo(Traverse.Create(__instance.QuestType).Field("displayName").SetValue(new LocalisedString("", "")));
+        }*/
 
         // Replaces CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
@@ -877,7 +915,7 @@ namespace Open_Ended_Item_Replacer
                 // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
                 PersistentBoolItem replacedPersistent = Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
 
-                Replace(__instance.gameObject, __instance.Item.name, true, null);
+                //Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
         }
 
