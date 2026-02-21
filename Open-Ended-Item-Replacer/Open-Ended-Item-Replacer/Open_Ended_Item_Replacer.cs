@@ -67,10 +67,6 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             HeroController.instance.AddToMaxSilkRegen(-1);
-
-            Active = false;
-            Finished = true;
-            Finish();
         }
     }
 
@@ -1110,20 +1106,20 @@ namespace Open_Ended_Item_Replacer
 
         private static void HandleSilkHeart(PlayMakerFSM __instance)
         {
-            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Heart")
+            if (__instance.Fsm.Name == "Silk Heart Memory Return" && __instance.gameObject?.name == "Silk Heart Memory Return")
             {
-                FsmState setData = __instance.Fsm.GetState("Set Data");
-                setData.Actions[0].Enabled = false;
+                FsmState save = __instance.Fsm.GetState("Save");
 
-                int numberOfNewActions = 1;
+                int numberOfNewActions = 2;
 
-                FsmStateAction[] newActions = new FsmStateAction[setData.Actions.Length + numberOfNewActions];
+                FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
 
                 newActions[0] = new GetCheck(__instance.gameObject, "Silk Heart");
+                newActions[1] = new RemoveExtraSilkHeart();
 
-                Array.Copy(setData.Actions, 0, newActions, numberOfNewActions, setData.Actions.Length);
+                Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
 
-                setData.Actions = newActions;
+                save.Actions = newActions;
             }
         }
 
