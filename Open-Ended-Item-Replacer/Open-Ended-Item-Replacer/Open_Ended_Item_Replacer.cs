@@ -62,62 +62,45 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
-    /*public class TempGrantAbilities : FsmStateAction
+    public class RemoveExtraSilkHeart : FsmStateAction
     {
-        static bool hasNeedolin;
-        static bool hasDash;
-        static bool hasBrolly;
-        static bool hasWalljump;
-        static bool hasDoubleJump;
-        static bool hasSuperJump;
-
-        static bool hasGranted;
-
-        public TempGrantAbilities()
-        {
-            hasGranted = false;
-        }
-
         public override void OnEnter()
         {
-            PlayerData playerData = PlayerData.instance;
-            Open_Ended_Item_Replacer.logSource.LogInfo("toggled abilities");
-
-            if (!hasGranted)
-            {
-                hasGranted = true;
-
-                hasNeedolin = playerData.hasNeedolin;
-                hasDash = playerData.hasDash;
-                hasBrolly = playerData.hasBrolly;
-                hasWalljump = playerData.hasWalljump;
-                hasDoubleJump = playerData.hasDoubleJump;
-                hasSuperJump = playerData.hasSuperJump;
-
-                playerData.hasNeedolin = true;
-                playerData.hasDash = true;
-                playerData.hasBrolly = true;
-                playerData.hasWalljump = true;
-                playerData.hasDoubleJump = true;
-                playerData.hasSuperJump = true;
-            }
-            else
-            {
-                hasGranted = false;
-
-                playerData.hasNeedolin = hasNeedolin;
-                playerData.hasDash = hasDash;
-                playerData.hasBrolly = hasBrolly;
-                playerData.hasWalljump = hasWalljump;
-                playerData.hasDoubleJump = hasDoubleJump;
-                playerData.hasSuperJump = hasSuperJump;
-            }
+            HeroController.instance.AddToMaxSilkRegen(-1);
 
             Active = false;
             Finished = true;
             Finish();
         }
-    }*/
+    }
+
+    public class GetCheck : FsmStateAction
+    {
+        GenericSavedItem genericItem;
+
+        public GetCheck(GameObject gameObject, string itemName)
+        {
+            UniqueID uniqueID = new UniqueID(gameObject, itemName);
+
+            // Generates a generic item using the uniqueID
+            genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            genericItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+            Open_Ended_Item_Replacer.SetGenericPersistentInfo(uniqueID, persistent);
+
+            genericItem.persistentBoolItem = persistent;
+        }
+
+        public override void OnEnter()
+        {
+            genericItem.Get();
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
+    }
 
     public class ReplacePickup : FsmStateAction
     {
@@ -1125,60 +1108,24 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        /*private static bool HandleSilkHeart(CreateUIMsgGetItem __instance)
+        private static void HandleSilkHeart(PlayMakerFSM __instance)
         {
-            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
-
-            FsmState setSilkHeartState = playMakerFsm.Fsm.GetState("Set Silk Heart");
-
-            if (setSilkHeartState == null) { return false; }
-
-            (setSilkHeartState.Actions[0] as PlayerDataVariableTest).IsExpectedEvent = FsmEvent.GetFsmEvent("SKIP");
-
-            return true;
-            //EventRegister.GetRegisterGuaranteed(__instance.Owner, "GET ITEM MSG END");
-            //__instance.Finish();
-        }*/
-
-        /*private static void HandleSilkHeart(PlayMakerFSM __instance)
-        {
-            if (__instance.gameObject == null) { return; }
-
-            if (__instance.Fsm.Name == "Control" && __instance.gameObject.name.Contains("memory_orb_large"))
+            if (__instance.Fsm.Name == "Silk Heart Memory Return" && __instance.gameObject?.name == "Silk Heart Memory Return")
             {
-                Fsm fsm = __instance.Fsm;
+                FsmState save = __instance.Fsm.GetState("Save");
 
-                // Skips being given a silk heart
-                /*FsmState nextSceneState = fsm.GetState("Next Scene");
-                //(nextSceneState.Actions[7] as SendEventByName).Enabled = false;
+                int numberOfNewActions = 2;
 
-                FsmStateAction nextSceneAction = nextSceneState.Actions[7];
-                LoadScene replacementAction = new LoadScene();
-                replacementAction.sceneReference = GetSceneActionBase.SceneSimpleReferenceOptions.SceneByName;
+                FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
 
-                string sceneName = GameManager.GetBaseSceneName(__instance.gameObject.scene.name);
-                if (sceneName.ToLower().Contains("lacetower"))
-                {
-                    replacementAction.sceneByName = "";
-                }
-                else if (sceneName.ToLower().Contains("wardboss"))
-                {
-                    replacementAction.sceneByName = "Ward_02_Boss";
-                }
-                else // bell beast
-                {
-                    replacementAction.sceneByName = "Bone_05";
-                }
+                newActions[0] = new GetCheck(__instance.gameObject, "Silk Heart");
+                newActions[1] = new RemoveExtraSilkHeart();
 
-                nextSceneAction = replacementAction;*/
+                Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
 
-                // Skips silk heart cutscene
-                //nextSceneState.Actions[7].Enabled = false;
-
-                /*testTransform = Replace(__instance.gameObject, "Silk Heart", false, null);
-                logSource.LogInfo(testTransform.gameObject.activeSelf);
+                save.Actions = newActions;
             }
-        }*/
+        }
 
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
@@ -1191,6 +1138,7 @@ namespace Open_Ended_Item_Replacer
             HandleCrest(__instance);
             HandleCrestDoor(__instance);
             HandleSilkNeedle(__instance);
+            HandleSilkHeart(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
@@ -1507,7 +1455,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void SetGenericPersistentInfo(UniqueID uniqueID, PersistentBoolItem persistent)
+        public static void SetGenericPersistentInfo(UniqueID uniqueID, PersistentBoolItem persistent)
         {
             // Makes sure that persistent has loaded and that hasSetup = true
             persistent.LoadIfNeverStarted();
