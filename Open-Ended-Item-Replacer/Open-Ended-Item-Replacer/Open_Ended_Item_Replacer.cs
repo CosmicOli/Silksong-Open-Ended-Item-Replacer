@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TeamCherry.Localization;
+using TeamCherry.SharedUtils;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -56,7 +57,7 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
-    public class testAction : FsmStateAction
+    public class TestAction : FsmStateAction
     {
         public override void OnEnter()
         {
@@ -68,23 +69,116 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
-    public class setFsmActiveState : FsmStateAction
+    public class SetFsmActiveState : FsmStateAction
     {
-        Fsm fsm;
-        FsmState state;
+        Fsm fsm; 
+        FsmState oldState;
+        FsmState newState;
 
-        public setFsmActiveState(Fsm fsm, FsmState state)
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
         {
             this.fsm = fsm;
-            this.state = state;
+            this.oldState = oldState;
+            this.newState = newState;
         }
 
         public override void OnEnter()
         {
-            Open_Ended_Item_Replacer.logSource.LogWarning("action ran setfsmstate");
-            Traverse.Create(fsm).Field("activeState").SetValue(state);
-            Traverse.Create(fsm).Field("activeStateName").SetValue(state.Name);
+            //Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmState");
+            //Open_Ended_Item_Replacer.logSource.LogWarning(oldState.Name);
+            //Open_Ended_Item_Replacer.logSource.LogWarning(newState.Name);
+
+            foreach (FsmStateAction action in oldState.Actions)
+            {
+                action.Enabled = false;
+            }
+
+            Traverse.Create(fsm).Field("activeState").SetValue(newState);
+            Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
             fsm.Start();
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
+    }
+
+    public class SetFsmStateOnPlayerDataBool : FsmStateAction
+    {
+        Fsm fsm;
+        FsmState oldState;
+        FsmState newState;
+        string playerDataBool;
+        bool expected;
+
+        public SetFsmStateOnPlayerDataBool(Fsm fsm, FsmState oldState, FsmState newState, string playerDataBool, bool expected)
+        {
+            this.fsm = fsm;
+            this.oldState = oldState;
+            this.newState = newState;
+            this.playerDataBool = playerDataBool;
+            this.expected = expected;
+        }
+
+        public override void OnEnter()
+        {
+            //Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPlayerDataBool");
+
+            if (VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
+            {
+                if (GameManager.instance.GetPlayerDataBool(playerDataBool) == expected)
+                {
+                    foreach (FsmStateAction action in oldState.Actions)
+                    {
+                        action.Enabled = false;
+                    }
+
+                    Traverse.Create(fsm).Field("activeState").SetValue(newState);
+                    Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
+                    fsm.Start();
+                }
+            }
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
+    }
+
+    public class SetFsmStateOnPersistentBool : FsmStateAction
+    {
+        Fsm fsm;
+        FsmState oldState;
+        FsmState newState;
+        PersistentBoolItem persistent;
+        bool expected;
+
+        public SetFsmStateOnPersistentBool(Fsm fsm, FsmState oldState, FsmState newState, PersistentBoolItem persistent, bool expected)
+        {
+            this.fsm = fsm;
+            this.oldState = oldState;
+            this.newState = newState;
+            this.persistent = persistent;
+            this.expected = expected;
+        }
+
+        public override void OnEnter()
+        {
+            //Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPersistentBool");
+
+            // Handles persistence set by new item
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID) == expected)
+            {
+                foreach (FsmStateAction action in oldState.Actions)
+                {
+                    action.Enabled = false;
+                }
+
+                Traverse.Create(fsm).Field("activeState").SetValue(newState);
+                Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
+                fsm.Start();
+            }
+
 
             Active = false;
             Finished = true;
@@ -1256,12 +1350,6 @@ namespace Open_Ended_Item_Replacer
                 FsmState setData = __instance.Fsm.GetState("Set Data");
                 if (UIMsg == null || setData == null) { return; }
 
-                foreach (FsmStateAction action in UIMsg.Actions)
-                {
-                    //logSource.LogWarning(action.Name);
-                    //logSource.LogInfo(action.GetType());
-                }
-
                 UIMsg.Actions[1].Enabled = false; // disables giving parry
                 UIMsg.Actions[5].Enabled = false; // disables auto equipping parry
                 UIMsg.Actions[6].Enabled = false; // disables displaying parry
@@ -1269,7 +1357,6 @@ namespace Open_Ended_Item_Replacer
                 setData.Actions[0].Enabled = false; // disables giving parry
 
                 int numberOfNewActions = 2;
-
                 FsmStateAction[] newActions = new FsmStateAction[UIMsg.Actions.Length + numberOfNewActions];
 
                 GameObject dummyGameObject = new GameObject("Parry");
@@ -1299,15 +1386,37 @@ namespace Open_Ended_Item_Replacer
 
                 Array.Copy(UIMsg.Actions, 0, newActions, numberOfNewActions - 1, UIMsg.Actions.Length);
 
-                newActions[newActions.Length - 1] = new setFsmActiveState(__instance.Fsm, __instance.Fsm.GetState("End Pause"));
+                newActions[newActions.Length - 1] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"));
 
                 UIMsg.Actions = newActions;
+            }
+        }
 
-                foreach (FsmStateAction action in UIMsg.Actions)
-                {
-                    logSource.LogWarning(action.Name);
-                    logSource.LogInfo(action.GetType());
-                }
+        private static void HandleArchitectMelody(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Cylinder States" && __instance.gameObject?.name == "puzzle cylinders")
+            {
+                FsmState waitForNotify = __instance.Fsm.GetState("Wait For Notify");
+                FsmState startLock = __instance.Fsm.GetState("Start Lock");
+                FsmState hasMelody = __instance.Fsm.GetState("Has Melody");
+                if (startLock == null || waitForNotify == null || hasMelody == null) { return; }
+
+                // Generates an equivalent persistence to test whether the sequence has already been done
+                GameObject gameObject = new GameObject("puzzle cylinders");
+                UniqueID uniqueID = new UniqueID(gameObject, "Citadel Ascent Melody Architect");
+                PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+                SetGenericPersistentInfo(uniqueID, persistent);
+
+                waitForNotify.Actions[0] = new SetFsmStateOnPersistentBool(__instance.Fsm, waitForNotify, hasMelody, persistent, true); // Replaces original persistence check with custom
+
+                int numberOfNewActions = 1;
+                FsmStateAction[] newActions = new FsmStateAction[startLock.Actions.Length + numberOfNewActions];
+
+                newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, startLock, waitForNotify, "hasNeedolin", false); // Disables allowing getting the song part without needolin
+
+                Array.Copy(startLock.Actions, 0, newActions, numberOfNewActions, startLock.Actions.Length);
+
+                startLock.Actions = newActions;
             }
         }
 
@@ -1335,6 +1444,8 @@ namespace Open_Ended_Item_Replacer
             HandleFirstSinnerInMemory(__instance);
 
             HandlePhantom(__instance);
+
+            HandleArchitectMelody(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
@@ -1411,21 +1522,29 @@ namespace Open_Ended_Item_Replacer
             return false;
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
-        private static bool CreateUIMsgGetItem_OnEnterPrefix(CreateUIMsgGetItem __instance)
+        private static void HandleUiMsgGetItem(PlayMakerFSM playMakerFsm)
         {
-            bool skip = false;
-
-            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
-
+            // As these fsms are spawned from a template, I am unsure whether the names will exactly match
             if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Get Item"))
             {
-                logSource.LogMessage("Msg found");
+                if (playMakerFsm.gameObject.name.Contains("Melody")) { return; }
 
-                //skip = true;
+                logSource.LogMessage("Ui Msg Get Item found");
 
-                FsmState[] states = playMakerFsm.Fsm.States;
+                FsmState init = playMakerFsm.Fsm.GetState("Init");
+                FsmState done = playMakerFsm.Fsm.GetState("Done");
+
+                int numberOfNewActions = 1;
+                FsmStateAction[] newActions = new FsmStateAction[init.Actions.Length + numberOfNewActions];
+
+                newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done);
+
+                Array.Copy(init.Actions, 0, newActions, numberOfNewActions, init.Actions.Length);
+
+                init.Actions = newActions;
+
+
+                /*FsmState[] states = playMakerFsm.Fsm.States;
 
                 foreach (FsmState state in states)
                 {
@@ -1454,62 +1573,60 @@ namespace Open_Ended_Item_Replacer
 
                         state.Actions = newActions;
                     }
-
-                    /*if (state.Name.Contains("Set ") || state.Name.Contains("Top Up") || state.Name.Contains("Audio Play") || state.Name.Contains("Bot Up") || state.Name.Contains("Stop Up") || state.Name.Contains("Detect") || state.Name.Contains("Down"))
-                    {
-                        foreach (FsmStateAction action in state.Actions)
-                        {
-                            ListenForPromptContinue listenForPromptContinue = action as ListenForPromptContinue;
-                            ActivateGameObject activateGameObject = action as ActivateGameObject;
-                            ActivateGameObjectDelay activateGameObjectDelay = action as ActivateGameObjectDelay;
-                            PlayAudioEvent playAudioEvent = action as PlayAudioEvent;
-                            AudioPlayerOneShotSingle audioPlayerOneShotSingle = action as AudioPlayerOneShotSingle;
-                            AwardQueuedAchievements awardQueuedAchievements = action as AwardQueuedAchievements;
-
-                            if (listenForPromptContinue != null || activateGameObjectDelay != null || playAudioEvent != null || audioPlayerOneShotSingle != null || awardQueuedAchievements != null)
-                            {
-                                action.Enabled = false;
-                            }
-
-                            if (activateGameObject != null)
-                            {
-                                if (!(state.Name == "Done"))
-                                {
-                                    action.Enabled = false;
-                                }
-                            }
-
-                            FsmEventTarget eventTarget = new FsmEventTarget();
-                            eventTarget.target = EventTarget.Self;
-
-                            SendEventByName sendEventByName = action as SendEventByName;
-                            if (sendEventByName != null)
-                            {
-                                sendEventByName.delay = 0;
-                            }
-                            
-                            Wait wait = action as Wait;
-                            if (wait != null)
-                            {
-                                wait.time = 0;
-                            }
-
-                        }
-
-                        if (state.Name.Contains("Stop Up"))
-                        {
-
-                        }
-                    }*/
-                }
-
-                //(setSilkHeartState.Actions[0] as PlayerDataVariableTest).IsExpectedEvent = FsmEvent.GetFsmEvent("SKIP");
+                }*/
             }
+        }
 
-            //EventRegister.GetRegisterGuaranteed(__instance.Owner, "GET ITEM MSG END");
-            //__instance.Finish();
+        private static void HandleUiMsgGetItemMelody(PlayMakerFSM playMakerFsm, SpawnObjectFromGlobalPool __instance)
+        {
+            // As these fsms are spawned from a template, I am unsure whether the names will exactly match
+            if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Get Item Melody"))
+            {
+                logSource.LogMessage("Ui Msg Get Item Melody found");
 
-            return !skip;
+                FsmState init = playMakerFsm.Fsm.GetState("Init");
+                FsmState stopPlaying = playMakerFsm.Fsm.GetState("Stop Playing");
+                FsmState wait = playMakerFsm.Fsm.GetState("Wait");
+                FsmState stopUp = playMakerFsm.Fsm.GetState("Stop Up");
+                FsmState done = playMakerFsm.Fsm.GetState("Done");
+
+                int numberOfNewActionsForInit = 1;
+                FsmStateAction[] newActionsForInit = new FsmStateAction[init.Actions.Length + numberOfNewActionsForInit];
+                newActionsForInit[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, stopPlaying);
+                Array.Copy(init.Actions, 0, newActionsForInit, numberOfNewActionsForInit, init.Actions.Length);
+                init.Actions = newActionsForInit;
+
+                (wait.Actions[0] as Wait).time = 0;
+
+                int numberOfNewActionsForStopUp = 1;
+                FsmStateAction[] newActionsForStopUp = new FsmStateAction[stopUp.Actions.Length + numberOfNewActionsForStopUp];
+                newActionsForStopUp[newActionsForStopUp.Length - 1] = new SetFsmActiveState(playMakerFsm.Fsm, stopUp, done);
+                Array.Copy(init.Actions, 0, newActionsForStopUp, 0, init.Actions.Length);
+                stopUp.Actions = newActionsForStopUp;
+
+                __instance.State.Actions[2].Enabled = false;
+
+                playMakerFsm.Fsm.Start(); // This would usually start in some other way that also shows the message, so this needs to be started independantly
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
+        private static void CreateUIMsgGetItem_OnEnterPrefix(CreateUIMsgGetItem __instance)
+        {
+            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
+
+            HandleUiMsgGetItem(playMakerFsm);
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SpawnObjectFromGlobalPool), "OnEnter")]
+        private static void SpawnObjectFromGlobalPool_OnEnterPrefix(SpawnObjectFromGlobalPool __instance)
+        {
+            PlayMakerFSM playMakerFsm = __instance.gameObject.Value.transform.GetComponent<PlayMakerFSM>();
+            if (playMakerFsm == null) { return; }
+
+            HandleUiMsgGetItemMelody(playMakerFsm, __instance);
         }
 
         /*[HarmonyPostfix]
