@@ -90,7 +90,11 @@ namespace Open_Ended_Item_Replacer
 
         public override void OnEnter()
         {
-            genericItem.Get();
+            // Handles persistence set by new item
+            if (!SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+            {
+                genericItem.Get();
+            }
 
             Active = false;
             Finished = true;
@@ -1115,7 +1119,7 @@ namespace Open_Ended_Item_Replacer
                 FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
 
                 GameObject dummyGameObject = new GameObject("Silk Heart");
-                newActions[0] = new GetCheck(dummyGameObject, "Silk Heart");
+                newActions[0] = new GetCheck(dummyGameObject, "Silk Heart"); // Replace
                 newActions[1] = new RemoveExtraSilkHeart();
 
                 Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
@@ -1141,6 +1145,8 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
             {
+                if (__instance.Fsm.GetState("Get Rune Bomb") != null) { return; } // Don't want to trigger on first sinner
+
                 FsmState needolinPrompt = __instance.Fsm.GetState("Needolin Prompt");
                 FsmState endScene = __instance.Fsm.GetState("End Scene");
                 if (needolinPrompt == null || endScene == null) { return; }
@@ -1153,11 +1159,58 @@ namespace Open_Ended_Item_Replacer
                 FsmStateAction[] newActions = new FsmStateAction[endScene.Actions.Length + numberOfNewActions];
 
                 GameObject dummyGameObject = new GameObject("Needolin");
-                newActions[0] = new GetCheck(dummyGameObject, "Needolin");
+                newActions[0] = new GetCheck(dummyGameObject, "Needolin"); // Replace
 
                 Array.Copy(endScene.Actions, 0, newActions, numberOfNewActions, endScene.Actions.Length);
 
                 endScene.Actions = newActions;
+            }
+        }
+
+        private static void HandleFirstSinnerPersistenceAndPickup(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine First Weaver")
+            {
+                FsmState init = __instance.Fsm.GetState("Init");
+                if (init == null) { return; }
+
+                (init.Actions[0] as PlayerDataBoolTest).isTrue = new FsmEvent(""); // disables checking for rune bomb
+
+                // Handles persistence set by new item
+                GameObject dummyGameObject = new GameObject("Rune Bomb");
+                UniqueID uniqueID = new UniqueID(dummyGameObject, "Rune Bomb");
+                if (SceneData.instance.PersistentBools.GetValueOrDefault("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
+                {
+                    __instance.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static void HandleFirstSinnerInMemory(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
+            {
+                FsmState getRuneBomb = __instance.Fsm.GetState("Get Rune Bomb");
+                if (getRuneBomb == null) { return; }
+
+                FsmState needolinPrompt = __instance.Fsm.GetState("Needolin Prompt");
+                needolinPrompt.Actions[1].Enabled = false; // disables giving needolin
+                needolinPrompt.Actions[2].Enabled = false; // disables setting having beaten widow to true
+
+                getRuneBomb.Actions[0].Enabled = false; // disables owning rune bomb
+                getRuneBomb.Actions[1].Enabled = false; // disables auto equipping rune bomb
+                getRuneBomb.Actions[2].Enabled = false; // disables displaying rune bomb
+
+                int numberOfNewActions = 1;
+
+                FsmStateAction[] newActions = new FsmStateAction[getRuneBomb.Actions.Length + numberOfNewActions];
+
+                GameObject dummyGameObject = new GameObject("Rune Bomb");
+                newActions[0] = new GetCheck(dummyGameObject, "Rune Bomb"); // Replace
+
+                Array.Copy(getRuneBomb.Actions, 0, newActions, numberOfNewActions, getRuneBomb.Actions.Length);
+
+                getRuneBomb.Actions = newActions;
             }
         }
 
@@ -1168,13 +1221,21 @@ namespace Open_Ended_Item_Replacer
         private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
         {
             HandleFlea(__instance);
+
             HandleWeaverStatue(__instance);
+
             HandleCrest(__instance);
             HandleCrestDoor(__instance);
+
             HandleSilkNeedle(__instance);
+
             HandleSilkHeart(__instance);
+
             HandleNeedolinPreMemory(__instance);
             HandleNeedolinInMemory(__instance);
+
+            HandleFirstSinnerPersistenceAndPickup(__instance);
+            HandleFirstSinnerInMemory(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
