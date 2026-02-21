@@ -10,12 +10,18 @@ using InControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TeamCherry.Localization;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static AchievementPopup;
 using static CollectableItem;
 using static FullQuestBase;
+using static HutongGames.EasingFunction;
+using static HutongGames.PlayMaker.FsmEventTarget;
+using static UnityEngine.UI.Image;
+using static UnityEngine.UI.Selectable;
 
 namespace Open_Ended_Item_Replacer
 {
@@ -242,11 +248,13 @@ namespace Open_Ended_Item_Replacer
 
         private void Awake()
         {
+            BepInEx.Logging.Logger.Sources.Add(logSource);
             Logger.LogInfo("Plugin loaded and initualised.");
 
-            BepInEx.Logging.Logger.Sources.Add(logSource);
+            Harmony harmony = Harmony.CreateAndPatchAll(typeof(Open_Ended_Item_Replacer), null);
 
-            Harmony.CreateAndPatchAll(typeof(Open_Ended_Item_Replacer), null);
+            //MethodInfo DoMsgOriginal = typeof(UIMsgBase<>).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).First(x => x.Name == "DoMsg");
+            //harmony.Patch(DoMsgOriginal, prefix: new HarmonyMethod(typeof(Open_Ended_Item_Replacer).GetMethod("UIMsgBase_DoMsgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));*/
         }
 
         // This is used for getting familiar with what objects are in rooms with checks; will be removed later
@@ -415,9 +423,29 @@ namespace Open_Ended_Item_Replacer
                 LevelActivatedDebugging();
             }
 
-            PlayerData playerData = PlayerData.instance;
+            // DISABLED, DOESN'T TRACK PROPERLY
+            // If in a memory, immediately leave
+            /*if (sceneName.ToLower().Contains("memory") && (sceneName.ToLower().Contains("silk_heart") || sceneName.ToLower().Contains("needolin") || sceneName.ToLower().Contains("first_sinner")))
+            {
+                string nextSceneName;
+                if (sceneName.ToLower().Contains("lacetower"))
+                {
+                    nextSceneName = "";
+                }
+                else if (sceneName.ToLower().Contains("wardboss"))
+                {
+                    nextSceneName = "Ward_02_Boss";
+                }
+                else // bell beast
+                {
+                    nextSceneName = "Bone_05";
+                }
+
+                SceneManager.LoadScene(nextSceneName);
+            }*/
 
             // Stops softlocking in memories
+            PlayerData playerData = PlayerData.instance;
             if (!hasGranted)
             {
                 if (sceneName.ToLower().Contains("memory") && (sceneName.ToLower().Contains("silk_heart") || sceneName.ToLower().Contains("needolin") || sceneName.ToLower().Contains("first_sinner")))
@@ -458,20 +486,14 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-
-
-        /*
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(SavedItem), "TryGet")]
-        private static void SavedItem_GetPostfix(SavedItem __instance)
-        {
-            logSource.LogFatal(__instance.name);
-        }*/
-
+        private static Transform testTransform;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void StartSlashPostfix(NailSlash __instance)
         {
+            //logSource.LogMessage(testTransform.position);
+            //logSource.LogMessage(testTransform.gameObject.activeSelf);
+
             /*var quests = QuestManager.GetAllQuests();
 
             foreach (var quest in quests)
@@ -529,6 +551,15 @@ namespace Open_Ended_Item_Replacer
 
             return output;
         }
+
+        /*private static void ReplaceSilkHeart(GameObject gameObject)
+        {
+            gameObject.SetActive(false);
+
+            UniqueID uniqueID = new UniqueID(gameObject, "Silk Heart");
+
+            Transform transform = SpawnGenericCollisionPickup(uniqueID, null, gameObject.transform, Vector3.zero);
+        }*/
 
         // Should just replace kratt physically
         // Keeping code around for now as reference for changing dialogue
@@ -1094,6 +1125,61 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        /*private static bool HandleSilkHeart(CreateUIMsgGetItem __instance)
+        {
+            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
+
+            FsmState setSilkHeartState = playMakerFsm.Fsm.GetState("Set Silk Heart");
+
+            if (setSilkHeartState == null) { return false; }
+
+            (setSilkHeartState.Actions[0] as PlayerDataVariableTest).IsExpectedEvent = FsmEvent.GetFsmEvent("SKIP");
+
+            return true;
+            //EventRegister.GetRegisterGuaranteed(__instance.Owner, "GET ITEM MSG END");
+            //__instance.Finish();
+        }*/
+
+        /*private static void HandleSilkHeart(PlayMakerFSM __instance)
+        {
+            if (__instance.gameObject == null) { return; }
+
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject.name.Contains("memory_orb_large"))
+            {
+                Fsm fsm = __instance.Fsm;
+
+                // Skips being given a silk heart
+                /*FsmState nextSceneState = fsm.GetState("Next Scene");
+                //(nextSceneState.Actions[7] as SendEventByName).Enabled = false;
+
+                FsmStateAction nextSceneAction = nextSceneState.Actions[7];
+                LoadScene replacementAction = new LoadScene();
+                replacementAction.sceneReference = GetSceneActionBase.SceneSimpleReferenceOptions.SceneByName;
+
+                string sceneName = GameManager.GetBaseSceneName(__instance.gameObject.scene.name);
+                if (sceneName.ToLower().Contains("lacetower"))
+                {
+                    replacementAction.sceneByName = "";
+                }
+                else if (sceneName.ToLower().Contains("wardboss"))
+                {
+                    replacementAction.sceneByName = "Ward_02_Boss";
+                }
+                else // bell beast
+                {
+                    replacementAction.sceneByName = "Bone_05";
+                }
+
+                nextSceneAction = replacementAction;*/
+
+                // Skips silk heart cutscene
+                //nextSceneState.Actions[7].Enabled = false;
+
+                /*testTransform = Replace(__instance.gameObject, "Silk Heart", false, null);
+                logSource.LogInfo(testTransform.gameObject.activeSelf);
+            }
+        }*/
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -1179,6 +1265,107 @@ namespace Open_Ended_Item_Replacer
         {
             __instance.Finish();
             return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
+        private static bool CreateUIMsgGetItem_OnEnterPrefix(CreateUIMsgGetItem __instance)
+        {
+            bool skip = false;
+
+            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
+
+            if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Get Item"))
+            {
+                logSource.LogMessage("Msg found");
+
+                //skip = true;
+
+                FsmState[] states = playMakerFsm.Fsm.States;
+
+                foreach (FsmState state in states)
+                {
+                    // Space is important as one state is called "Setup And Wait"
+                    if (state.Name.Contains("Set "))
+                    {
+                        int numberOfNewActions = 1;
+
+                        FsmStateAction[] newActions = new FsmStateAction[state.Actions.Length + numberOfNewActions];
+
+                        SendEvent sendEvent = new SendEvent();
+
+                        FsmEventTarget eventTarget = new FsmEventTarget();
+                        eventTarget.target = EventTarget.BroadcastAll;
+
+                        sendEvent.eventTarget = eventTarget;
+                        sendEvent.sendEvent = FsmEvent.GetFsmEvent("SKIP");
+                        sendEvent.delay = 0;
+                        sendEvent.everyFrame = false;
+
+                        newActions[0] = sendEvent;
+
+                        state.Transitions.AddItem(new FsmTransition(playMakerFsm.Fsm.GetState("Set Silk Heart").GetTransition(1)));
+
+                        Array.Copy(state.Actions, 0, newActions, numberOfNewActions, state.Actions.Length);
+
+                        state.Actions = newActions;
+                    }
+
+                    /*if (state.Name.Contains("Set ") || state.Name.Contains("Top Up") || state.Name.Contains("Audio Play") || state.Name.Contains("Bot Up") || state.Name.Contains("Stop Up") || state.Name.Contains("Detect") || state.Name.Contains("Down"))
+                    {
+                        foreach (FsmStateAction action in state.Actions)
+                        {
+                            ListenForPromptContinue listenForPromptContinue = action as ListenForPromptContinue;
+                            ActivateGameObject activateGameObject = action as ActivateGameObject;
+                            ActivateGameObjectDelay activateGameObjectDelay = action as ActivateGameObjectDelay;
+                            PlayAudioEvent playAudioEvent = action as PlayAudioEvent;
+                            AudioPlayerOneShotSingle audioPlayerOneShotSingle = action as AudioPlayerOneShotSingle;
+                            AwardQueuedAchievements awardQueuedAchievements = action as AwardQueuedAchievements;
+
+                            if (listenForPromptContinue != null || activateGameObjectDelay != null || playAudioEvent != null || audioPlayerOneShotSingle != null || awardQueuedAchievements != null)
+                            {
+                                action.Enabled = false;
+                            }
+
+                            if (activateGameObject != null)
+                            {
+                                if (!(state.Name == "Done"))
+                                {
+                                    action.Enabled = false;
+                                }
+                            }
+
+                            FsmEventTarget eventTarget = new FsmEventTarget();
+                            eventTarget.target = EventTarget.Self;
+
+                            SendEventByName sendEventByName = action as SendEventByName;
+                            if (sendEventByName != null)
+                            {
+                                sendEventByName.delay = 0;
+                            }
+                            
+                            Wait wait = action as Wait;
+                            if (wait != null)
+                            {
+                                wait.time = 0;
+                            }
+
+                        }
+
+                        if (state.Name.Contains("Stop Up"))
+                        {
+
+                        }
+                    }*/
+                }
+
+                //(setSilkHeartState.Actions[0] as PlayerDataVariableTest).IsExpectedEvent = FsmEvent.GetFsmEvent("SKIP");
+            }
+
+            //EventRegister.GetRegisterGuaranteed(__instance.Owner, "GET ITEM MSG END");
+            //__instance.Finish();
+
+            return !skip;
         }
 
         /*[HarmonyPostfix]
