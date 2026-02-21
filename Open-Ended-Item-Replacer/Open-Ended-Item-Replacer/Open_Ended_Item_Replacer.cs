@@ -1110,20 +1110,20 @@ namespace Open_Ended_Item_Replacer
 
         private static void HandleSilkHeart(PlayMakerFSM __instance)
         {
-            if (__instance.Fsm.Name == "Silk Heart Memory Return" && __instance.gameObject?.name == "Silk Heart Memory Return")
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Heart")
             {
-                FsmState save = __instance.Fsm.GetState("Save");
+                FsmState setData = __instance.Fsm.GetState("Set Data");
+                setData.Actions[0].Enabled = false;
 
-                int numberOfNewActions = 2;
+                int numberOfNewActions = 1;
 
-                FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
+                FsmStateAction[] newActions = new FsmStateAction[setData.Actions.Length + numberOfNewActions];
 
                 newActions[0] = new GetCheck(__instance.gameObject, "Silk Heart");
-                newActions[1] = new RemoveExtraSilkHeart();
 
-                Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
+                Array.Copy(setData.Actions, 0, newActions, numberOfNewActions, setData.Actions.Length);
 
-                save.Actions = newActions;
+                setData.Actions = newActions;
             }
         }
 
