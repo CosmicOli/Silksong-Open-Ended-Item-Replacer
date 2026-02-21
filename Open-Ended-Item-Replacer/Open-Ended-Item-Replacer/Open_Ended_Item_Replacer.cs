@@ -18,8 +18,10 @@ using UnityEngine.SceneManagement;
 using static AchievementPopup;
 using static CollectableItem;
 using static FullQuestBase;
+using static GamepadVibrationMixer.GamepadVibrationEmission;
 using static HutongGames.EasingFunction;
 using static HutongGames.PlayMaker.FsmEventTarget;
+using static tk2dSpriteCollectionDefinition;
 using static UnityEngine.UI.Image;
 using static UnityEngine.UI.Selectable;
 
@@ -59,6 +61,34 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             Open_Ended_Item_Replacer.logSource.LogWarning("action ran");
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
+    }
+
+    public class setFsmActiveState : FsmStateAction
+    {
+        Fsm fsm;
+        FsmState state;
+
+        public setFsmActiveState(Fsm fsm, FsmState state)
+        {
+            this.fsm = fsm;
+            this.state = state;
+        }
+
+        public override void OnEnter()
+        {
+            Open_Ended_Item_Replacer.logSource.LogWarning("action ran setfsmstate");
+            Traverse.Create(fsm).Field("activeState").SetValue(state);
+            Traverse.Create(fsm).Field("activeStateName").SetValue(state.Name);
+            fsm.Start();
+
+            Active = false;
+            Finished = true;
+            Finish();
         }
     }
 
@@ -67,6 +97,10 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             HeroController.instance.AddToMaxSilkRegen(-1);
+
+            Active = false;
+            Finished = true;
+            Finish();
         }
     }
 
@@ -1214,6 +1248,69 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandlePhantom(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Phantom")
+            {
+                FsmState UIMsg = __instance.Fsm.GetState("UI Msg");
+                FsmState setData = __instance.Fsm.GetState("Set Data");
+                if (UIMsg == null || setData == null) { return; }
+
+                foreach (FsmStateAction action in UIMsg.Actions)
+                {
+                    //logSource.LogWarning(action.Name);
+                    //logSource.LogInfo(action.GetType());
+                }
+
+                UIMsg.Actions[1].Enabled = false; // disables giving parry
+                UIMsg.Actions[5].Enabled = false; // disables auto equipping parry
+                UIMsg.Actions[6].Enabled = false; // disables displaying parry
+
+                setData.Actions[0].Enabled = false; // disables giving parry
+
+                int numberOfNewActions = 2;
+
+                FsmStateAction[] newActions = new FsmStateAction[UIMsg.Actions.Length + numberOfNewActions];
+
+                GameObject dummyGameObject = new GameObject("Parry");
+                newActions[0] = new GetCheck(dummyGameObject, "Parry"); // Replace
+
+                /*FsmOwnerDefault ownerDefault = new FsmOwnerDefault();
+                ownerDefault.GameObject = __instance.gameObject;
+                ownerDefault.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+
+                FsmEventTarget eventTarget = new FsmEventTarget();
+                eventTarget.target = EventTarget.BroadcastAll;
+                eventTarget.excludeSelf = false;
+                eventTarget.gameObject = ownerDefault;
+                eventTarget.fsmName = __instance.Fsm.Name;
+                eventTarget.sendToChildren = true;
+                eventTarget.fsmComponent = __instance;
+
+                SendEventByName msgFadeOut = new SendEventByName();
+                msgFadeOut.eventTarget = eventTarget;
+                msgFadeOut.sendEvent = "SKILL GET MSG FADED OUT";
+                msgFadeOut.delay = 0;
+
+                SendEventByName msgEnd = new SendEventByName();
+                msgEnd.eventTarget = eventTarget;
+                msgEnd.sendEvent = "SKILL GET MSG ENDED";
+                msgFadeOut.delay = 0;*/
+
+                Array.Copy(UIMsg.Actions, 0, newActions, numberOfNewActions - 1, UIMsg.Actions.Length);
+
+                newActions[newActions.Length - 1] = new setFsmActiveState(__instance.Fsm, __instance.Fsm.GetState("End Pause"));
+
+                UIMsg.Actions = newActions;
+
+                foreach (FsmStateAction action in UIMsg.Actions)
+                {
+                    logSource.LogWarning(action.Name);
+                    logSource.LogInfo(action.GetType());
+                }
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -1236,6 +1333,8 @@ namespace Open_Ended_Item_Replacer
 
             HandleFirstSinnerPersistenceAndPickup(__instance);
             HandleFirstSinnerInMemory(__instance);
+
+            HandlePhantom(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
