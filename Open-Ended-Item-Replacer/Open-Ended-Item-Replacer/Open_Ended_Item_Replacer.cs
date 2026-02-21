@@ -1114,12 +1114,50 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
 
-                newActions[0] = new GetCheck(__instance.gameObject, "Silk Heart");
+                GameObject dummyGameObject = new GameObject("Silk Heart");
+                newActions[0] = new GetCheck(dummyGameObject, "Silk Heart");
                 newActions[1] = new RemoveExtraSilkHeart();
 
                 Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
 
                 save.Actions = newActions;
+            }
+        }
+
+        private static void HandleNeedolinPreMemory(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Spinner Boss")
+            {
+                FsmState finalBindBurst = __instance.Fsm.GetState("Final Bind Burst");
+                FsmState getNeedolin = __instance.Fsm.GetState("Get Needolin");
+                if (finalBindBurst == null || getNeedolin == null) { return; }
+
+                finalBindBurst.Actions[3].Enabled = false; // disables giving needolin
+                getNeedolin.Actions[1].Enabled = false; // disables needolin message
+            }
+        }
+
+        private static void HandleNeedolinInMemory(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
+            {
+                FsmState needolinPrompt = __instance.Fsm.GetState("Needolin Prompt");
+                FsmState endScene = __instance.Fsm.GetState("End Scene");
+                if (needolinPrompt == null || endScene == null) { return; }
+
+                needolinPrompt.Actions[1].Enabled = false; // disables giving needolin
+                endScene.Actions[0].Enabled = false; // disables giving needolin
+
+                int numberOfNewActions = 1;
+
+                FsmStateAction[] newActions = new FsmStateAction[endScene.Actions.Length + numberOfNewActions];
+
+                GameObject dummyGameObject = new GameObject("Needolin");
+                newActions[0] = new GetCheck(dummyGameObject, "Needolin");
+
+                Array.Copy(endScene.Actions, 0, newActions, numberOfNewActions, endScene.Actions.Length);
+
+                endScene.Actions = newActions;
             }
         }
 
@@ -1135,6 +1173,8 @@ namespace Open_Ended_Item_Replacer
             HandleCrestDoor(__instance);
             HandleSilkNeedle(__instance);
             HandleSilkHeart(__instance);
+            HandleNeedolinPreMemory(__instance);
+            HandleNeedolinInMemory(__instance);
         }
 
         // Handles when FSMs run CollectableItemCollect
