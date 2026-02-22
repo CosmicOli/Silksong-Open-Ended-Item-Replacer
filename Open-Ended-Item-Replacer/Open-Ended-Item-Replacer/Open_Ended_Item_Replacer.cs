@@ -430,7 +430,7 @@ namespace Open_Ended_Item_Replacer
             // Send get request
             persistentBoolItem.ItemData.Value = true;
             SceneData.instance.PersistentBools.SetValue(persistentBoolItem.ItemData);
-            logSource.LogInfo("Item get: " + persistentBoolItem.ItemData.ID);
+            logSource.LogInfo("Item get:  " + persistentBoolItem.ItemData.ID + "  In Scene: " + persistentBoolItem.ItemData.SceneName);
         }
 
         public override bool CanGetMore()
@@ -849,9 +849,9 @@ namespace Open_Ended_Item_Replacer
             getItemNPCReady.Enabled = false;
         }*/
 
-        private static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance)
+        private static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
         {
-            UniqueID uniqueID = new UniqueID(giantFlea.gameObject, genericFleaItemName);
+            UniqueID uniqueID = new UniqueID(fleaObject, genericFleaItemName);
 
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
@@ -1035,7 +1035,7 @@ namespace Open_Ended_Item_Replacer
             return null;
         }
 
-        private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker, PlayMakerFSM __instance)
+        private static void HandleCheckQuestPdSceneBoolFlea(CheckQuestPdSceneBool genericPersistenceChecker, PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (genericPersistenceChecker == null) { return; }
 
@@ -1066,7 +1066,8 @@ namespace Open_Ended_Item_Replacer
 
                             if (!containsFleaSprite)
                             {
-                                Replace(gameObject, genericFleaItemName, false, null);
+                                fleaObject.transform.position = __instance.transform.position;
+                                Replace(fleaObject, genericFleaItemName, false, null);
                                 return;
                             }
                         }
@@ -1082,14 +1083,15 @@ namespace Open_Ended_Item_Replacer
                     FsmGameObject fleaFsmGameObject = __instance.FsmVariables.GetFsmGameObject("Flea");
                     if (fleaFsmGameObject.Value == null)
                     {
-                        GameObject dummyFlea = new GameObject();
-                        dummyFlea.transform.position = __instance.transform.position;
-
-                        replacmentTransform = Replace(dummyFlea, genericFleaItemName, true, null);
+                        fleaObject.transform.position = __instance.transform.position;
+                        __instance.gameObject.SetActive(false);
+                        replacmentTransform = Replace(fleaObject, genericFleaItemName, true, null);
                     }
                     else
                     {
-                        replacmentTransform = Replace(fleaFsmGameObject.Value, genericFleaItemName, true, null);
+                        fleaObject.transform.position = fleaFsmGameObject.Value.transform.position;
+                        fleaFsmGameObject.Value.SetActive(false);
+                        replacmentTransform = Replace(fleaObject, genericFleaItemName, true, null);
                     }
 
                     // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
@@ -1166,7 +1168,9 @@ namespace Open_Ended_Item_Replacer
 
                 case "Sleeping":
                     // Sleeping fleas have to be on a floor, so they will be interactable
-                    Replace(gameObject, genericFleaItemName, true, null);
+                    fleaObject.transform.position = __instance.transform.position;
+                    __instance.gameObject.SetActive(false);
+                    Replace(fleaObject, genericFleaItemName, true, null);
                     break;
 
                 default:
@@ -1175,17 +1179,19 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void HandleKrattFlea(PlayerDataBoolTest krattPersistenceChecker, PlayMakerFSM __instance)
+        private static void HandleKrattFlea(PlayerDataBoolTest krattPersistenceChecker, PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (krattPersistenceChecker == null) { return; }
 
             logSource.LogInfo("Kratt flagged");
             krattPersistenceChecker.isTrue = new FsmEvent("");
 
-            Replace(__instance.gameObject, genericFleaItemName, true, null);
+            fleaObject.transform.position = __instance.transform.position;
+            __instance.gameObject.SetActive(false);
+            Replace(fleaObject, genericFleaItemName, true, null);
         }
 
-        private static void HandleGiantFlea(PlayerDataBoolTest giantFleaPersistenceChecker, PlayMakerFSM __instance)
+        private static void HandleGiantFlea(PlayerDataBoolTest giantFleaPersistenceChecker, PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (giantFleaPersistenceChecker == null) { return; }
 
@@ -1193,28 +1199,31 @@ namespace Open_Ended_Item_Replacer
             giantFleaPersistenceChecker.isTrue = new FsmEvent("");
 
             Transform giantFlea = (__instance.FsmVariables.GetVariable("Parent").RawValue as GameObject).transform.Find("Giant Flea");
+            fleaObject.transform.position = giantFlea.position;
 
             PlayMakerFSM[] giantFleaFSMs = giantFlea.GetComponents<PlayMakerFSM>();
             foreach (PlayMakerFSM giantFleaFSM in giantFleaFSMs)
             {
                 if (giantFleaFSM.FsmName == "Control")
                 {
-                    ReplaceGiantFleaPickup(giantFlea, giantFleaFSM, __instance);
+                    ReplaceGiantFleaPickup(giantFlea, giantFleaFSM, __instance, fleaObject);
                 }
             }
         }
 
-        private static void HandleVogFlea(PlayerDataVariableTest vogPersistenceChecker, PlayMakerFSM __instance)
+        private static void HandleVogFlea(PlayerDataVariableTest vogPersistenceChecker, PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (vogPersistenceChecker == null) { return; }
 
             logSource.LogInfo("Vog flagged");
             vogPersistenceChecker.IsExpectedEvent = new FsmEvent("TRUE");
 
-            Replace(__instance.gameObject, genericFleaItemName, true, null);
+            fleaObject.transform.position = __instance.transform.position;
+            __instance.gameObject.SetActive(false);
+            Replace(fleaObject, genericFleaItemName, true, null);
         }
 
-        private static void HandleFrozenFlea(PlayMakerFSM __instance)
+        private static void HandleFrozenFlea(PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (__instance.gameObject == null) { return; }
 
@@ -1222,11 +1231,13 @@ namespace Open_Ended_Item_Replacer
             {
                 logSource.LogInfo("Frozen flea flagged");
 
-                Replace(__instance.gameObject, genericFleaItemName, false, null);
+                fleaObject.transform.position = __instance.transform.position;
+                __instance.gameObject.SetActive(false);
+                Replace(fleaObject, genericFleaItemName, false, null);
             }
         }
 
-        private static void HandleAspidFlea(PlayMakerFSM __instance)
+        private static void HandleAspidFlea(PlayMakerFSM __instance, GameObject fleaObject)
         {
             if (__instance.gameObject == null) { return; }
 
@@ -1245,7 +1256,9 @@ namespace Open_Ended_Item_Replacer
                 {
                     logSource.LogInfo("Aspid flea flagged");
 
-                    Replace(__instance.gameObject, genericFleaItemName, false, null);
+                    fleaObject.transform.position = __instance.transform.position;
+                    __instance.gameObject.SetActive(false);
+                    Replace(fleaObject, genericFleaItemName, false, null);
                 }
             }
         }
@@ -1259,32 +1272,36 @@ namespace Open_Ended_Item_Replacer
             FsmState sleepState = __instance.Fsm.GetState("Sleeping");
             FsmState idleState = __instance.Fsm.GetState("Idle");
 
+            // Fleas are unique to scenes even if they sometimes can be in different locations in a scene, so it's worth only distinguishing fleas by scene name
+            // By unique to scenes, I really mean it; as far as I remember seeing, the fleas set the playerdata bool associated with them using the scene name
+            GameObject fleaObject = new GameObject("Flea Object");
+
             // Should flag every flea except
             // -> Giant flea
             // -> Vog
             // -> Kratt
             // -> That one aspid flea
             // -> That one frozen flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, genericFleaItemName), __instance); // Misc fleas
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, genericFleaItemName), __instance); // Like bellhart and karak flea
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, genericFleaItemName), __instance); // Seepy fleas -> gameObject can be replaced with no restrictions
-            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, genericFleaItemName), __instance); // Fancy citadel cage fleas and slab cell flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(initState, genericFleaItemName), __instance, fleaObject); // Misc fleas
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(checkState, genericFleaItemName), __instance, fleaObject); // Like bellhart and karak flea
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(sleepState, genericFleaItemName), __instance, fleaObject); // Seepy fleas -> gameObject can be replaced with no restrictions
+            HandleCheckQuestPdSceneBoolFlea(SearchForCheckQuestPdSceneBool(idleState, genericFleaItemName), __instance, fleaObject); // Fancy citadel cage fleas and slab cell flea
 
             // Specifically for Kratt
-            HandleKrattFlea(SearchForPlayerDataBoolTest(initState, "CaravanLechSaved"), __instance);
+            HandleKrattFlea(SearchForPlayerDataBoolTest(initState, "CaravanLechSaved"), __instance, fleaObject);
 
             // Specifically for giant flea
-            HandleGiantFlea(SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea"), __instance);
+            HandleGiantFlea(SearchForPlayerDataBoolTest(idleState, "tamedGiantFlea"), __instance, fleaObject);
             
             // Specifically for Vog
             FsmState stillHereState = __instance.Fsm.GetState("Still Here?");
-            HandleVogFlea(SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild"), __instance);
+            HandleVogFlea(SearchForPlayerDataVariableTest(stillHereState, "MetTroupeHunterWild"), __instance, fleaObject);
 
             // Specifically for frozen flea
-            HandleFrozenFlea(__instance);
+            HandleFrozenFlea(__instance, fleaObject);
 
             // Specifically for aspid flea
-            HandleAspidFlea(__instance);
+            HandleAspidFlea(__instance, fleaObject);
         }
 
         private static void HandleWeaverStatue(PlayMakerFSM __instance)
@@ -1939,10 +1956,13 @@ namespace Open_Ended_Item_Replacer
                 
                 // Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
 
-                if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
+                /*if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
                 {
                     return;
-                }
+                }*/
+
+                if (__instance.Item == null) { return; }
+                if (__instance.gameObject == null) { return; }
 
                 Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
