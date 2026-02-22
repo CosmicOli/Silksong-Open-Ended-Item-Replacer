@@ -176,16 +176,9 @@ namespace Open_Ended_Item_Replacer
 
         public GetCheck(GameObject gameObject, string itemName)
         {
-            UniqueID uniqueID = new UniqueID(gameObject, itemName);
-
-            // Generates a generic item using the uniqueID
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
 
-            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-            Open_Ended_Item_Replacer.SetGenericPersistentInfo(uniqueID, persistent);
-
-            genericItem.persistentBoolItem = persistent;
+            genericItem.persistentBoolItem = Open_Ended_Item_Replacer.GenerateSetPersistent(gameObject, itemName, genericItem);
         }
 
         public override void OnEnter()
@@ -363,6 +356,38 @@ namespace Open_Ended_Item_Replacer
             }
 
             return GetBool;
+        }
+
+        public static PersistentBoolItem GenerateSetPersistent(string gameObjectName, string originalItemName, GenericSavedItem replacementItem)
+        {
+            GameObject gameObject = new GameObject(gameObjectName);
+            return GenerateSetPersistent(gameObject, originalItemName, replacementItem);
+        }
+
+        public static PersistentBoolItem GenerateSetPersistent(GameObject gameObject, string originalItemName, GenericSavedItem replacementItem)
+        {
+            UniqueID uniqueID = new UniqueID(gameObject, originalItemName);
+            replacementItem.UniqueID = uniqueID;
+
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            return persistent;
+        }
+
+        public static PersistentBoolItem GenerateCheckPersistent(string gameObjectName, string originalItemName)
+        {
+            GameObject gameObject = new GameObject(gameObjectName);
+            return GenerateCheckPersistent(gameObject, originalItemName);
+        }
+
+        public static PersistentBoolItem GenerateCheckPersistent(GameObject gameObject, string originalItemName)
+        {
+            UniqueID uniqueID = new UniqueID(gameObject, originalItemName);
+            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+            SetGenericPersistentInfo(uniqueID, persistent);
+
+            return persistent;
         }
 
         private static FsmStateAction[] ReturnCombinedActions(FsmStateAction[] preActions, FsmStateAction[] postActions)
@@ -740,17 +765,10 @@ namespace Open_Ended_Item_Replacer
 
         private static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
         {
-            UniqueID uniqueID = new UniqueID(fleaObject, genericFleaItemName);
-
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
 
-            PersistentBoolItem persistent = __instance.gameObject.AddComponent<PersistentBoolItem>();
-            SetGenericPersistentInfo(uniqueID, persistent);
-
-            genericItem.persistentBoolItem = persistent;
-
+            genericItem.persistentBoolItem = GenerateSetPersistent(fleaObject, genericFleaItemName, genericItem);
 
             // Handle actions on "Stun" state
             FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
@@ -773,7 +791,7 @@ namespace Open_Ended_Item_Replacer
 
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
             {
                 giantFlea.gameObject.SetActive(false);
                 __instance.gameObject.SetActive(false);
@@ -791,20 +809,11 @@ namespace Open_Ended_Item_Replacer
                 gameObject.name = "dummyName";
             }
 
-            UniqueID uniqueID = new UniqueID(gameObject, item.name);
-
-            // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
-
-            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-
-            SetGenericPersistentInfo(uniqueID, persistent);
-
-            genericItem.persistentBoolItem = persistent;
+            genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, item.name, genericItem);
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
             {
                 logSource.LogInfo("Replacement set inactive");
             }
@@ -825,20 +834,11 @@ namespace Open_Ended_Item_Replacer
                 gameObject.name = "dummyName";
             }
 
-            UniqueID uniqueID = new UniqueID(gameObject, (__instance.Tool.Value as ToolItem).name);
-
-            // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
-
-            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-
-            SetGenericPersistentInfo(uniqueID, persistent);
-
-            genericItem.persistentBoolItem = persistent;
+            genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
             {
                 logSource.LogInfo("Replacement set inactive");
             }
@@ -962,9 +962,7 @@ namespace Open_Ended_Item_Replacer
                         }
                     }
 
-                    PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-                    UniqueID uniqueID = new UniqueID(gameObject, genericFleaItemName);
-                    SetGenericPersistentInfo(uniqueID, persistent);
+                    PersistentBoolItem persistent = GenerateCheckPersistent(gameObject, genericFleaItemName);
 
                     Transform replacmentTransform;
 
@@ -1437,13 +1435,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState hasMelody = __instance.Fsm.GetState("Has Melody");
                 if (startLock == null || waitForNotify == null || hasMelody == null) { return; }
 
-                // Generates an equivalent persistence to test whether the sequence has already been done
-                GameObject gameObject = new GameObject("puzzle cylinders");
-                UniqueID uniqueID = new UniqueID(gameObject, "Citadel Ascent Melody Architect");
-                PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-                SetGenericPersistentInfo(uniqueID, persistent);
-
-                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBool(persistent), GetTrue); // Replaces original persistence check with custom
+                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBool(GenerateCheckPersistent("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrue); // Replaces original persistence check with custom
 
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
@@ -1472,13 +1464,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[0] = new SetFsmActiveState(__instance.Fsm, questActive, melodyNoQuest, GetPlayerDataBool("hasNeedolin"), GetFalse); // Disables allowing getting the song part without needolin
                 questActive.Actions = ReturnCombinedActions(newActions, questActive.Actions);
 
-                // Generates an equivalent persistence to test whether the sequence has already been done
-                GameObject gameObject = new GameObject("Last Conductor NPC");
-                UniqueID uniqueID = new UniqueID(gameObject, "Citadel Ascent Melody Conductor");
-                PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-                SetGenericPersistentInfo(uniqueID, persistent);
-
-                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBool(persistent), GetTrue);
+                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBool(GenerateCheckPersistent("Last Conductor NPC", "Citadel Ascent Melody Conductor")), GetTrue);
             }
         }
 
@@ -1495,13 +1481,7 @@ namespace Open_Ended_Item_Replacer
 
                 newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBool("hasNeedolin"), GetFalse);
 
-                // Generates an equivalent persistence to test whether the sequence has already been done
-                GameObject gameObject = new GameObject("Librarian");
-                UniqueID uniqueID = new UniqueID(gameObject, "Citadel Ascent Melody Librarian Return");
-                PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-                SetGenericPersistentInfo(uniqueID, persistent);
-
-                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBool(persistent), GetTrue);
+                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBool(GenerateCheckPersistent("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrue);
 
                 needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
 
@@ -1509,6 +1489,16 @@ namespace Open_Ended_Item_Replacer
                 {
                     (openRelicBoard.Actions[2] as ShowRelicBoard).ClosedEvent = FsmEvent.GetFsmEvent("MELODY CYLINDER PLAYED");
                 }
+            }
+        }
+
+        private static void HandlePlinney(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" || __instance.gameObject?.name == "Plinney Inside")
+            {
+                FsmState upgradeState = __instance.Fsm.GetState("Upgrade State");
+
+                upgradeState.Actions[1] = SetFsmActiveState();
             }
         }
 
@@ -1540,6 +1530,8 @@ namespace Open_Ended_Item_Replacer
             HandleArchitectMelody(__instance);
             HandleConductorMelody(__instance);
             HandleLibrarianMelody(__instance);
+
+            HandlePlinney(__instance);
         }
 
         /*[HarmonyPostfix]
@@ -1600,6 +1592,13 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.Item.Name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
             {
+                return true;
+            }
+
+            if (__instance.Item.Name.Contains("Needle Upgrade"))
+            {
+                
+                ReplaceFsmItemGet(__instance, );
                 return true;
             }
 
@@ -1769,25 +1768,20 @@ namespace Open_Ended_Item_Replacer
 
             if (name.Contains("silk spool") || name.Contains("heart piece"))
             {
-                UniqueID uniqueID;
+                string itemName;
 
                 if (name.Contains("silk spool"))
                 {
-                    uniqueID = new UniqueID(__instance.Fsm.GameObject, "Silk Spool");
+                    itemName = "Silk Spool";
                 }
                 else
                 {
-                    uniqueID = new UniqueID(__instance.Fsm.GameObject, "Heart Piece");
+                    itemName = "Heart Piece";
                 }
 
-                // Generates a generic item using the uniqueID
                 GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                genericItem.UniqueID = uniqueID;
 
-                PersistentBoolItem persistent = __instance.Fsm.GameObject.AddComponent<PersistentBoolItem>();
-                SetGenericPersistentInfo(uniqueID, persistent);
-
-                genericItem.persistentBoolItem = persistent;
+                genericItem.persistentBoolItem = GenerateSetPersistent(__instance.Fsm.GameObject, itemName, genericItem);
 
                 // Handles persistence set by new item
                 if (!SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
