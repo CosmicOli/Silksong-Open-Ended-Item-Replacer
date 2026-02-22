@@ -1851,6 +1851,44 @@ namespace Open_Ended_Item_Replacer
             HandleUiMsgGetItemMelody(playMakerFsm, __instance);
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CreateObject), "OnEnter")]
+        private static void CreateObject_OnEnterPrefix(CreateObject __instance)
+        {
+            if (__instance.gameObject.Value == null) { return; }
+
+            string name = __instance.gameObject.Value.name.ToLower();
+
+            if (name.Contains("silk spool") || name.Contains("heart piece"))
+            {
+                UniqueID uniqueID;
+
+                if (name.Contains("silk spool"))
+                {
+                    uniqueID = new UniqueID(__instance.Fsm.GameObject, "Silk Spool");
+                }
+                else
+                {
+                    uniqueID = new UniqueID(__instance.Fsm.GameObject, "Heart Piece");
+                }
+
+                // Generates a generic item using the uniqueID
+                GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+                genericItem.UniqueID = uniqueID;
+
+                PersistentBoolItem persistent = __instance.Fsm.GameObject.AddComponent<PersistentBoolItem>();
+                SetGenericPersistentInfo(uniqueID, persistent);
+
+                genericItem.persistentBoolItem = persistent;
+
+                // Handles persistence set by new item
+                if (!SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+                {
+                    genericItem.Get();
+                }
+            }
+        }
+
         /*[HarmonyPostfix]
         [HarmonyPatch(typeof(LocalisedString), "ToString", new Type[] { typeof(bool) })]
         public static void LocalisedString_ToString(LocalisedString __instance, ref string __result)
