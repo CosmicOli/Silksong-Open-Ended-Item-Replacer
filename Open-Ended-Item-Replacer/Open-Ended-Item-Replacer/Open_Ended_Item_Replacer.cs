@@ -77,12 +77,14 @@ namespace Open_Ended_Item_Replacer
         Fsm fsm; 
         FsmState oldState;
         FsmState newState;
+        bool notStopState;
 
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, bool notStopState)
         {
             this.fsm = fsm;
             this.oldState = oldState;
             this.newState = newState;
+            this.notStopState = notStopState;
         }
 
         public override void OnEnter()
@@ -130,6 +132,7 @@ namespace Open_Ended_Item_Replacer
                 Traverse.Create(fsm).Field("activeState").SetValue(newState);
                 Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
                 fsm.Start();
+                Finish();
             }
         }
     }
@@ -156,10 +159,11 @@ namespace Open_Ended_Item_Replacer
 
         public override void OnEnter()
         {
-            //Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPlayerDataBool");
+            Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPlayerDataBool");
 
             if (revert)
             {
+                Open_Ended_Item_Replacer.logSource.LogWarning("revert");
                 FsmStateAction[] dummyArray = new FsmStateAction[cachedEnabled.Length];
                 Array.Copy(oldState.Actions, dummyArray, dummyArray.Length);
                 oldState.Actions = dummyArray;
@@ -177,10 +181,13 @@ namespace Open_Ended_Item_Replacer
             }
             else
             {
+                Open_Ended_Item_Replacer.logSource.LogWarning("not revert");
                 if (VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
                 {
                     if (GameManager.instance.GetPlayerDataBool(playerDataBool) == expected)
                     {
+                        Open_Ended_Item_Replacer.logSource.LogWarning("if flagged");
+
                         int length = oldState.Actions.Length;
                         cachedEnabled = new bool[length];
                         for (int i = 0; i < length; i++)
@@ -207,6 +214,8 @@ namespace Open_Ended_Item_Replacer
                         fsm.Start();
                     }
                 }
+
+                Finish();
             }
         }
     }
@@ -233,8 +242,6 @@ namespace Open_Ended_Item_Replacer
 
         public override void OnEnter()
         {
-            //Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPersistentBool");
-
             if (revert)
             {
                 FsmStateAction[] dummyArray = new FsmStateAction[cachedEnabled.Length];
@@ -282,6 +289,7 @@ namespace Open_Ended_Item_Replacer
                     Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
                     fsm.Start();
                 }
+                Finish();
             }
         }
     }
@@ -468,22 +476,12 @@ namespace Open_Ended_Item_Replacer
             //harmony.Patch(DoMsgOriginal, prefix: new HarmonyMethod(typeof(Open_Ended_Item_Replacer).GetMethod("UIMsgBase_DoMsgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));*/
         }
 
-        private static FsmStateAction[] AddActionsPre(FsmStateAction[] newActions, FsmStateAction[] actions)
+        private static FsmStateAction[] ReturnCombinedActions(FsmStateAction[] preActions, FsmStateAction[] postActions)
         {
-            FsmStateAction[] replacementActions = new FsmStateAction[newActions.Length + actions.Length];
+            FsmStateAction[] replacementActions = new FsmStateAction[preActions.Length + postActions.Length];
 
-            Array.Copy(newActions, 0, replacementActions, 0, newActions.Length);
-            Array.Copy(actions, 0, replacementActions, newActions.Length, actions.Length);
-
-            return replacementActions;
-        }
-
-        private static FsmStateAction[] AddActionsPost(FsmStateAction[] newActions, FsmStateAction[] actions)
-        {
-            FsmStateAction[] replacementActions = new FsmStateAction[newActions.Length + actions.Length];
-
-            Array.Copy(newActions, 0, replacementActions, actions.Length, newActions.Length);
-            Array.Copy(actions, 0, replacementActions, 0, actions.Length);
+            Array.Copy(preActions, 0, replacementActions, 0, preActions.Length);
+            Array.Copy(postActions, 0, replacementActions, preActions.Length, postActions.Length);
 
             return replacementActions;
         }
@@ -722,6 +720,10 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void StartSlashPostfix(NailSlash __instance)
         {
+            //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
+            //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);
+            //logSource.LogMessage(PlayerData.instance.HasMelodyLibrarian);
+
             //logSource.LogMessage(testTransform.position);
             //logSource.LogMessage(testTransform.gameObject.activeSelf);
 
@@ -1137,7 +1139,7 @@ namespace Open_Ended_Item_Replacer
                                     newActions[2] = new AllowPickup(replacmentTransform.GetComponent<CollectableItemPickup>());
 
                                     //Array.Copy(nextState.Actions, 0, newActions, numberOfNewActions, nextState.Actions.Length);
-                                    nextState.Actions = AddActionsPre(newActions, nextState.Actions);
+                                    nextState.Actions = ReturnCombinedActions(newActions, nextState.Actions);
 
                                     //nextState.Actions = newActions;
                                 }
@@ -1336,7 +1338,7 @@ namespace Open_Ended_Item_Replacer
                         newActions[0] = new ReplacePickup(__instance.gameObject, fsm.Variables.GetFsmEnum("Crest Type").Value.ToString());
 
                         //Array.Copy(nextState.Actions, 0, newActions, numberOfNewActions, nextState.Actions.Length);
-                        nextState.Actions = AddActionsPre(newActions, nextState.Actions);
+                        nextState.Actions = ReturnCombinedActions(newActions, nextState.Actions);
 
                         //nextState.Actions = newActions;
                     }
@@ -1371,7 +1373,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[1] = new RemoveExtraSilkHeart();
 
                 //Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
-                save.Actions = AddActionsPre(newActions, save.Actions);
+                save.Actions = ReturnCombinedActions(newActions, save.Actions);
 
                 //save.Actions = newActions;
             }
@@ -1411,7 +1413,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[0] = new GetCheck(dummyGameObject, "Needolin"); // Replace
 
                 //Array.Copy(endScene.Actions, 0, newActions, numberOfNewActions, endScene.Actions.Length);
-                endScene.Actions = AddActionsPre(newActions, endScene.Actions);
+                endScene.Actions = ReturnCombinedActions(newActions, endScene.Actions);
 
                 //endScene.Actions = newActions;
             }
@@ -1459,7 +1461,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[0] = new GetCheck(dummyGameObject, "Rune Bomb"); // Replace
 
                 //Array.Copy(getRuneBomb.Actions, 0, newActions, numberOfNewActions, getRuneBomb.Actions.Length);
-                getRuneBomb.Actions = AddActionsPre(newActions, getRuneBomb.Actions);
+                getRuneBomb.Actions = ReturnCombinedActions(newActions, getRuneBomb.Actions);
 
                 //getRuneBomb.Actions = newActions;
             }
@@ -1508,11 +1510,11 @@ namespace Open_Ended_Item_Replacer
 
                 //Array.Copy(UIMsg.Actions, 0, newActions, numberOfNewActions - 1, UIMsg.Actions.Length);
 
-                UIMsg.Actions = AddActionsPre(newActionsPre, UIMsg.Actions);
+                UIMsg.Actions = ReturnCombinedActions(newActionsPre, UIMsg.Actions);
 
                 FsmStateAction[] newActionsPost = new FsmStateAction[1];
-                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"));
-                AddActionsPost(newActionsPost, UIMsg.Actions);
+                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"), false);
+                UIMsg.Actions = ReturnCombinedActions(UIMsg.Actions, newActionsPost);
 
                 //UIMsg.Actions = newActions;
             }
@@ -1541,7 +1543,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, startLock, waitForNotify, "hasNeedolin", false); // Disables allowing getting the song part without needolin
 
                 //Array.Copy(startLock.Actions, 0, newActions, numberOfNewActions, startLock.Actions.Length);
-                startLock.Actions = AddActionsPre(newActions, startLock.Actions);
+                startLock.Actions = ReturnCombinedActions(newActions, startLock.Actions);
 
                 //startLock.Actions = newActions;
             }
@@ -1556,12 +1558,11 @@ namespace Open_Ended_Item_Replacer
                 FsmState questActive = __instance.Fsm.GetState("Quest Active?");
                 FsmState melodyNoQuest = __instance.Fsm.GetState("Melody NoQuest");
 
-                int numberOfNewActions = 2;
+                int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
                 newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, questActive, melodyNoQuest, "hasNeedolin", false); // Disables allowing getting the song part without needolin
-                newActions[1] = new TestAction();
-                questActive.Actions = AddActionsPre(newActions, questActive.Actions);
+                questActive.Actions = ReturnCombinedActions(newActions, questActive.Actions);
 
                 // Generates an equivalent persistence to test whether the sequence has already been done
                 GameObject gameObject = new GameObject("Last Conductor NPC");
@@ -1570,6 +1571,36 @@ namespace Open_Ended_Item_Replacer
                 SetGenericPersistentInfo(uniqueID, persistent);
 
                 hasItem.Actions[8] = new SetFsmStateOnPersistentBool(__instance.Fsm, hasItem, repeatDlg, persistent, true);
+            }
+        }
+
+        private static void HandleLibrarianMelody(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Librarian")
+            {
+                FsmState openRelicBoard = __instance.Fsm.GetState("Open Relic Board");
+                if (openRelicBoard == null) { return; }
+
+                FsmState needolinPreWait = __instance.Fsm.GetState("Needolin Pre Wait");
+                FsmState dlgEnd = __instance.Fsm.GetState("Dlg End");
+                FsmStateAction[] newActions = new FsmStateAction[2];
+
+                newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, needolinPreWait, dlgEnd, "hasNeedolin", false);
+
+                // Generates an equivalent persistence to test whether the sequence has already been done
+                GameObject gameObject = new GameObject("Librarian");
+                UniqueID uniqueID = new UniqueID(gameObject, "Citadel Ascent Melody Librarian Return");
+                PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
+                SetGenericPersistentInfo(uniqueID, persistent);
+
+                newActions[1] = new SetFsmStateOnPersistentBool(__instance.Fsm, needolinPreWait, dlgEnd, persistent, true);
+
+                needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
+
+                if (PlayerData.instance.HasMelodyLibrarian)
+                {
+                    (openRelicBoard.Actions[2] as ShowRelicBoard).ClosedEvent = FsmEvent.GetFsmEvent("MELODY CYLINDER PLAYED");
+                }
             }
         }
 
@@ -1600,6 +1631,7 @@ namespace Open_Ended_Item_Replacer
 
             HandleArchitectMelody(__instance);
             HandleConductorMelody(__instance);
+            HandleLibrarianMelody(__instance);
         }
 
         /*[HarmonyPostfix]
@@ -1718,10 +1750,10 @@ namespace Open_Ended_Item_Replacer
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done);
+                newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done, false);
 
                 //Array.Copy(init.Actions, 0, newActions, numberOfNewActions, init.Actions.Length);
-                init.Actions = AddActionsPre(newActions, init.Actions);
+                init.Actions = ReturnCombinedActions(newActions, init.Actions);
 
                 //init.Actions = newActions;
 
@@ -1773,18 +1805,18 @@ namespace Open_Ended_Item_Replacer
                 FsmState done = playMakerFsm.Fsm.GetState("Done");
 
                 FsmStateAction[] newActionsForInit = new FsmStateAction[1];
-                newActionsForInit[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, stopPlaying);
+                newActionsForInit[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, stopPlaying, false);
                 //Array.Copy(init.Actions, 0, newActionsForInit, numberOfNewActionsForInit, init.Actions.Length);
                 //init.Actions = newActionsForInit;
-                init.Actions = AddActionsPre(newActionsForInit, init.Actions);
+                init.Actions = ReturnCombinedActions(newActionsForInit, init.Actions);
 
                 (wait.Actions[0] as Wait).time = 0;
 
                 FsmStateAction[] newActionsForStopUp = new FsmStateAction[1];
-                newActionsForStopUp[newActionsForStopUp.Length - 1] = new SetFsmActiveState(playMakerFsm.Fsm, stopUp, done);
+                newActionsForStopUp[newActionsForStopUp.Length - 1] = new SetFsmActiveState(playMakerFsm.Fsm, stopUp, done, false);
                 //Array.Copy(init.Actions, 0, newActionsForStopUp, 0, init.Actions.Length);
                 //stopUp.Actions = newActionsForStopUp;
-                stopUp.Actions = AddActionsPre(newActionsForStopUp, stopUp.Actions);
+                stopUp.Actions = ReturnCombinedActions(newActionsForStopUp, stopUp.Actions);
 
                 foreach (FsmStateAction action in __instance.State.Actions)
                 {
