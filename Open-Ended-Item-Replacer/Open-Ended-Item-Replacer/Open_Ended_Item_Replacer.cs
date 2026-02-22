@@ -69,6 +69,11 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
+    // THIS IS NOT A CATCH ALL SOLUTION
+    // In some situations, the remaining actions in an state are not ran
+    // If this doesn't work, change the newState if possible
+    // If not possible, I'll just try make a more functional action
+    // Only runs on both compares being equal
     public class SetFsmActiveState : FsmStateAction
     {
         bool[] cachedEnabled;
@@ -77,14 +82,27 @@ namespace Open_Ended_Item_Replacer
         Fsm fsm; 
         FsmState oldState;
         FsmState newState;
-        bool notStopState;
+        Func<bool> compareFirst;
+        Func<bool> compareSecond;
 
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, bool notStopState)
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
+        {
+            bool getTrue() { return true; }
+
+            this.fsm = fsm;
+            this.oldState = oldState;
+            this.newState = newState;
+            this.compareFirst = getTrue;
+            this.compareSecond = getTrue;
+        }
+
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> compareFirst, Func<bool> compareSecond)
         {
             this.fsm = fsm;
             this.oldState = oldState;
             this.newState = newState;
-            this.notStopState = notStopState;
+            this.compareFirst = compareFirst;
+            this.compareSecond = compareSecond;
         }
 
         public override void OnEnter()
@@ -108,161 +126,7 @@ namespace Open_Ended_Item_Replacer
             }
             else
             {
-                int length = oldState.Actions.Length;
-                cachedEnabled = new bool[length];
-                for (int i = 0; i < length; i++)
-                {
-                    cachedEnabled[i] = oldState.Actions[i].Enabled;
-                }
-
-                FsmStateAction[] cachedActions = new FsmStateAction[length];
-                Array.Copy(oldState.Actions, cachedActions, length);
-                oldState.Actions = new FsmStateAction[length + 1];
-                Array.Copy(cachedActions, oldState.Actions, length);
-                revert = true;
-
-                for (int i = 0; i < length; i++)
-                {
-                    oldState.Actions[i].Enabled = false;
-                }
-
-                Enabled = true;
-                oldState.Actions[length] = this;
-
-                Traverse.Create(fsm).Field("activeState").SetValue(newState);
-                Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
-                fsm.Start();
-                Finish();
-            }
-        }
-    }
-
-    public class SetFsmStateOnPlayerDataBool : FsmStateAction
-    {
-        bool[] cachedEnabled;
-        bool revert = false;
-
-        Fsm fsm;
-        FsmState oldState;
-        FsmState newState;
-        string playerDataBool;
-        bool expected;
-
-        public SetFsmStateOnPlayerDataBool(Fsm fsm, FsmState oldState, FsmState newState, string playerDataBool, bool expected)
-        {
-            this.fsm = fsm;
-            this.oldState = oldState;
-            this.newState = newState;
-            this.playerDataBool = playerDataBool;
-            this.expected = expected;
-        }
-
-        public override void OnEnter()
-        {
-            Open_Ended_Item_Replacer.logSource.LogWarning("Action entered: setFsmStateOnPlayerDataBool");
-
-            if (revert)
-            {
-                Open_Ended_Item_Replacer.logSource.LogWarning("revert");
-                FsmStateAction[] dummyArray = new FsmStateAction[cachedEnabled.Length];
-                Array.Copy(oldState.Actions, dummyArray, dummyArray.Length);
-                oldState.Actions = dummyArray;
-
-                for (int i = 0; i < cachedEnabled.Length; i++)
-                {
-                    oldState.Actions[i].Enabled = cachedEnabled[i];
-                }
-
-                revert = false;
-
-                Active = false;
-                Finished = true;
-                Finish();
-            }
-            else
-            {
-                Open_Ended_Item_Replacer.logSource.LogWarning("not revert");
-                if (VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
-                {
-                    if (GameManager.instance.GetPlayerDataBool(playerDataBool) == expected)
-                    {
-                        Open_Ended_Item_Replacer.logSource.LogWarning("if flagged");
-
-                        int length = oldState.Actions.Length;
-                        cachedEnabled = new bool[length];
-                        for (int i = 0; i < length; i++)
-                        {
-                            cachedEnabled[i] = oldState.Actions[i].Enabled;
-                        }
-
-                        FsmStateAction[] cachedActions = new FsmStateAction[length];
-                        Array.Copy(oldState.Actions, cachedActions, length);
-                        oldState.Actions = new FsmStateAction[length + 1];
-                        Array.Copy(cachedActions, oldState.Actions, length);
-                        revert = true;
-
-                        for (int i = 0; i < length; i++)
-                        {
-                            oldState.Actions[i].Enabled = false;
-                        }
-
-                        Enabled = true;
-                        oldState.Actions[length] = this;
-
-                        Traverse.Create(fsm).Field("activeState").SetValue(newState);
-                        Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
-                        fsm.Start();
-                    }
-                }
-
-                Finish();
-            }
-        }
-    }
-
-    public class SetFsmStateOnPersistentBool : FsmStateAction
-    {
-        bool[] cachedEnabled;
-        bool revert = false;
-
-        Fsm fsm;
-        FsmState oldState;
-        FsmState newState;
-        PersistentBoolItem persistent;
-        bool expected;
-
-        public SetFsmStateOnPersistentBool(Fsm fsm, FsmState oldState, FsmState newState, PersistentBoolItem persistent, bool expected)
-        {
-            this.fsm = fsm;
-            this.oldState = oldState;
-            this.newState = newState;
-            this.persistent = persistent;
-            this.expected = expected;
-        }
-
-        public override void OnEnter()
-        {
-            if (revert)
-            {
-                FsmStateAction[] dummyArray = new FsmStateAction[cachedEnabled.Length];
-                Array.Copy(oldState.Actions, dummyArray, dummyArray.Length);
-                oldState.Actions = dummyArray;
-
-                for (int i = 0; i < cachedEnabled.Length; i++)
-                {
-                    oldState.Actions[i].Enabled = cachedEnabled[i];
-                }
-
-                revert = false;
-
-                Active = false;
-                Finished = true;
-                Finish();
-            }
-            else
-            {
-                // Handles persistence set by new item
-                if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID) == expected)
+                if (compareFirst.Invoke() == compareSecond.Invoke())
                 {
                     int length = oldState.Actions.Length;
                     cachedEnabled = new bool[length];
@@ -474,6 +338,31 @@ namespace Open_Ended_Item_Replacer
 
             //MethodInfo DoMsgOriginal = typeof(UIMsgBase<>).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).First(x => x.Name == "DoMsg");
             //harmony.Patch(DoMsgOriginal, prefix: new HarmonyMethod(typeof(Open_Ended_Item_Replacer).GetMethod("UIMsgBase_DoMsgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));*/
+        }
+
+        static bool GetTrue() { return true; }
+        static bool GetFalse() { return false; }
+
+        static Func<bool> GetPersistentBool(PersistentBoolItem persistent)
+        {
+            bool GetBool() { return SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID); }
+
+            return GetBool;
+        }
+
+        static Func<bool> GetPlayerDataBool(string playerDataBool)
+        {
+            bool GetBool() 
+            {
+                if (!VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
+                {
+                    return false;
+                }
+
+                return GameManager.instance.GetPlayerDataBool(playerDataBool); 
+            }
+
+            return GetBool;
         }
 
         private static FsmStateAction[] ReturnCombinedActions(FsmStateAction[] preActions, FsmStateAction[] postActions)
@@ -1530,7 +1419,9 @@ namespace Open_Ended_Item_Replacer
                 UIMsg.Actions = ReturnCombinedActions(newActionsPre, UIMsg.Actions);
 
                 FsmStateAction[] newActionsPost = new FsmStateAction[1];
-                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"), false);
+                //newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"), false);
+                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause")); // Replaces original persistence check with custom
+
                 UIMsg.Actions = ReturnCombinedActions(UIMsg.Actions, newActionsPost);
 
                 //UIMsg.Actions = newActions;
@@ -1552,12 +1443,12 @@ namespace Open_Ended_Item_Replacer
                 PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
                 SetGenericPersistentInfo(uniqueID, persistent);
 
-                waitForNotify.Actions[0] = new SetFsmStateOnPersistentBool(__instance.Fsm, waitForNotify, hasMelody, persistent, true); // Replaces original persistence check with custom
+                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBool(persistent), GetTrue); // Replaces original persistence check with custom
 
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, startLock, waitForNotify, "hasNeedolin", false); // Disables allowing getting the song part without needolin
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, startLock, waitForNotify, GetPlayerDataBool("hasNeedolin"), GetFalse); // Disables allowing getting the song part without needolin
 
                 //Array.Copy(startLock.Actions, 0, newActions, numberOfNewActions, startLock.Actions.Length);
                 startLock.Actions = ReturnCombinedActions(newActions, startLock.Actions);
@@ -1578,7 +1469,7 @@ namespace Open_Ended_Item_Replacer
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, questActive, melodyNoQuest, "hasNeedolin", false); // Disables allowing getting the song part without needolin
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, questActive, melodyNoQuest, GetPlayerDataBool("hasNeedolin"), GetFalse); // Disables allowing getting the song part without needolin
                 questActive.Actions = ReturnCombinedActions(newActions, questActive.Actions);
 
                 // Generates an equivalent persistence to test whether the sequence has already been done
@@ -1587,7 +1478,7 @@ namespace Open_Ended_Item_Replacer
                 PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
                 SetGenericPersistentInfo(uniqueID, persistent);
 
-                hasItem.Actions[8] = new SetFsmStateOnPersistentBool(__instance.Fsm, hasItem, repeatDlg, persistent, true);
+                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBool(persistent), GetTrue);
             }
         }
 
@@ -1602,7 +1493,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState dlgEnd = __instance.Fsm.GetState("Dlg End");
                 FsmStateAction[] newActions = new FsmStateAction[2];
 
-                newActions[0] = new SetFsmStateOnPlayerDataBool(__instance.Fsm, needolinPreWait, dlgEnd, "hasNeedolin", false);
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBool("hasNeedolin"), GetFalse);
 
                 // Generates an equivalent persistence to test whether the sequence has already been done
                 GameObject gameObject = new GameObject("Librarian");
@@ -1610,7 +1501,7 @@ namespace Open_Ended_Item_Replacer
                 PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
                 SetGenericPersistentInfo(uniqueID, persistent);
 
-                newActions[1] = new SetFsmStateOnPersistentBool(__instance.Fsm, needolinPreWait, dlgEnd, persistent, true);
+                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBool(persistent), GetTrue);
 
                 needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
 
@@ -1767,7 +1658,7 @@ namespace Open_Ended_Item_Replacer
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done, false);
+                newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done);
 
                 //Array.Copy(init.Actions, 0, newActions, numberOfNewActions, init.Actions.Length);
                 init.Actions = ReturnCombinedActions(newActions, init.Actions);
@@ -1822,7 +1713,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState done = playMakerFsm.Fsm.GetState("Done");
 
                 FsmStateAction[] newActionsForInit = new FsmStateAction[1];
-                newActionsForInit[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, stopPlaying, false);
+                newActionsForInit[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, stopPlaying);
                 //Array.Copy(init.Actions, 0, newActionsForInit, numberOfNewActionsForInit, init.Actions.Length);
                 //init.Actions = newActionsForInit;
                 init.Actions = ReturnCombinedActions(newActionsForInit, init.Actions);
@@ -1830,7 +1721,7 @@ namespace Open_Ended_Item_Replacer
                 (wait.Actions[0] as Wait).time = 0;
 
                 FsmStateAction[] newActionsForStopUp = new FsmStateAction[1];
-                newActionsForStopUp[newActionsForStopUp.Length - 1] = new SetFsmActiveState(playMakerFsm.Fsm, stopUp, done, false);
+                newActionsForStopUp[newActionsForStopUp.Length - 1] = new SetFsmActiveState(playMakerFsm.Fsm, stopUp, done);
                 //Array.Copy(init.Actions, 0, newActionsForStopUp, 0, init.Actions.Length);
                 //stopUp.Actions = newActionsForStopUp;
                 stopUp.Actions = ReturnCombinedActions(newActionsForStopUp, stopUp.Actions);
