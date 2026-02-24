@@ -69,6 +69,57 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
+    // Progressive start and end are inclusive
+    public class GetProgressiveLevel : FsmStateAction
+    {
+        int progressiveStart;
+        int progressiveEnd;
+        string[] gameObjectNames;
+        string progressiveItemName;
+        FsmInt storeResult;
+
+        public GetProgressiveLevel(int progressiveStart, int progressiveEnd, string gameObjectName, string progressiveItemName, FsmInt storeResult)
+        {
+            gameObjectNames = new string[progressiveEnd - progressiveStart + 1];
+            for (int i = 0; i < gameObjectNames.Length; i++) { gameObjectNames[i]  = gameObjectName; }
+
+            this.progressiveStart = progressiveStart;
+            this.progressiveEnd = progressiveEnd;
+            this.progressiveItemName = progressiveItemName;
+            this.storeResult = storeResult;
+        }
+
+        public GetProgressiveLevel(int progressiveStart, int progressiveEnd, string[] gameObjectNames, string progressiveItemName, FsmInt storeResult)
+        {
+            this.progressiveStart = progressiveStart;
+            this.progressiveEnd = progressiveEnd;
+            this.gameObjectNames = gameObjectNames;
+            this.progressiveItemName = progressiveItemName;
+            this.storeResult = storeResult;
+        }
+
+        public override void OnEnter()
+        {
+            GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            needleUpgradeItem.name = progressiveItemName + " 1";
+
+            PersistentBoolItem needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[0], progressiveItemName + " 1");
+
+            for (int i = progressiveStart + 1; i < progressiveEnd + 1; i++)
+            {
+                if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
+                {
+                    storeResult = i;
+                }
+                else
+                {
+                    needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
+                    needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[i - progressiveStart], "Needle Upgrade " + i.ToString());
+                }
+            }
+        }
+    }
+
     // THIS IS NOT A CATCH ALL SOLUTION
     // In some situations, the remaining actions in an state are not ran
     // If this doesn't work, change the newState if possible
@@ -763,7 +814,7 @@ namespace Open_Ended_Item_Replacer
             getItemNPCReady.Enabled = false;
         }*/
 
-        private static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
+        public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
         {
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
@@ -798,7 +849,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
+        public static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
         {
             GameObject gameObject = new GameObject();
             gameObject.name = __instance.Owner?.gameObject?.name;
@@ -823,7 +874,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void ReplaceFsmToolGet(SetToolUnlocked __instance)
+        public static void ReplaceFsmToolGet(SetToolUnlocked __instance)
         {
             GameObject gameObject = new GameObject();
             gameObject.name = __instance.Owner?.gameObject?.name;
@@ -1506,10 +1557,12 @@ namespace Open_Ended_Item_Replacer
                 // Further upgrades needs to have dialogue change with persistence checks 
 
                 upgradeState.Actions = new FsmStateAction[4];
-                upgradeState.Actions[0] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 0")), GetFalse);
-                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 0")), GetTrue);
+                upgradeState.Actions[0] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalse);
+                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetTrue);
                 upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalse);
                 upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrue);
+
+                furtherUpgrades.Actions.Length[2] = new GetProgressiveLevel();
             }
         }
 
@@ -1608,13 +1661,12 @@ namespace Open_Ended_Item_Replacer
 
             if (__instance.Item.Value.name.Contains("Needle Upgrade"))
             {
-                GameObject needleUpgradeObject = new GameObject("Needle Upgrade");
                 GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                needleUpgradeItem.name = "Needle Upgrade 0";
+                needleUpgradeItem.name = "Needle Upgrade 1";
 
-                PersistentBoolItem needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 0");
+                PersistentBoolItem needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1");
 
-                for (int i = 1; i < 4; i++)
+                for (int i = 2; i < 5; i++)
                 {
                     if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
                     {
