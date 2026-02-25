@@ -70,7 +70,7 @@ namespace Open_Ended_Item_Replacer
     }
 
     // Progressive start and end are inclusive
-    public class GetProgressiveLevel : FsmStateAction
+    public class GetReplacedProgressiveLevel : FsmStateAction
     {
         int progressiveStart;
         int progressiveEnd;
@@ -78,7 +78,7 @@ namespace Open_Ended_Item_Replacer
         string progressiveItemName;
         FsmInt storeResult;
 
-        public GetProgressiveLevel(int progressiveStart, int progressiveEnd, string gameObjectName, string progressiveItemName, FsmInt storeResult)
+        public GetReplacedProgressiveLevel(int progressiveStart, int progressiveEnd, string gameObjectName, string progressiveItemName, FsmInt storeResult)
         {
             gameObjectNames = new string[progressiveEnd - progressiveStart + 1];
             for (int i = 0; i < gameObjectNames.Length; i++) { gameObjectNames[i]  = gameObjectName; }
@@ -89,7 +89,7 @@ namespace Open_Ended_Item_Replacer
             this.storeResult = storeResult;
         }
 
-        public GetProgressiveLevel(int progressiveStart, int progressiveEnd, string[] gameObjectNames, string progressiveItemName, FsmInt storeResult)
+        public GetReplacedProgressiveLevel(int progressiveStart, int progressiveEnd, string[] gameObjectNames, string progressiveItemName, FsmInt storeResult)
         {
             this.progressiveStart = progressiveStart;
             this.progressiveEnd = progressiveEnd;
@@ -1418,8 +1418,8 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActions = new FsmStateAction[getRuneBomb.Actions.Length + numberOfNewActions];
 
-                GameObject dummyGameObject = new GameObject("Rune Bomb");
-                newActions[0] = new GetCheck(dummyGameObject, "Rune Bomb"); // Replace
+                GameObject dummyGameObject = new GameObject("Rune Rage");
+                newActions[0] = new GetCheck(dummyGameObject, "Rune Rage"); // Replace
 
                 //Array.Copy(getRuneBomb.Actions, 0, newActions, numberOfNewActions, getRuneBomb.Actions.Length);
                 getRuneBomb.Actions = ReturnCombinedActions(newActions, getRuneBomb.Actions);
@@ -1563,11 +1563,23 @@ namespace Open_Ended_Item_Replacer
                 FsmInt storeValue = (upgradeState.Actions[0] as GetPlayerDataInt).storeValue; // Gets the variable responsible for tracking current needle upgrade
 
                 upgradeState.Actions = new FsmStateAction[5];
-                upgradeState.Actions[0] = new GetProgressiveLevel(1, 4, __instance.Fsm.Owner.name, "Needle Upgrade", storeValue); // Sets the variable responsible for tracking current needle upgrade by checking the progressive persistent bools; necessary for price and dialogue functionality
+                upgradeState.Actions[0] = new GetReplacedProgressiveLevel(1, 4, __instance.Fsm.Owner.name, "Needle Upgrade", storeValue); // Sets the variable responsible for tracking current needle upgrade by checking the progressive persistent bools; necessary for price and dialogue functionality
                 upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalseFunc()); // Upgrade 1
                 upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 2")), GetFalseFunc()); // Upgrade 2
                 upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalseFunc()); // Upgrade 3 and 4
                 upgradeState.Actions[4] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrueFunc()); // All upgrades
+            }
+        }
+
+        private static void HandleSeamstress(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seamstress")
+            {
+                FsmState msg = __instance.Fsm.GetState("Msg");
+                if (msg == null) { return; }
+
+                GameObject dummyGameObject = new GameObject("Drifter's Cloak");
+                msg.Actions[3] = new GetCheck(dummyGameObject, "Drifter's Cloak");
             }
         }
 
@@ -1601,6 +1613,8 @@ namespace Open_Ended_Item_Replacer
             HandleLibrarianMelody(__instance);
 
             HandlePlinney(__instance);
+
+            HandleSeamstress(__instance);
         }
 
         /*[HarmonyPostfix]
