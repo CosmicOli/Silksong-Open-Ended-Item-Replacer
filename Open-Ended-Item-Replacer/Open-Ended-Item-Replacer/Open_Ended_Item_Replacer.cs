@@ -101,20 +101,17 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            needleUpgradeItem.name = progressiveItemName + " 1";
+            PersistentBoolItem needleUpgradePersistence;
 
-            PersistentBoolItem needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[0], progressiveItemName + " 1");
-
-            for (int i = progressiveStart + 1; i < progressiveEnd + 1; i++)
+            for (int i = progressiveStart; i <= progressiveEnd; i++)
             {
+                needleUpgradeItem.name = progressiveItemName + " " + i.ToString();
+                needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[i - progressiveStart], needleUpgradeItem.name);
+
                 if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
                 {
-                    storeResult = i;
-                }
-                else
-                {
-                    needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
-                    needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[i - progressiveStart], "Needle Upgrade " + i.ToString());
+                    storeResult.Value = i - 1; // Minus 1 as the previous i will be the last "true" bool
+                    break;
                 }
             }
         }
@@ -130,11 +127,11 @@ namespace Open_Ended_Item_Replacer
         bool[] cachedEnabled;
         bool revert = false;
 
-        Fsm fsm; 
+        Fsm fsm;
         FsmState oldState;
         FsmState newState;
-        Func<bool> compareFirst;
-        Func<bool> compareSecond;
+        Func<bool> comparisonFirstHalf;
+        Func<bool> comparisonSecondHalf;
 
         public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
         {
@@ -143,17 +140,17 @@ namespace Open_Ended_Item_Replacer
             this.fsm = fsm;
             this.oldState = oldState;
             this.newState = newState;
-            this.compareFirst = getTrue;
-            this.compareSecond = getTrue;
+            this.comparisonFirstHalf = getTrue;
+            this.comparisonSecondHalf = getTrue;
         }
 
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> compareFirst, Func<bool> compareSecond)
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
         {
             this.fsm = fsm;
             this.oldState = oldState;
             this.newState = newState;
-            this.compareFirst = compareFirst;
-            this.compareSecond = compareSecond;
+            this.comparisonFirstHalf = comparisonFirstHalf;
+            this.comparisonSecondHalf = comparisonSecondHalf;
         }
 
         public override void OnEnter()
@@ -177,7 +174,7 @@ namespace Open_Ended_Item_Replacer
             }
             else
             {
-                if (compareFirst.Invoke() == compareSecond.Invoke())
+                if (comparisonFirstHalf.Invoke() == comparisonSecondHalf.Invoke())
                 {
                     int length = oldState.Actions.Length;
                     cachedEnabled = new bool[length];
@@ -384,17 +381,26 @@ namespace Open_Ended_Item_Replacer
             //harmony.Patch(DoMsgOriginal, prefix: new HarmonyMethod(typeof(Open_Ended_Item_Replacer).GetMethod("UIMsgBase_DoMsgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));*/
         }
 
-        static bool GetTrue() { return true; }
-        static bool GetFalse() { return false; }
+        static Func<bool> GetTrueFunc() 
+        {
+            bool GetTrue() { return true; }
+            return GetTrue; 
+        }
 
-        static Func<bool> GetPersistentBool(PersistentBoolItem persistent)
+        static Func<bool> GetFalseFunc()
+        {
+            bool GetFalse() { return false; }
+            return GetFalse; 
+        }
+
+        static Func<bool> GetPersistentBoolFunc(PersistentBoolItem persistent)
         {
             bool GetBool() { return SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID); }
 
             return GetBool;
         }
 
-        static Func<bool> GetPlayerDataBool(string playerDataBool)
+        static Func<bool> GetPlayerDataBoolFunc(string playerDataBool)
         {
             bool GetBool() 
             {
@@ -1486,12 +1492,12 @@ namespace Open_Ended_Item_Replacer
                 FsmState hasMelody = __instance.Fsm.GetState("Has Melody");
                 if (startLock == null || waitForNotify == null || hasMelody == null) { return; }
 
-                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBool(GenerateCheckPersistentSameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrue); // Replaces original persistence check with custom
+                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrueFunc()); // Replaces original persistence check with custom
 
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmActiveState(__instance.Fsm, startLock, waitForNotify, GetPlayerDataBool("hasNeedolin"), GetFalse); // Disables allowing getting the song part without needolin
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, startLock, waitForNotify, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc()); // Disables allowing getting the song part without needolin
 
                 //Array.Copy(startLock.Actions, 0, newActions, numberOfNewActions, startLock.Actions.Length);
                 startLock.Actions = ReturnCombinedActions(newActions, startLock.Actions);
@@ -1512,10 +1518,10 @@ namespace Open_Ended_Item_Replacer
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                newActions[0] = new SetFsmActiveState(__instance.Fsm, questActive, melodyNoQuest, GetPlayerDataBool("hasNeedolin"), GetFalse); // Disables allowing getting the song part without needolin
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, questActive, melodyNoQuest, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc()); // Disables allowing getting the song part without needolin
                 questActive.Actions = ReturnCombinedActions(newActions, questActive.Actions);
 
-                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBool(GenerateCheckPersistentSameScene("Last Conductor NPC", "Citadel Ascent Melody Conductor")), GetTrue);
+                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Last Conductor NPC", "Citadel Ascent Melody Conductor")), GetTrueFunc());
             }
         }
 
@@ -1530,9 +1536,9 @@ namespace Open_Ended_Item_Replacer
                 FsmState dlgEnd = __instance.Fsm.GetState("Dlg End");
                 FsmStateAction[] newActions = new FsmStateAction[2];
 
-                newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBool("hasNeedolin"), GetFalse);
+                newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc());
 
-                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBool(GenerateCheckPersistentSameScene("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrue);
+                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrueFunc());
 
                 needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
 
@@ -1554,15 +1560,14 @@ namespace Open_Ended_Item_Replacer
                 FsmState completeRepeat = __instance.Fsm.GetState(" Complete Repeat"); // I kid you not, this state has a space at the beginning of its name, and yes I did have to spend time debugging to discover this lmao
                 if (upgradeState == null || setUpgrade1 == null || setUpgrade2 == null || furtherUpgrades == null || completeRepeat == null) { return; }
 
-                // Further upgrades needs to have dialogue change with persistence checks 
+                FsmInt storeValue = (upgradeState.Actions[0] as GetPlayerDataInt).storeValue; // Gets the variable responsible for tracking current needle upgrade
 
-                upgradeState.Actions = new FsmStateAction[4];
-                upgradeState.Actions[0] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalse);
-                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetTrue);
-                upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalse);
-                upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBool(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrue);
-
-                furtherUpgrades.Actions.Length[2] = new GetProgressiveLevel();
+                upgradeState.Actions = new FsmStateAction[5];
+                upgradeState.Actions[0] = new GetProgressiveLevel(1, 4, __instance.Fsm.Owner.name, "Needle Upgrade", storeValue); // Sets the variable responsible for tracking current needle upgrade by checking the progressive persistent bools; necessary for price and dialogue functionality
+                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalseFunc()); // Upgrade 1
+                upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 2")), GetFalseFunc()); // Upgrade 2
+                upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalseFunc()); // Upgrade 3 and 4
+                upgradeState.Actions[4] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrueFunc()); // All upgrades
             }
         }
 
@@ -1662,21 +1667,17 @@ namespace Open_Ended_Item_Replacer
             if (__instance.Item.Value.name.Contains("Needle Upgrade"))
             {
                 GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                needleUpgradeItem.name = "Needle Upgrade 1";
+                PersistentBoolItem needleUpgradePersistence;
 
-                PersistentBoolItem needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1");
-
-                for (int i = 2; i < 5; i++)
+                for (int i = 1; i <= 4; i++)
                 {
+                    needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
+                    needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
+
                     if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
                     {
                         ReplaceFsmItemGet(__instance, needleUpgradeItem);
                         break;
-                    }
-                    else
-                    {
-                        needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
-                        needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
                     }
                 }
 
