@@ -112,7 +112,7 @@ namespace Open_Ended_Item_Replacer
                 needleUpgradeItem.name = progressiveItemName + " " + i.ToString();
                 needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[i - progressiveStart], needleUpgradeItem.name);
 
-                if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
+                if (!Open_Ended_Item_Replacer.GetPersistentBool(needleUpgradePersistence))
                 {
                     storeResult.Value = i - 1; // Minus 1 as the previous i will be the last "true" bool
                     break;
@@ -236,7 +236,7 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             // Handles persistence set by new item
-            if (!SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+            if (!Open_Ended_Item_Replacer.GetPersistentBool(genericItem.persistentBoolItem))
             {
                 genericItem.Get();
             }
@@ -397,9 +397,19 @@ namespace Open_Ended_Item_Replacer
             return GetFalse; 
         }
 
+        public static bool GetPersistentBool(PersistentBoolItem persistent)
+        {
+            return SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID);
+        }
+
+        public static bool GetPersistentBool(string sceneName, string persistentID)
+        {
+            return SceneData.instance.PersistentBools.GetValueOrDefault(sceneName, persistentID);
+        }
+
         static Func<bool> GetPersistentBoolFunc(PersistentBoolItem persistent)
         {
-            bool GetBool() { return SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID); }
+            bool GetBool() { return GetPersistentBool(persistent); }
 
             return GetBool;
         }
@@ -614,7 +624,7 @@ namespace Open_Ended_Item_Replacer
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameManager), "LevelActivated")]
-        public static void GameManager_LevelActivatedPostfix(GameManager __instance)
+        public static void GameManager_LevelActivated_Postfix(GameManager __instance)
         {
             string sceneName = SceneManager.GetActiveScene().name;
 
@@ -668,9 +678,34 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameManager), "TimePasses")]
+        public static void GameManager_TimePasses_Postfix(GameManager __instance)
+        {
+            PlayerData playerData = __instance.playerData;
+            string sceneNameString = __instance.GetSceneNameString();
+
+            if (sceneNameString != "Room_Pinstress")
+            {
+                if (playerData.blackThreadWorld)
+                {
+                    logSource.LogInfo("time passed");
+
+                    if (GetPersistentBool("Room_Pinstress", GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash").ItemData.ID))
+                    {
+                        playerData.pinstressQuestReady = true;
+                    }
+                    else
+                    {
+                        playerData.pinstressQuestReady = false;
+                    }
+                }
+            }
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SceneAdditiveLoadConditional), "TryTestLoad")]
-        private static bool TransitionPoint_DoSceneTransition(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests, ref bool __result)
+        private static bool SceneAdditiveLoadConditional_TryTestLoad_Prefix(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests, ref bool __result)
         {
             if (!Traverse.Create(__instance).Field("sceneNameToLoad").GetValue<string>().ToLower().Contains("bone_east_08")) { return true; }
 
@@ -711,7 +746,7 @@ namespace Open_Ended_Item_Replacer
         private static Transform testTransform;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
-        private static void StartSlashPostfix(NailSlash __instance)
+        private static void NailSlash_StartSlash_Postfix(NailSlash __instance)
         {
             //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
             //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);
@@ -870,7 +905,7 @@ namespace Open_Ended_Item_Replacer
 
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+            if (GetPersistentBool(genericItem.persistentBoolItem))
             {
                 giantFlea.gameObject.SetActive(false);
                 __instance.gameObject.SetActive(false);
@@ -892,7 +927,7 @@ namespace Open_Ended_Item_Replacer
             genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, item.name, genericItem);
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+            if (GetPersistentBool(genericItem.persistentBoolItem))
             {
                 logSource.LogInfo("Replacement set inactive: " + genericItem.persistentBoolItem.ItemData.SceneName + "   " + genericItem.persistentBoolItem.ItemData.ID);
             }
@@ -917,7 +952,7 @@ namespace Open_Ended_Item_Replacer
             genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+            if (GetPersistentBool(genericItem.persistentBoolItem))
             {
                 logSource.LogInfo("Replacement set inactive");
             }
@@ -931,7 +966,7 @@ namespace Open_Ended_Item_Replacer
         // All physically placed mask shards (heart piece) and spool fragments (silk spool) have persistent bools attributed to them
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PersistentBoolItem), "Awake")]
-        private static void PersistentBoolItem_AwakePostfix(PersistentBoolItem __instance)
+        private static void PersistentBoolItem_Awake_Postfix(PersistentBoolItem __instance)
         {
             if (__instance.ItemData.ID.ToLower().StartsWith("heart piece"))
             {
@@ -1116,7 +1151,7 @@ namespace Open_Ended_Item_Replacer
                     }
 
                     // Handles persistence for the container
-                    if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+                    if (GetPersistentBool(persistent))
                     {
                         gameObject.SetActive(false);
                         logSource.LogInfo("Container set inactive");
@@ -1414,7 +1449,7 @@ namespace Open_Ended_Item_Replacer
                 // Handles persistence set by new item
                 GameObject dummyGameObject = new GameObject("Rune Bomb");
                 UniqueID uniqueID = new UniqueID(dummyGameObject, "Rune Bomb");
-                if (SceneData.instance.PersistentBools.GetValueOrDefault("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
+                if (GetPersistentBool("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
                 {
                     __instance.gameObject.SetActive(false);
                 }
@@ -1627,11 +1662,36 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandlePinstress(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "States" && __instance.gameObject?.name == "Pinstress States")
+            {
+                FsmState check = __instance.Fsm.GetState("Check");
+                FsmState ground = __instance.Fsm.GetState("Ground");
+                if (check == null || ground == null) { return; }
+
+                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash")), GetFalseFunc());
+            }
+
+            if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject?.name == "Pinstress Interior Ground Sit")
+            {
+                FsmState save = __instance.Fsm.GetState("Save");
+                FsmState met = __instance.Fsm.GetState("Met?");
+                FsmState reofferDlg = __instance.Fsm.GetState("Reoffer Dlg");
+                if (save == null || met == null) { return; }
+
+                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash")), GetFalseFunc());
+
+                GameObject dummyGameObject = new GameObject("Charge Slash");
+                save.Actions[2] = new GetCheck(dummyGameObject, "Charge Slash");
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PlayMakerFSM), "Awake")]
-        private static void PlayMakerFSM_AwakePostfix(PlayMakerFSM __instance)
+        private static void PlayMakerFSM_Awake_Postfix(PlayMakerFSM __instance)
         {
             HandleFlea(__instance);
 
@@ -1660,6 +1720,8 @@ namespace Open_Ended_Item_Replacer
 
             HandleSeamstress(__instance);
             HandleFourthChorus(__instance);
+
+            HandlePinstress(__instance);
         }
 
         /*HarmonyPostfix]
@@ -1673,7 +1735,7 @@ namespace Open_Ended_Item_Replacer
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CollectableItemCollect), "DoAction")]
-        private static bool CollectableItemCollect_DoActionPrefix(CollectableItemCollect __instance, CollectableItem item)
+        private static bool CollectableItemCollect_DoAction_Prefix(CollectableItemCollect __instance, CollectableItem item)
         {
             ReplaceFsmItemGet(__instance, item);
 
@@ -1684,7 +1746,7 @@ namespace Open_Ended_Item_Replacer
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SavedItemGet), "OnEnter")]
-        private static bool SavedItemGet_OnEnterPrefix(SavedItemGet __instance)
+        private static bool SavedItemGet_OnEnter_Prefix(SavedItemGet __instance)
         {
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
@@ -1696,7 +1758,7 @@ namespace Open_Ended_Item_Replacer
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SavedItemGetV2), "OnEnter")]
-        private static bool SavedItemGetV2_OnEnterPrefix(SavedItemGetV2 __instance)
+        private static bool SavedItemGetV2_OnEnter_Prefix(SavedItemGetV2 __instance)
         {
             if (__instance.Item.Value.name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
             {
@@ -1713,7 +1775,7 @@ namespace Open_Ended_Item_Replacer
                     needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
                     needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
 
-                    if (!SceneData.instance.PersistentBools.GetValueOrDefault(needleUpgradePersistence.ItemData.SceneName, needleUpgradePersistence.ItemData.ID))
+                    if (!GetPersistentBool(needleUpgradePersistence))
                     {
                         ReplaceFsmItemGet(__instance, needleUpgradeItem);
                         break;
@@ -1733,7 +1795,7 @@ namespace Open_Ended_Item_Replacer
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SavedItemGetDelayed), "DoGet")]
-        private static bool SavedItemGetDelayed_DoGetPrefix(SavedItemGet __instance)
+        private static bool SavedItemGetDelayed_DoGet_Prefix(SavedItemGet __instance)
         {
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
@@ -1745,7 +1807,7 @@ namespace Open_Ended_Item_Replacer
         // Should handle the vast majority of cases of being given an item from an NPC
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SetToolUnlocked), "OnEnter")]
-        private static bool SetToolUnlocked_OnEnterPrefix(SetToolUnlocked __instance)
+        private static bool SetToolUnlocked_OnEnter_Prefix(SetToolUnlocked __instance)
         {
             ReplaceFsmToolGet(__instance);
 
@@ -1757,7 +1819,7 @@ namespace Open_Ended_Item_Replacer
         // Stops NPCs locking tools when not actually replacing them
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SetToolLocked), "OnEnter")]
-        private static bool SetToolLocked_OnEnterPrefix(SetToolLocked __instance)
+        private static bool SetToolLocked_OnEnter_Prefix(SetToolLocked __instance)
         {
             __instance.Finish();
             return false;
@@ -1862,7 +1924,7 @@ namespace Open_Ended_Item_Replacer
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
-        private static void CreateUIMsgGetItem_OnEnterPrefix(CreateUIMsgGetItem __instance)
+        private static void CreateUIMsgGetItem_OnEnter_Prefix(CreateUIMsgGetItem __instance)
         {
             PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
 
@@ -1871,7 +1933,7 @@ namespace Open_Ended_Item_Replacer
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SpawnObjectFromGlobalPool), "OnEnter")]
-        private static void SpawnObjectFromGlobalPool_OnEnterPrefix(SpawnObjectFromGlobalPool __instance)
+        private static void SpawnObjectFromGlobalPool_OnEnter_Prefix(SpawnObjectFromGlobalPool __instance)
         {
             PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
             if (playMakerFsm == null) { return; }
@@ -1881,7 +1943,7 @@ namespace Open_Ended_Item_Replacer
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CreateObject), "OnEnter")]
-        private static void CreateObject_OnEnterPrefix(CreateObject __instance)
+        private static void CreateObject_OnEnter_Prefix(CreateObject __instance)
         {
             if (__instance.gameObject.Value == null) { return; }
 
@@ -1905,7 +1967,7 @@ namespace Open_Ended_Item_Replacer
                 genericItem.persistentBoolItem = GenerateSetPersistent(__instance.Fsm.GameObject, itemName, genericItem);
 
                 // Handles persistence set by new item
-                if (!SceneData.instance.PersistentBools.GetValueOrDefault(genericItem.persistentBoolItem.ItemData.SceneName, genericItem.persistentBoolItem.ItemData.ID))
+                if (!GetPersistentBool(genericItem.persistentBoolItem))
                 {
                     genericItem.Get();
                 }
@@ -1949,7 +2011,7 @@ namespace Open_Ended_Item_Replacer
         private static bool spawningReplacementCollectableItemPickup = false;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
-        private static void CollectableItemPickup_OnEnablePostfix(CollectableItemPickup __instance) //, PersistentBoolItem ___persistent)
+        private static void CollectableItemPickup_OnEnable_Postfix(CollectableItemPickup __instance) //, PersistentBoolItem ___persistent)
         {
             logSource.LogMessage("CollectableItemPickup Enabled");
 
@@ -2047,7 +2109,7 @@ namespace Open_Ended_Item_Replacer
             logSource.LogInfo("Pickup Item Set: " + genericItem.name);
 
             // Handles persistence set by new item
-            if (SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID))
+            if (GetPersistentBool(persistent))
             {
                 collectableItemPickup.gameObject.SetActive(false);
                 logSource.LogInfo("Replacement set inactive");
