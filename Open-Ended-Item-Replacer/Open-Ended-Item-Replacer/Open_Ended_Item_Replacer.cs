@@ -16,6 +16,7 @@ using TeamCherry.Localization;
 using TeamCherry.SharedUtils;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 using static AchievementPopup;
 using static CollectableItem;
@@ -24,6 +25,7 @@ using static GameManager;
 using static GamepadVibrationMixer.GamepadVibrationEmission;
 using static HutongGames.EasingFunction;
 using static HutongGames.PlayMaker.FsmEventTarget;
+using static PlayerDataTest;
 using static tk2dSpriteCollectionDefinition;
 using static UnityEngine.UI.Image;
 using static UnityEngine.UI.Selectable;
@@ -624,8 +626,6 @@ namespace Open_Ended_Item_Replacer
                 LevelActivatedDebugging();
             }
 
-            GameObject[] objects = FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            
             // Stops softlocking in memories
             PlayerData playerData = PlayerData.instance;
             if (!hasGranted)
@@ -665,14 +665,6 @@ namespace Open_Ended_Item_Replacer
                     playerData.hasDoubleJump = hasDoubleJump;
                     playerData.hasSuperJump = hasSuperJump;
                 }
-                /*else if (sceneName.ToLower() == "bone_east_08")
-                {
-                    logSource.LogMessage("TEST");
-
-                    hasGranted = false;
-
-                    playerData.hasBrolly = hasBrolly;
-                }*/
             }
         }
 
@@ -680,51 +672,44 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(TransitionPoint), "DoSceneTransition")]
         private static void TransitionPoint_DoSceneTransition(TransitionPoint __instance)
         {
-            
-            if (__instance.targetScene.ToLower() == "bone_east_08")
+            if (__instance.targetScene.ToLower().Contains("bone_east_08"))
             {
                 if (QuestManager.GetQuest("Brolly Get").IsCompleted)
                 {
-                    //logSource.LogMessage("TEST TRANS");
-                    //PlayerData playerData = PlayerData.instance;
-                    //hasBrolly = playerData.hasBrolly;
-                    //hasGranted = true;
-
-                    /*if (__instance.customEntryFSM == null) { return; }
-                    logSource.LogMessage("custom");
-
-                    foreach (var state in __instance.customEntryFSM.Fsm.States)
-                    {
-                        logSource.LogMessage(state.Name);
-                    }
-
-                    
+                    logSource.LogMessage("TEST TRANS");
+                    PlayerData playerData = PlayerData.instance;
+                    hasBrolly = playerData.hasBrolly;
+                    playerData.hasBrolly = true;
+                    hasGranted = true;
                 }
             }
         }*/
 
         /*[HarmonyPrefix]
-        [HarmonyPatch(typeof(GameManager), "BeginSceneTransition")]
-        private static void GameManager_BeginSceneTransition(GameManager __instance, SceneLoadInfo info)
+        [HarmonyPatch(typeof(WorldInfo), "NameLooksLikeAdditiveLoadScene")]
+        private static void TransitionPoint_DoSceneTransition()
         {
-            if (QuestManager.GetQuest("Brolly Get").IsCompleted)
-            {
-                logSource.LogInfo(info.ToString());
-
-                if (info.SceneResourceLocation == null) {  return; }
-
-                logSource.LogInfo(info.SceneResourceLocation.ToString());
-            }
+            throw new NotImplementedException();
         }*/
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(SceneLoad), "BeginRoutine")]
-        private static void BeginRoutine(SceneLoad __instance)
+        [HarmonyPatch(typeof(SceneAdditiveLoadConditional), "TryTestLoad")]
+        private static void TransitionPoint_DoSceneTransition(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests)
         {
-            if (QuestManager.GetQuest("Brolly Get").IsCompleted)
+            foreach (TestGroup testGroup in ___tests.TestGroups)
             {
-                logSource.LogInfo(__instance.SceneLoadInfo.SceneName);
-                logSource.LogInfo(__instance.TargetSceneName);
+                for (int i = 0; i < testGroup.Tests.Length; i++)
+                {
+                    if (testGroup.Tests[i].FieldName == "hasBrolly")
+                    {
+                        ___tests.TestGroups = new TestGroup[0];
+
+                        ___questTests = new QuestTest[1];
+                        ___questTests[0] = new QuestTest();
+                        ___questTests[0].Quest = QuestManager.GetQuest("Brolly Get");
+                        ___questTests[0].CheckCompleted = true;
+                    }
+                }
             }
         }
 
@@ -1645,38 +1630,6 @@ namespace Open_Ended_Item_Replacer
 
                 init.Actions[19] = checkBrollyGetQuest;
             }
-
-            /*else if (__instance.Fsm.Name == "Wake" && __instance.gameObject?.name == "Golem_rest")
-            {
-                FsmState end = __instance.Fsm.GetState("End");
-                if (end == null) { return; }
-
-                FsmStateAction[] newActions = new FsmStateAction[1];
-
-                ActivateGameObject activateGameObject = new ActivateGameObject();
-                activateGameObject.activate = true;
-
-                FsmOwnerDefault ownerDefault = new FsmOwnerDefault();
-
-                ownerDefault.GameObject = GameObject.Find("song_golem");
-                ownerDefault.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
-
-                //logSource.LogInfo(ownerDefault.GameObject.Value.name);
-
-                activateGameObject.gameObject = ownerDefault;
-
-                newActions[0] = activateGameObject;
-
-                end.Actions = ReturnCombinedActions(end.Actions, newActions);
-            }
-
-            else if (__instance.Fsm.Name == "Pre build" && __instance.gameObject?.name == "Boss Scene")
-            {
-                FsmState state1 = __instance.Fsm.GetState("State 1");
-                if (state1 == null) { return; }
-
-                logSource.LogWarning((state1.Actions[0] as SetGameObjectSelf).gameObject);
-            }*/
         }
 
         // Handles FSM checks
@@ -1714,32 +1667,11 @@ namespace Open_Ended_Item_Replacer
             HandleFourthChorus(__instance);
         }
 
-        /*[HarmonyPostfix]
-        [HarmonyPatch(typeof(Fsm), "Awake")]
+        /*HarmonyPostfix]
+        [HarmonyPatch(typeof(Fsm), "Start")]
         private static void PlayMakerFSM_AwakePostfix(Fsm __instance)
         {
-            if (__instance == null) { return; }
-            if (__instance.States == null) { return; }
-
-            foreach (var state in __instance.States)
-            {
-                if (state.Actions == null) { continue; }
-
-                foreach (var action in state.Actions)
-                {
-                    if (action == null) { continue; }
-
-                    if (action.GetType() == typeof(PlayerDataBoolTest))
-                    {
-                        logSource.LogInfo((action as PlayerDataBoolTest).boolName);
-                    }
-                    if (action.GetType() == typeof(PlayerDataBoolTrueAndFalse))
-                    {
-                        logSource.LogInfo((action as PlayerDataBoolTrueAndFalse).trueBool);
-                        logSource.LogInfo((action as PlayerDataBoolTrueAndFalse).falseBool);
-                    }
-                }
-            }
+            logSource.LogInfo(__instance.Name);
         }*/
 
         // Handles when FSMs run CollectableItemCollect
