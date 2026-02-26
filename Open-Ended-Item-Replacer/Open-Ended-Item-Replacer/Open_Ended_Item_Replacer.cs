@@ -668,49 +668,44 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        /*[HarmonyPrefix]
-        [HarmonyPatch(typeof(TransitionPoint), "DoSceneTransition")]
-        private static void TransitionPoint_DoSceneTransition(TransitionPoint __instance)
-        {
-            if (__instance.targetScene.ToLower().Contains("bone_east_08"))
-            {
-                if (QuestManager.GetQuest("Brolly Get").IsCompleted)
-                {
-                    logSource.LogMessage("TEST TRANS");
-                    PlayerData playerData = PlayerData.instance;
-                    hasBrolly = playerData.hasBrolly;
-                    playerData.hasBrolly = true;
-                    hasGranted = true;
-                }
-            }
-        }*/
-
-        /*[HarmonyPrefix]
-        [HarmonyPatch(typeof(WorldInfo), "NameLooksLikeAdditiveLoadScene")]
-        private static void TransitionPoint_DoSceneTransition()
-        {
-            throw new NotImplementedException();
-        }*/
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SceneAdditiveLoadConditional), "TryTestLoad")]
-        private static void TransitionPoint_DoSceneTransition(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests)
+        private static bool TransitionPoint_DoSceneTransition(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests, ref bool __result)
         {
+            if (!Traverse.Create(__instance).Field("sceneNameToLoad").GetValue<string>().ToLower().Contains("bone_east_08")) { return true; }
+
             foreach (TestGroup testGroup in ___tests.TestGroups)
             {
                 for (int i = 0; i < testGroup.Tests.Length; i++)
                 {
+                    logSource.LogInfo(testGroup.Tests[i].FieldName);
+
                     if (testGroup.Tests[i].FieldName == "hasBrolly")
                     {
-                        ___tests.TestGroups = new TestGroup[0];
 
-                        ___questTests = new QuestTest[1];
-                        ___questTests[0] = new QuestTest();
-                        ___questTests[0].Quest = QuestManager.GetQuest("Brolly Get");
-                        ___questTests[0].CheckCompleted = true;
+                        if (QuestManager.GetQuest("Brolly Get").IsCompleted)
+                        {
+                            if (PlayerData.instance.defeatedSongGolem)
+                            {
+                                __result = false;
+                            }
+                            else
+                            {
+                                __result = true;
+                            }
+                        }
+
+                        return false;
                     }
                 }
             }
+
+            /*foreach (QuestTest test in ___questTests)
+            {
+                logSource.LogInfo(test.Quest.DisplayName);
+            }*/
+
+            return true;
         }
 
         private static Transform testTransform;
@@ -1878,7 +1873,7 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SpawnObjectFromGlobalPool), "OnEnter")]
         private static void SpawnObjectFromGlobalPool_OnEnterPrefix(SpawnObjectFromGlobalPool __instance)
         {
-            PlayMakerFSM playMakerFsm = __instance.gameObject.Value.transform.GetComponent<PlayMakerFSM>();
+            PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
             if (playMakerFsm == null) { return; }
 
             HandleUiMsgGetItemMelody(playMakerFsm, __instance);
