@@ -7,6 +7,7 @@ using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using InControl;
+using QuestPlaymakerActions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ using UnityEngine.SceneManagement;
 using static AchievementPopup;
 using static CollectableItem;
 using static FullQuestBase;
+using static GameManager;
 using static GamepadVibrationMixer.GamepadVibrationEmission;
 using static HutongGames.EasingFunction;
 using static HutongGames.PlayMaker.FsmEventTarget;
@@ -608,7 +610,6 @@ namespace Open_Ended_Item_Replacer
 
         static bool hasGranted;
 
-        // Similarly used for debugging, will be removed later
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameManager), "LevelActivated")]
         public static void GameManager_LevelActivatedPostfix(GameManager __instance)
@@ -623,27 +624,8 @@ namespace Open_Ended_Item_Replacer
                 LevelActivatedDebugging();
             }
 
-            // DISABLED, DOESN'T TRACK PROPERLY
-            // If in a memory, immediately leave
-            /*if (sceneName.ToLower().Contains("memory") && (sceneName.ToLower().Contains("silk_heart") || sceneName.ToLower().Contains("needolin") || sceneName.ToLower().Contains("first_sinner")))
-            {
-                string nextSceneName;
-                if (sceneName.ToLower().Contains("lacetower"))
-                {
-                    nextSceneName = "";
-                }
-                else if (sceneName.ToLower().Contains("wardboss"))
-                {
-                    nextSceneName = "Ward_02_Boss";
-                }
-                else // bell beast
-                {
-                    nextSceneName = "Bone_05";
-                }
-
-                SceneManager.LoadScene(nextSceneName);
-            }*/
-
+            GameObject[] objects = FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            
             // Stops softlocking in memories
             PlayerData playerData = PlayerData.instance;
             if (!hasGranted)
@@ -683,6 +665,66 @@ namespace Open_Ended_Item_Replacer
                     playerData.hasDoubleJump = hasDoubleJump;
                     playerData.hasSuperJump = hasSuperJump;
                 }
+                /*else if (sceneName.ToLower() == "bone_east_08")
+                {
+                    logSource.LogMessage("TEST");
+
+                    hasGranted = false;
+
+                    playerData.hasBrolly = hasBrolly;
+                }*/
+            }
+        }
+
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(TransitionPoint), "DoSceneTransition")]
+        private static void TransitionPoint_DoSceneTransition(TransitionPoint __instance)
+        {
+            
+            if (__instance.targetScene.ToLower() == "bone_east_08")
+            {
+                if (QuestManager.GetQuest("Brolly Get").IsCompleted)
+                {
+                    //logSource.LogMessage("TEST TRANS");
+                    //PlayerData playerData = PlayerData.instance;
+                    //hasBrolly = playerData.hasBrolly;
+                    //hasGranted = true;
+
+                    /*if (__instance.customEntryFSM == null) { return; }
+                    logSource.LogMessage("custom");
+
+                    foreach (var state in __instance.customEntryFSM.Fsm.States)
+                    {
+                        logSource.LogMessage(state.Name);
+                    }
+
+                    
+                }
+            }
+        }*/
+
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(GameManager), "BeginSceneTransition")]
+        private static void GameManager_BeginSceneTransition(GameManager __instance, SceneLoadInfo info)
+        {
+            if (QuestManager.GetQuest("Brolly Get").IsCompleted)
+            {
+                logSource.LogInfo(info.ToString());
+
+                if (info.SceneResourceLocation == null) {  return; }
+
+                logSource.LogInfo(info.SceneResourceLocation.ToString());
+            }
+        }*/
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SceneLoad), "BeginRoutine")]
+        private static void BeginRoutine(SceneLoad __instance)
+        {
+            if (QuestManager.GetQuest("Brolly Get").IsCompleted)
+            {
+                logSource.LogInfo(__instance.SceneLoadInfo.SceneName);
+                logSource.LogInfo(__instance.TargetSceneName);
             }
         }
 
@@ -705,17 +747,17 @@ namespace Open_Ended_Item_Replacer
                 logSource.LogMessage(quest.DisplayName);
             }*/
 
-            //logSource.LogMessage("Slash Postfix");
+                    //logSource.LogMessage("Slash Postfix");
 
-            //HeroController heroControl = GameManager.instance.hero_ctrl;
+                    //HeroController heroControl = GameManager.instance.hero_ctrl;
 
-            //logSource.LogInfo(test.GetComponent<Rigidbody2D>().gravityScale);
-            //logSource.LogInfo(testAction.gravityScale);
+                    //logSource.LogInfo(test.GetComponent<Rigidbody2D>().gravityScale);
+                    //logSource.LogInfo(testAction.gravityScale);
 
-            /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
-            spawningReplacementCollectableItemPickup = true;
-            SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
-            spawningReplacementCollectableItemPickup = false;*/
+                    /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
+                    spawningReplacementCollectableItemPickup = true;
+                    SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
+                    spawningReplacementCollectableItemPickup = false;*/
         }
 
         public static string replacementFlag = "_(Replacement)";
@@ -1583,6 +1625,60 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleFourthChorus(PlayMakerFSM __instance)
+        {
+            // Fourth Chorus; "Control" "Boss Scene" "Init 18 and 19" -> Will need a more identifying part of this fsm to avoid triggering for other bosses
+
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Boss Scene")
+            {
+                FsmState activateReturnBombRock = __instance.Fsm.GetState("Activate Return Bomb Rock"); // Hopefully a unique enough state name to uniquely identify fourth chorus
+                FsmState init = __instance.Fsm.GetState("Init");
+                if (activateReturnBombRock == null || init == null) { return; }
+
+                init.Actions[18] = init.Actions[19]; // Moves checking whether encountered Fourth Chorus prior to checking the quest
+
+                CheckQuestState checkBrollyGetQuest = new CheckQuestState();
+                checkBrollyGetQuest.Quest = QuestManager.GetQuest("Brolly Get");
+                checkBrollyGetQuest.NotTrackedEvent = FsmEvent.GetFsmEvent("");
+                checkBrollyGetQuest.TrackedEvent = FsmEvent.GetFsmEvent("");
+                checkBrollyGetQuest.CompletedEvent = FsmEvent.GetFsmEvent("MEET READY");
+
+                init.Actions[19] = checkBrollyGetQuest;
+            }
+
+            /*else if (__instance.Fsm.Name == "Wake" && __instance.gameObject?.name == "Golem_rest")
+            {
+                FsmState end = __instance.Fsm.GetState("End");
+                if (end == null) { return; }
+
+                FsmStateAction[] newActions = new FsmStateAction[1];
+
+                ActivateGameObject activateGameObject = new ActivateGameObject();
+                activateGameObject.activate = true;
+
+                FsmOwnerDefault ownerDefault = new FsmOwnerDefault();
+
+                ownerDefault.GameObject = GameObject.Find("song_golem");
+                ownerDefault.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+
+                //logSource.LogInfo(ownerDefault.GameObject.Value.name);
+
+                activateGameObject.gameObject = ownerDefault;
+
+                newActions[0] = activateGameObject;
+
+                end.Actions = ReturnCombinedActions(end.Actions, newActions);
+            }
+
+            else if (__instance.Fsm.Name == "Pre build" && __instance.gameObject?.name == "Boss Scene")
+            {
+                FsmState state1 = __instance.Fsm.GetState("State 1");
+                if (state1 == null) { return; }
+
+                logSource.LogWarning((state1.Actions[0] as SetGameObjectSelf).gameObject);
+            }*/
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -1615,33 +1711,35 @@ namespace Open_Ended_Item_Replacer
             HandlePlinney(__instance);
 
             HandleSeamstress(__instance);
+            HandleFourthChorus(__instance);
         }
 
         /*[HarmonyPostfix]
         [HarmonyPatch(typeof(Fsm), "Awake")]
         private static void PlayMakerFSM_AwakePostfix(Fsm __instance)
         {
-            HandleFlea(__instance);
+            if (__instance == null) { return; }
+            if (__instance.States == null) { return; }
 
-            HandleWeaverStatue(__instance);
+            foreach (var state in __instance.States)
+            {
+                if (state.Actions == null) { continue; }
 
-            HandleCrest(__instance);
-            HandleCrestDoor(__instance);
+                foreach (var action in state.Actions)
+                {
+                    if (action == null) { continue; }
 
-            HandleSilkNeedle(__instance);
-
-            HandleSilkHeart(__instance);
-
-            HandleNeedolinPreMemory(__instance);
-            HandleNeedolinInMemory(__instance);
-
-            HandleFirstSinnerPersistenceAndPickup(__instance);
-            HandleFirstSinnerInMemory(__instance);
-
-            HandlePhantom(__instance);
-
-            HandleArchitectMelody(__instance);
-            HandleConductorMelody(__instance);
+                    if (action.GetType() == typeof(PlayerDataBoolTest))
+                    {
+                        logSource.LogInfo((action as PlayerDataBoolTest).boolName);
+                    }
+                    if (action.GetType() == typeof(PlayerDataBoolTrueAndFalse))
+                    {
+                        logSource.LogInfo((action as PlayerDataBoolTrueAndFalse).trueBool);
+                        logSource.LogInfo((action as PlayerDataBoolTrueAndFalse).falseBool);
+                    }
+                }
+            }
         }*/
 
         // Handles when FSMs run CollectableItemCollect
