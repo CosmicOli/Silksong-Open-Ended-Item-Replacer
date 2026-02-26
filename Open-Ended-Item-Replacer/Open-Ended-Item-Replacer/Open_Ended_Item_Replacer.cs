@@ -691,7 +691,7 @@ namespace Open_Ended_Item_Replacer
                 {
                     logSource.LogInfo("time passed");
 
-                    if (GetPersistentBool("Room_Pinstress", GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash").ItemData.ID))
+                    if (GetPersistentBool("Room_Pinstress", GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike").ItemData.ID))
                     {
                         playerData.pinstressQuestReady = true;
                     }
@@ -1670,7 +1670,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState ground = __instance.Fsm.GetState("Ground");
                 if (check == null || ground == null) { return; }
 
-                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash")), GetFalseFunc());
+                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
             }
 
             if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject?.name == "Pinstress Interior Ground Sit")
@@ -1680,10 +1680,30 @@ namespace Open_Ended_Item_Replacer
                 FsmState reofferDlg = __instance.Fsm.GetState("Reoffer Dlg");
                 if (save == null || met == null) { return; }
 
-                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Charge Slash", "Charge Slash")), GetFalseFunc());
+                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
 
-                GameObject dummyGameObject = new GameObject("Charge Slash");
-                save.Actions[2] = new GetCheck(dummyGameObject, "Charge Slash");
+                GameObject dummyGameObject = new GameObject("Needle Strike");
+                save.Actions[2] = new GetCheck(dummyGameObject, "Needle Strike");
+            }
+        }
+
+        private static void HandleFaydownCloak(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "DJ Get Sequence" && __instance.gameObject?.name == "DJ Get Sequence")
+            {
+                FsmState hasDJ = __instance.Fsm.GetState("Has DJ?");
+                FsmState startBlizzardAudio = __instance.Fsm.GetState("Start Blizzard Audio");
+                FsmState completed = __instance.Fsm.GetState("Completed");
+                FsmState breakTuningFork = __instance.Fsm.GetState("Break Tuning Fork");
+
+                if (hasDJ == null || startBlizzardAudio == null || completed == null || breakTuningFork == null) { return; }
+
+                hasDJ.Actions = new FsmStateAction[2];
+                hasDJ.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasDJ, startBlizzardAudio, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Faydown Cloak", "Faydown Cloak")), GetFalseFunc());
+                hasDJ.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasDJ, completed, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Faydown Cloak", "Faydown Cloak")), GetTrueFunc());
+
+                GameObject dummyGameObject = new GameObject("Faydown Cloak");
+                breakTuningFork.Actions[3] = new GetCheck(dummyGameObject, "Faydown Cloak");
             }
         }
 
@@ -1722,6 +1742,8 @@ namespace Open_Ended_Item_Replacer
             HandleFourthChorus(__instance);
 
             HandlePinstress(__instance);
+
+            HandleFaydownCloak(__instance);
         }
 
         /*HarmonyPostfix]
