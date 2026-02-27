@@ -105,19 +105,36 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            PersistentBoolItem needleUpgradePersistence;
+            PersistentItemData<bool> needleUpgradePersistentBoolData;
 
             for (int i = progressiveStart; i <= progressiveEnd; i++)
             {
                 needleUpgradeItem.name = progressiveItemName + " " + i.ToString();
-                needleUpgradePersistence = Open_Ended_Item_Replacer.GenerateCheckPersistentSameScene(gameObjectNames[i - progressiveStart], needleUpgradeItem.name);
+                needleUpgradePersistentBoolData = Open_Ended_Item_Replacer.GeneratePersistentBoolData_SameScene(gameObjectNames[i - progressiveStart], needleUpgradeItem.name);
 
-                if (!Open_Ended_Item_Replacer.GetPersistentBool(needleUpgradePersistence))
+                if (!Open_Ended_Item_Replacer.GetPersistentBoolFromData(needleUpgradePersistentBoolData))
                 {
                     storeResult.Value = i - 1; // Minus 1 as the previous i will be the last "true" bool
                     break;
                 }
             }
+        }
+    }
+
+    public class GetPersistentBoolUsingPersistentItemBool : FsmStateAction
+    {
+        PersistentItemData<bool> persistence;
+        FsmBool storeResult;
+
+        public GetPersistentBoolUsingPersistentItemBool(PersistentItemData<bool> persistence, FsmBool storeResult)
+        {
+            this.persistence = persistence;
+            this.storeResult = storeResult;
+        }
+
+        public override void OnEnter()
+        {
+            storeResult = Open_Ended_Item_Replacer.GetPersistentBoolFromData(persistence);
         }
     }
 
@@ -230,13 +247,13 @@ namespace Open_Ended_Item_Replacer
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = Open_Ended_Item_Replacer.GenerateSetPersistent(gameObject, itemName, genericItem);
+            genericItem.persistentBoolItem = Open_Ended_Item_Replacer.GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
         }
 
         public override void OnEnter()
         {
             // Handles persistence set by new item
-            if (!Open_Ended_Item_Replacer.GetPersistentBool(genericItem.persistentBoolItem))
+            if (!Open_Ended_Item_Replacer.GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
             {
                 genericItem.Get();
             }
@@ -290,17 +307,17 @@ namespace Open_Ended_Item_Replacer
 
     public class SetContainerPersistence : FsmStateAction
     {
-        PersistentBoolItem persistentBoolItem;
+        PersistentItemData<bool> persistentBoolData;
 
-        public SetContainerPersistence(PersistentBoolItem persistentBoolItem)
+        public SetContainerPersistence(PersistentItemData<bool> persistentBoolData)
         {
-            this.persistentBoolItem = persistentBoolItem;
+            this.persistentBoolData = persistentBoolData;
         }
 
         public override void OnEnter()
         {
-            persistentBoolItem.ItemData.Value = true;
-            SceneData.instance.PersistentBools.SetValue(persistentBoolItem.ItemData);
+            persistentBoolData.Value = true;
+            SceneData.instance.PersistentBools.SetValue(persistentBoolData);
 
             Active = false;
             Finished = true;
@@ -397,19 +414,19 @@ namespace Open_Ended_Item_Replacer
             return GetFalse; 
         }
 
-        public static bool GetPersistentBool(PersistentBoolItem persistent)
+        public static bool GetPersistentBoolFromData(PersistentItemData<bool> persistentBoolData)
         {
-            return SceneData.instance.PersistentBools.GetValueOrDefault(persistent.ItemData.SceneName, persistent.ItemData.ID);
+            return SceneData.instance.PersistentBools.GetValueOrDefault(persistentBoolData.SceneName, persistentBoolData.ID);
         }
 
-        public static bool GetPersistentBool(string sceneName, string persistentID)
+        public static bool GetPersistentBoolFromData(string sceneName, string persistentID)
         {
             return SceneData.instance.PersistentBools.GetValueOrDefault(sceneName, persistentID);
         }
 
-        static Func<bool> GetPersistentBoolFunc(PersistentBoolItem persistent)
+        static Func<bool> GetPersistentBoolFromDataFunc(PersistentItemData<bool> persistentData)
         {
-            bool GetBool() { return GetPersistentBool(persistent); }
+            bool GetBool() { return GetPersistentBoolFromData(persistentData); }
 
             return GetBool;
         }
@@ -429,13 +446,13 @@ namespace Open_Ended_Item_Replacer
             return GetBool;
         }
 
-        public static PersistentBoolItem GenerateSetPersistentSameScene(string gameObjectName, string originalItemName, GenericSavedItem replacementItem)
+        public static PersistentBoolItem GeneratePersistentBoolSetToItem_SameScene(string gameObjectName, string originalItemName, GenericSavedItem replacementItem)
         {
             GameObject gameObject = new GameObject(gameObjectName);
-            return GenerateSetPersistent(gameObject, originalItemName, replacementItem);
+            return GeneratePersistentBoolSetToItem(gameObject, originalItemName, replacementItem);
         }
 
-        public static PersistentBoolItem GenerateSetPersistent(GameObject gameObject, string originalItemName, GenericSavedItem replacementItem)
+        public static PersistentBoolItem GeneratePersistentBoolSetToItem(GameObject gameObject, string originalItemName, GenericSavedItem replacementItem)
         {
             UniqueID uniqueID = new UniqueID(gameObject, originalItemName);
             replacementItem.UniqueID = uniqueID;
@@ -446,19 +463,19 @@ namespace Open_Ended_Item_Replacer
             return persistent;
         }
 
-        public static PersistentBoolItem GenerateCheckPersistentSameScene(string gameObjectName, string originalItemName)
+        public static PersistentItemData<bool> GeneratePersistentBoolData_SameScene(string gameObjectName, string originalItemName)
         {
             GameObject gameObject = new GameObject(gameObjectName);
-            return GenerateCheckPersistent(gameObject, originalItemName);
+            return GeneratePersistentBoolData(gameObject, originalItemName);
         }
 
-        public static PersistentBoolItem GenerateCheckPersistent(GameObject gameObject, string originalItemName)
+        public static PersistentItemData<bool> GeneratePersistentBoolData(GameObject gameObject, string originalItemName)
         {
             UniqueID uniqueID = new UniqueID(gameObject, originalItemName);
-            PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
-            SetGenericPersistentInfo(uniqueID, persistent);
+            PersistentItemData<bool> persistentBoolData = new PersistentItemData<bool>();
+            SetGenericPersistentBoolDataInfo(uniqueID, persistentBoolData);
 
-            return persistent;
+            return persistentBoolData;
         }
 
         private static FsmStateAction[] ReturnCombinedActions(FsmStateAction[] preActions, FsmStateAction[] postActions)
@@ -691,7 +708,7 @@ namespace Open_Ended_Item_Replacer
                 {
                     logSource.LogInfo("time passed");
 
-                    if (GetPersistentBool("Room_Pinstress", GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike").ItemData.ID))
+                    if (GetPersistentBoolFromData("Room_Pinstress", GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike").ID))
                     {
                         playerData.pinstressQuestReady = true;
                     }
@@ -813,76 +830,12 @@ namespace Open_Ended_Item_Replacer
             return output;
         }
 
-        /*private static void ReplaceSilkHeart(GameObject gameObject)
-        {
-            gameObject.SetActive(false);
-
-            UniqueID uniqueID = new UniqueID(gameObject, "Silk Heart");
-
-            Transform transform = SpawnGenericCollisionPickup(uniqueID, null, gameObject.transform, Vector3.zero);
-        }*/
-
-        // Should just replace kratt physically
-        // Keeping code around for now as reference for changing dialogue
-        /*private static void ReplaceKrattPickup(PlayMakerFSM __instance)
-        {
-            // Removing flags for processing
-            string currentInstanceName = __instance.gameObject.name;
-            if (currentInstanceName.EndsWith(replacedFlag))
-            {
-                currentInstanceName = currentInstanceName.Substring(0, currentInstanceName.Length - replacedFlag.Length);
-            }
-            else
-            {
-                __instance.gameObject.name += replacedFlag;
-            }
-
-            string currentItemName = "FleasCollected Target";
-
-            // Defining the unique id for the new pickup
-            string pickupName = currentInstanceName + "-" + currentItemName;
-            string sceneName = GameManager.GetBaseSceneName(__instance.gameObject.scene.name);
-
-            UniqueID uniqueID = new UniqueID(pickupName, sceneName);
-
-            // Generates a generic item using the uniqueID
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.UniqueID = uniqueID;
-
-            PersistentBoolItem persistent = __instance.gameObject.AddComponent<PersistentBoolItem>();
-            SetGenericPersistentInfo(uniqueID, persistent);
-            genericItem.persistentItemBool = persistent;
-
-
-            // Handle actions on "Break" state
-            FsmStateAction[] breakActions = __instance.Fsm.GetState("Break").Actions;
-
-            FsmBool krattBool = new FsmBool();
-            krattBool.Value = false;
-
-            // Stops kratt being marked as saved in the player bools
-            HutongGames.PlayMaker.Actions.SetPlayerDataBool setKrattSaved = breakActions.OfType<HutongGames.PlayMaker.Actions.SetPlayerDataBool>().ToList()[0];
-            Traverse.Create(setKrattSaved).Field("value").SetValue(krattBool);
-
-            SavedItemGetV2 getItemBreak = breakActions.OfType<SavedItemGetV2>().ToList()[0];
-            getItemBreak.Item = genericItem;
-            getItemBreak.ShowPopup = true;
-            getItemBreak.Amount = 1;
-
-
-            // Handle actions on "NPC Ready" state
-            FsmStateAction[] NPCReadyActions = __instance.Fsm.GetState("NPC Ready").Actions;
-
-            SavedItemGetV2 getItemNPCReady = NPCReadyActions.OfType<SavedItemGetV2>().ToList()[0];
-            getItemNPCReady.Enabled = false;
-        }*/
-
         public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
         {
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = GenerateSetPersistent(fleaObject, genericFleaItemName, genericItem);
+            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(fleaObject, genericFleaItemName, genericItem);
 
             // Handle actions on "Stun" state
             FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
@@ -905,7 +858,7 @@ namespace Open_Ended_Item_Replacer
 
 
             // Handles persistence set by new item
-            if (GetPersistentBool(genericItem.persistentBoolItem))
+            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
             {
                 giantFlea.gameObject.SetActive(false);
                 __instance.gameObject.SetActive(false);
@@ -924,10 +877,10 @@ namespace Open_Ended_Item_Replacer
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, item.name, genericItem);
+            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
 
             // Handles persistence set by new item
-            if (GetPersistentBool(genericItem.persistentBoolItem))
+            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
             {
                 logSource.LogInfo("Replacement set inactive: " + genericItem.persistentBoolItem.ItemData.SceneName + "   " + genericItem.persistentBoolItem.ItemData.ID);
             }
@@ -949,10 +902,10 @@ namespace Open_Ended_Item_Replacer
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.persistentBoolItem = GenerateSetPersistent(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
+            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
 
             // Handles persistence set by new item
-            if (GetPersistentBool(genericItem.persistentBoolItem))
+            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
             {
                 logSource.LogInfo("Replacement set inactive");
             }
@@ -1076,7 +1029,7 @@ namespace Open_Ended_Item_Replacer
                         }
                     }
 
-                    PersistentBoolItem persistent = GenerateCheckPersistent(gameObject, genericFleaItemName);
+                    PersistentItemData<bool> persistentBoolData = GeneratePersistentBoolData(gameObject, genericFleaItemName);
 
                     Transform replacmentTransform;
 
@@ -1137,7 +1090,7 @@ namespace Open_Ended_Item_Replacer
                                     setGravity2dScaleV2.gameObject.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
                                     setGravity2dScaleV2.gameObject.GameObject = replacmentTransform.gameObject;
 
-                                    newActions[0] = new SetContainerPersistence(persistent);
+                                    newActions[0] = new SetContainerPersistence(persistentBoolData);
                                     newActions[1] = setGravity2dScaleV2;
                                     newActions[2] = new AllowPickup(replacmentTransform.GetComponent<CollectableItemPickup>());
 
@@ -1151,7 +1104,7 @@ namespace Open_Ended_Item_Replacer
                     }
 
                     // Handles persistence for the container
-                    if (GetPersistentBool(persistent))
+                    if (GetPersistentBoolFromData(persistentBoolData))
                     {
                         gameObject.SetActive(false);
                         logSource.LogInfo("Container set inactive");
@@ -1449,7 +1402,7 @@ namespace Open_Ended_Item_Replacer
                 // Handles persistence set by new item
                 GameObject dummyGameObject = new GameObject("Rune Bomb");
                 UniqueID uniqueID = new UniqueID(dummyGameObject, "Rune Bomb");
-                if (GetPersistentBool("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
+                if (GetPersistentBoolFromData("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
                 {
                     __instance.gameObject.SetActive(false);
                 }
@@ -1549,7 +1502,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState hasMelody = __instance.Fsm.GetState("Has Melody");
                 if (startLock == null || waitForNotify == null || hasMelody == null) { return; }
 
-                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrueFunc()); // Replaces original persistence check with custom
+                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrueFunc()); // Replaces original persistence check with custom
 
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
@@ -1578,7 +1531,7 @@ namespace Open_Ended_Item_Replacer
                 newActions[0] = new SetFsmActiveState(__instance.Fsm, questActive, melodyNoQuest, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc()); // Disables allowing getting the song part without needolin
                 questActive.Actions = ReturnCombinedActions(newActions, questActive.Actions);
 
-                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Last Conductor NPC", "Citadel Ascent Melody Conductor")), GetTrueFunc());
+                hasItem.Actions[8] = new SetFsmActiveState(__instance.Fsm, hasItem, repeatDlg, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Last Conductor NPC", "Citadel Ascent Melody Conductor")), GetTrueFunc());
             }
         }
 
@@ -1595,7 +1548,7 @@ namespace Open_Ended_Item_Replacer
 
                 newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc());
 
-                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrueFunc());
+                newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrueFunc());
 
                 needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
 
@@ -1621,10 +1574,10 @@ namespace Open_Ended_Item_Replacer
 
                 upgradeState.Actions = new FsmStateAction[5];
                 upgradeState.Actions[0] = new GetReplacedProgressiveLevel(1, 4, __instance.Fsm.Owner.name, "Needle Upgrade", storeValue); // Sets the variable responsible for tracking current needle upgrade by checking the progressive persistent bools; necessary for price and dialogue functionality
-                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalseFunc()); // Upgrade 1
-                upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 2")), GetFalseFunc()); // Upgrade 2
-                upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalseFunc()); // Upgrade 3 and 4
-                upgradeState.Actions[4] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBoolFunc(GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrueFunc()); // All upgrades
+                upgradeState.Actions[1] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade1, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade 1")), GetFalseFunc()); // Upgrade 1
+                upgradeState.Actions[2] = new SetFsmActiveState(__instance.Fsm, upgradeState, setUpgrade2, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade 2")), GetFalseFunc()); // Upgrade 2
+                upgradeState.Actions[3] = new SetFsmActiveState(__instance.Fsm, upgradeState, furtherUpgrades, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetFalseFunc()); // Upgrade 3 and 4
+                upgradeState.Actions[4] = new SetFsmActiveState(__instance.Fsm, upgradeState, completeRepeat, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade 4")), GetTrueFunc()); // All upgrades
             }
         }
 
@@ -1670,7 +1623,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState ground = __instance.Fsm.GetState("Ground");
                 if (check == null || ground == null) { return; }
 
-                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
+                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
             }
 
             if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject?.name == "Pinstress Interior Ground Sit")
@@ -1680,7 +1633,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState reofferDlg = __instance.Fsm.GetState("Reoffer Dlg");
                 if (save == null || met == null) { return; }
 
-                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
+                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
 
                 GameObject dummyGameObject = new GameObject("Needle Strike");
                 save.Actions[2] = new GetCheck(dummyGameObject, "Needle Strike");
@@ -1699,11 +1652,118 @@ namespace Open_Ended_Item_Replacer
                 if (hasDJ == null || startBlizzardAudio == null || completed == null || breakTuningFork == null) { return; }
 
                 hasDJ.Actions = new FsmStateAction[2];
-                hasDJ.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasDJ, startBlizzardAudio, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Faydown Cloak", "Faydown Cloak")), GetFalseFunc());
-                hasDJ.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasDJ, completed, GetPersistentBoolFunc(GenerateCheckPersistentSameScene("Faydown Cloak", "Faydown Cloak")), GetTrueFunc());
+                hasDJ.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasDJ, startBlizzardAudio, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Faydown Cloak", "Faydown Cloak")), GetFalseFunc());
+                hasDJ.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasDJ, completed, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Faydown Cloak", "Faydown Cloak")), GetTrueFunc());
 
                 GameObject dummyGameObject = new GameObject("Faydown Cloak");
                 breakTuningFork.Actions[3] = new GetCheck(dummyGameObject, "Faydown Cloak");
+            }
+        }
+
+        private static void HandleEva(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Crest Upgrade Shrine")
+            {
+                FsmState checkCombo1 = __instance.Fsm.GetState("Check Combo 1");
+                FsmState checkSlot1 = __instance.Fsm.GetState("Check Slot1");
+                FsmState checkSlot2 = __instance.Fsm.GetState("Check Slot2");
+                FsmState checkHunterv3 = __instance.Fsm.GetState("Check Hunter v3");
+                FsmState checkFinalUpgrade = __instance.Fsm.GetState("Check Final Upgrade");
+                FsmState showedPrompt = __instance.Fsm.GetState("Showed Prompt?");
+
+                FsmState unlockCrestUpg1 = __instance.Fsm.GetState("Unlock Crest Upg 1");
+                FsmState unlockFirstSlot = __instance.Fsm.GetState("Unlock First Slot");
+                FsmState unlockOtherSlot = __instance.Fsm.GetState("Unlock Other Slot");
+                FsmState unlockCrestUpg2 = __instance.Fsm.GetState("Unlock Crest Upg 2");
+                FsmState setBound = __instance.Fsm.GetState("Set Bound");
+
+                FsmState crestChangeAntic = __instance.Fsm.GetState("Crest Change Antic");
+                FsmState crestChange = __instance.Fsm.GetState("Crest Change");
+                FsmState crestChangeEnd = __instance.Fsm.GetState("Crest Change End");
+                FsmState firstUpgDlg = __instance.Fsm.GetState("First Upg Dlg");
+
+                FsmState init = __instance.Fsm.GetState("Init");
+                FsmState endDialogue = __instance.Fsm.GetState("End Dialogue");
+                FsmState broken = __instance.Fsm.GetState("Broken");
+
+                if (checkCombo1 == null || checkSlot1 == null || checkSlot2 == null || checkHunterv3 == null || checkFinalUpgrade == null || showedPrompt == null) { return; }
+
+                PersistentItemData<bool> persistentBoolDataHunter_v2 = GeneratePersistentBoolData_SameScene("Hunter_v2", "Hunter_v2");
+                PersistentItemData<bool> persistentBoolDataHunter_v3 = GeneratePersistentBoolData_SameScene("Hunter_v3", "Hunter_v3");
+                PersistentItemData<bool> persistentBoolDataYellowSlot = GeneratePersistentBoolData_SameScene("Yellow Slot", "Yellow Slot");
+                PersistentItemData<bool> persistentBoolDataBlueSlot = GeneratePersistentBoolData_SameScene("Blue Slot", "Blue Slot");
+                PersistentItemData<bool> persistentBoolDataSylphsong = GeneratePersistentBoolData_SameScene("Sylphsong", "Sylphsong");
+
+                // A lot of the following checks are somewhat pointless, but I am mimicking the original checks where possible (even though they also are mostly pointless)
+
+                checkCombo1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkCombo1, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetTrueFunc()); // hunter 2
+                checkCombo1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkCombo1, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+
+                checkSlot1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
+                checkSlot1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataYellowSlot), GetTrueFunc()); // yellow slot
+                checkSlot1.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+
+                checkSlot2.Actions[0].Enabled = false;
+                checkSlot2.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot2, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
+                checkSlot2.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot2, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+
+                checkHunterv3.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+
+                checkFinalUpgrade.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, showedPrompt, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()); // bound eva
+
+                // The following handle replacing getting the upgrades
+
+                GameObject hunter_v2GameObject = new GameObject("Hunter_v2");
+                unlockCrestUpg1.Actions[3] = new GetCheck(hunter_v2GameObject, "Hunter_v2");
+
+                GameObject yellowSlot_GameObject = new GameObject("Yellow Slot");
+                unlockFirstSlot.Actions[5] = new GetCheck(yellowSlot_GameObject, "Yellow Slot");
+
+                GameObject blueSlot_GameObject = new GameObject("Blue Slot");
+                unlockOtherSlot.Actions[2] = new SetIntValue();
+                (unlockOtherSlot.Actions[2] as SetIntValue).intVariable = __instance.Fsm.GetFsmInt("Slot Index");
+                (unlockOtherSlot.Actions[2] as SetIntValue).intValue = 1;
+                unlockOtherSlot.Actions[4] = new GetCheck(blueSlot_GameObject, "Blue Slot");
+
+                GameObject hunter_v3GameObject = new GameObject("Hunter_v3");
+                unlockCrestUpg2.Actions[2] = new GetCheck(hunter_v3GameObject, "Hunter_v3");
+
+                GameObject sylphsong_GameObject = new GameObject("Sylphsong");
+                setBound.Actions[2] = new GetCheck(sylphsong_GameObject, "Sylphsong");
+
+                // The following handles removing the incorrect animations for hunter crest upgrades
+
+                unlockCrestUpg1.Actions = ReturnCombinedActions(unlockCrestUpg1.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg1, crestChange) });
+                unlockCrestUpg2.Actions = ReturnCombinedActions(unlockCrestUpg2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg2, crestChange) });
+
+                crestChange.Actions[1].Enabled = false;
+                crestChange.Actions[2].Enabled = false;
+
+                crestChangeAntic.Actions[1].Enabled = false;
+                crestChange.Actions = ReturnCombinedActions(crestChangeAntic.Actions, crestChange.Actions);
+                crestChangeAntic.Actions = new FsmStateAction[0]; // This is done as something seemingly disables everything in crestChangeAntic, so the actions are copied to the start of the next state
+
+                crestChangeEnd.Actions[1].Enabled = false;
+                crestChangeEnd.Actions[3] = new SetFsmActiveState(__instance.Fsm, crestChangeEnd, firstUpgDlg);
+
+                // The following handles removing the incorrect animations for slot upgrades
+
+                unlockFirstSlot.Actions[6].Enabled = false;
+                unlockFirstSlot.Actions[7].Enabled = false;
+                unlockFirstSlot.Actions[8].Enabled = false;
+                unlockFirstSlot.Actions = ReturnCombinedActions(unlockFirstSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockFirstSlot, checkSlot2) }); // Added to the end instead of replacing to make it clear 6-8 are disabled
+
+                unlockOtherSlot.Actions[5].Enabled = false;
+                unlockOtherSlot.Actions[6].Enabled = false;
+                unlockOtherSlot.Actions[7].Enabled = false;
+                unlockOtherSlot.Actions = ReturnCombinedActions(unlockOtherSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockOtherSlot, checkHunterv3) }); // Added to the end instead of replacing to make it clear 5-7 are disabled
+
+                // The following handles removing the incorrect animations and persistence for Sylphsong
+
+                init.Actions[0] = new SetFsmActiveState(__instance.Fsm, init, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
+                setBound.Actions[0].Enabled = false;
+                endDialogue.Actions[2] = endDialogue.Actions[3];
+                endDialogue.Actions[3] = new SetFsmActiveState(__instance.Fsm, endDialogue, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
             }
         }
 
@@ -1744,6 +1804,8 @@ namespace Open_Ended_Item_Replacer
             HandlePinstress(__instance);
 
             HandleFaydownCloak(__instance);
+
+            HandleEva(__instance);
         }
 
         /*HarmonyPostfix]
@@ -1790,14 +1852,14 @@ namespace Open_Ended_Item_Replacer
             if (__instance.Item.Value.name.Contains("Needle Upgrade"))
             {
                 GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                PersistentBoolItem needleUpgradePersistence;
+                PersistentItemData<bool> needleUpgradePersistentBoolData;
 
                 for (int i = 1; i <= 4; i++)
                 {
                     needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
-                    needleUpgradePersistence = GenerateCheckPersistentSameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
+                    needleUpgradePersistentBoolData = GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
 
-                    if (!GetPersistentBool(needleUpgradePersistence))
+                    if (!GetPersistentBoolFromData(needleUpgradePersistentBoolData))
                     {
                         ReplaceFsmItemGet(__instance, needleUpgradeItem);
                         break;
@@ -1864,42 +1926,7 @@ namespace Open_Ended_Item_Replacer
 
                 newActions[0] = new SetFsmActiveState(playMakerFsm.Fsm, init, done);
 
-                //Array.Copy(init.Actions, 0, newActions, numberOfNewActions, init.Actions.Length);
                 init.Actions = ReturnCombinedActions(newActions, init.Actions);
-
-                //init.Actions = newActions;
-
-
-                /*FsmState[] states = playMakerFsm.Fsm.States;
-
-                foreach (FsmState state in states)
-                {
-                    // Space is important as one state is called "Setup And Wait"
-                    if (state.Name.Contains("Set "))
-                    {
-                        int numberOfNewActions = 1;
-
-                        FsmStateAction[] newActions = new FsmStateAction[state.Actions.Length + numberOfNewActions];
-
-                        SendEvent sendEvent = new SendEvent();
-
-                        FsmEventTarget eventTarget = new FsmEventTarget();
-                        eventTarget.target = EventTarget.BroadcastAll;
-
-                        sendEvent.eventTarget = eventTarget;
-                        sendEvent.sendEvent = FsmEvent.GetFsmEvent("SKIP");
-                        sendEvent.delay = 0;
-                        sendEvent.everyFrame = false;
-
-                        newActions[0] = sendEvent;
-
-                        state.Transitions.AddItem(new FsmTransition(playMakerFsm.Fsm.GetState("Set Silk Heart").GetTransition(1)));
-
-                        Array.Copy(state.Actions, 0, newActions, numberOfNewActions, state.Actions.Length);
-
-                        state.Actions = newActions;
-                    }
-                }*/
             }
         }
 
@@ -1944,6 +1971,23 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        /*private static void HandleUiMsgCrestEvolve(PlayMakerFSM playMakerFsm)
+        {
+            // As these fsms are spawned from a template, I am unsure whether the names will exactly match
+            if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Crest Evolve"))
+            {
+                logSource.LogMessage("UI Msg Crest Evolve found");
+
+                FsmState init = playMakerFsm.Fsm.GetState("Init");
+                FsmState done = playMakerFsm.Fsm.GetState("Done");
+
+                int numberOfNewActions = 1;
+                FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
+
+                init.Actions[8] = new SetFsmActiveState(playMakerFsm.Fsm, init, done);
+            }
+        }*/
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
         private static void CreateUIMsgGetItem_OnEnter_Prefix(CreateUIMsgGetItem __instance)
@@ -1969,13 +2013,13 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.gameObject.Value == null) { return; }
 
-            string name = __instance.gameObject.Value.name.ToLower();
+            string loweredName = __instance.gameObject.Value.name.ToLower();
 
-            if (name.Contains("silk spool") || name.Contains("heart piece"))
+            if (loweredName.Contains("silk spool") || loweredName.Contains("heart piece"))
             {
                 string itemName;
 
-                if (name.Contains("silk spool"))
+                if (loweredName.Contains("silk spool"))
                 {
                     itemName = "Silk Spool";
                 }
@@ -1986,14 +2030,22 @@ namespace Open_Ended_Item_Replacer
 
                 GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-                genericItem.persistentBoolItem = GenerateSetPersistent(__instance.Fsm.GameObject, itemName, genericItem);
+                genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(__instance.Fsm.GameObject, itemName, genericItem);
 
                 // Handles persistence set by new item
-                if (!GetPersistentBool(genericItem.persistentBoolItem))
+                if (!GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
                 {
                     genericItem.Get();
                 }
             }
+
+            /*if (loweredName.Contains("ui msg crest evolve"))
+            {
+                PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
+                if (playMakerFsm == null) { return; }
+
+                HandleUiMsgCrestEvolve(playMakerFsm);
+            }*/
         }
 
         /*[HarmonyPostfix]
@@ -2131,9 +2183,9 @@ namespace Open_Ended_Item_Replacer
             logSource.LogInfo("Pickup Item Set: " + genericItem.name);
 
             // Handles persistence set by new item
-            if (GetPersistentBool(persistent))
+            if (GetPersistentBoolFromData(persistent.ItemData))
             {
-                collectableItemPickup.gameObject.SetActive(false);
+                collectableItemPickup.gameObject.SetActive(false); // Kinda not needed as disablePrefabIfActivated exists
                 logSource.LogInfo("Replacement set inactive");
             }
         }
@@ -2145,11 +2197,17 @@ namespace Open_Ended_Item_Replacer
             persistent.ItemData.ToString();
 
             // Sets persistent data
-            persistent.ItemData.ID = uniqueID.PickupName + replacementFlag;
-            persistent.ItemData.SceneName = uniqueID.SceneName;
-            persistent.ItemData.IsSemiPersistent = false;
-            persistent.ItemData.Value = false;
-            persistent.ItemData.Mutator = SceneData.PersistentMutatorTypes.None;
+            SetGenericPersistentBoolDataInfo(uniqueID, persistent.ItemData);
+        }
+
+        public static void SetGenericPersistentBoolDataInfo(UniqueID uniqueID, PersistentItemData<bool> persistentBoolData)
+        {
+            // Sets persistent data
+            persistentBoolData.ID = uniqueID.PickupName + replacementFlag;
+            persistentBoolData.SceneName = uniqueID.SceneName;
+            persistentBoolData.IsSemiPersistent = false;
+            persistentBoolData.Value = false;
+            persistentBoolData.Mutator = SceneData.PersistentMutatorTypes.None;
         }
     }
 }
