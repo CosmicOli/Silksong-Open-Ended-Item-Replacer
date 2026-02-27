@@ -138,12 +138,14 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
+    // OLD SOLUTION: 
+    // 
     // THIS IS NOT A CATCH ALL SOLUTION
     // In some situations, the remaining actions in an state are not ran
     // If this doesn't work, change the newState if possible
     // If not possible, I'll just try make a more functional action
     // Only runs on both compares being equal
-    public class SetFsmActiveState : FsmStateAction
+    /*public class SetFsmActiveState : FsmStateAction
     {
         bool[] cachedEnabled;
         bool revert = false;
@@ -225,7 +227,62 @@ namespace Open_Ended_Item_Replacer
                 Finish();
             }
         }
+    }*/
+
+    public class SetFsmActiveState : FsmStateAction
+    {
+        bool[] cachedEnabled;
+        bool revert = false;
+
+        Fsm fsm;
+        FsmState newState;
+        Func<bool> comparisonFirstHalf;
+        Func<bool> comparisonSecondHalf;
+
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
+        {
+            bool getTrue() { return true; }
+
+            this.fsm = fsm;
+            this.newState = newState;
+            this.comparisonFirstHalf = getTrue;
+            this.comparisonSecondHalf = getTrue;
+        }
+
+        public SetFsmActiveState(Fsm fsm, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
+        {
+            this.fsm = fsm;
+            this.newState = newState;
+            this.comparisonFirstHalf = comparisonFirstHalf;
+            this.comparisonSecondHalf = comparisonSecondHalf;
+        }
+
+        [Obsolete]
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
+        {
+            this.fsm = fsm;
+            this.newState = newState;
+            this.comparisonFirstHalf = comparisonFirstHalf;
+            this.comparisonSecondHalf = comparisonSecondHalf;
+        }
+
+        public override void OnEnter()
+        {
+            if (comparisonFirstHalf.Invoke() == comparisonSecondHalf.Invoke())
+            {
+                fsm.SwitchState(newState);
+
+                Traverse.Create(fsm).Field("activeState").SetValue(newState);
+                Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
+                fsm.Start();
+            }
+
+            Active = false;
+            Finished = true;
+            Finish();
+        }
     }
+
 
     public class RemoveExtraSilkHeart : FsmStateAction
     {
@@ -1733,15 +1790,16 @@ namespace Open_Ended_Item_Replacer
 
                 // The following handles removing the incorrect animations for hunter crest upgrades
 
-                unlockCrestUpg1.Actions = ReturnCombinedActions(unlockCrestUpg1.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg1, crestChange) });
-                unlockCrestUpg2.Actions = ReturnCombinedActions(unlockCrestUpg2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg2, crestChange) });
+                unlockCrestUpg1.Actions = ReturnCombinedActions(unlockCrestUpg1.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg1, crestChangeAntic) });
+                unlockCrestUpg2.Actions = ReturnCombinedActions(unlockCrestUpg2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg2, crestChangeAntic) });
 
                 crestChange.Actions[1].Enabled = false;
                 crestChange.Actions[2].Enabled = false;
+                crestChange.Actions[3].Enabled = false;
 
                 crestChangeAntic.Actions[1].Enabled = false;
-                crestChange.Actions = ReturnCombinedActions(crestChangeAntic.Actions, crestChange.Actions);
-                crestChangeAntic.Actions = new FsmStateAction[0]; // This is done as something seemingly disables everything in crestChangeAntic, so the actions are copied to the start of the next state
+                crestChangeAntic.Actions[10].Enabled = false;
+                crestChangeAntic.Actions[11].Enabled = false;
 
                 crestChangeEnd.Actions[1].Enabled = false;
                 crestChangeEnd.Actions[3] = new SetFsmActiveState(__instance.Fsm, crestChangeEnd, firstUpgDlg);
