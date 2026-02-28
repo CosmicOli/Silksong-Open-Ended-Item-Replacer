@@ -138,14 +138,7 @@ namespace Open_Ended_Item_Replacer
         }
     }
 
-    // OLD SOLUTION: 
-    // 
-    // THIS IS NOT A CATCH ALL SOLUTION
-    // In some situations, the remaining actions in an state are not ran
-    // If this doesn't work, change the newState if possible
-    // If not possible, I'll just try make a more functional action
-    // Only runs on both compares being equal
-    /*public class SetFsmActiveState : FsmStateAction
+    public class SetFsmActiveState : FsmStateAction
     {
         bool[] cachedEnabled;
         bool revert = false;
@@ -155,8 +148,9 @@ namespace Open_Ended_Item_Replacer
         FsmState newState;
         Func<bool> comparisonFirstHalf;
         Func<bool> comparisonSecondHalf;
+        bool blockRemainingActions = false;
 
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, bool blockRemainingActions = true)
         {
             bool getTrue() { return true; }
 
@@ -165,18 +159,38 @@ namespace Open_Ended_Item_Replacer
             this.newState = newState;
             this.comparisonFirstHalf = getTrue;
             this.comparisonSecondHalf = getTrue;
+            this.blockRemainingActions = blockRemainingActions;
         }
 
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
+        public SetFsmActiveState(Fsm fsm, FsmState newState)
+        {
+            bool getTrue() { return true; }
+
+            this.fsm = fsm;
+            this.newState = newState;
+            this.comparisonFirstHalf = getTrue;
+            this.comparisonSecondHalf = getTrue;
+        }
+
+        public SetFsmActiveState(Fsm fsm, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
+        {
+            this.fsm = fsm;
+            this.newState = newState;
+            this.comparisonFirstHalf = comparisonFirstHalf;
+            this.comparisonSecondHalf = comparisonSecondHalf;
+        }
+
+        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf, bool blockRemainingActions = true)
         {
             this.fsm = fsm;
             this.oldState = oldState;
             this.newState = newState;
             this.comparisonFirstHalf = comparisonFirstHalf;
             this.comparisonSecondHalf = comparisonSecondHalf;
+            this.blockRemainingActions = blockRemainingActions;
         }
 
-        public override void OnEnter()
+        private void HandleBlockRemainingActions()
         {
             if (revert)
             {
@@ -227,47 +241,15 @@ namespace Open_Ended_Item_Replacer
                 Finish();
             }
         }
-    }*/
-
-    public class SetFsmActiveState : FsmStateAction
-    {
-        bool[] cachedEnabled;
-        bool revert = false;
-
-        Fsm fsm;
-        FsmState newState;
-        Func<bool> comparisonFirstHalf;
-        Func<bool> comparisonSecondHalf;
-
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState)
-        {
-            bool getTrue() { return true; }
-
-            this.fsm = fsm;
-            this.newState = newState;
-            this.comparisonFirstHalf = getTrue;
-            this.comparisonSecondHalf = getTrue;
-        }
-
-        public SetFsmActiveState(Fsm fsm, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
-        {
-            this.fsm = fsm;
-            this.newState = newState;
-            this.comparisonFirstHalf = comparisonFirstHalf;
-            this.comparisonSecondHalf = comparisonSecondHalf;
-        }
-
-        [Obsolete]
-        public SetFsmActiveState(Fsm fsm, FsmState oldState, FsmState newState, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
-        {
-            this.fsm = fsm;
-            this.newState = newState;
-            this.comparisonFirstHalf = comparisonFirstHalf;
-            this.comparisonSecondHalf = comparisonSecondHalf;
-        }
 
         public override void OnEnter()
         {
+            if (blockRemainingActions)
+            {
+                HandleBlockRemainingActions();
+                return;
+            }
+
             if (comparisonFirstHalf.Invoke() == comparisonSecondHalf.Invoke())
             {
                 fsm.SwitchState(newState);
@@ -282,7 +264,6 @@ namespace Open_Ended_Item_Replacer
             Finish();
         }
     }
-
 
     public class RemoveExtraSilkHeart : FsmStateAction
     {
@@ -1542,7 +1523,7 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActionsPost = new FsmStateAction[1];
                 //newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause"), false);
-                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, UIMsg, __instance.Fsm.GetState("End Pause")); // Replaces original persistence check with custom
+                newActionsPost[0] = new SetFsmActiveState(__instance.Fsm, __instance.Fsm.GetState("End Pause")); // Replaces original persistence check with custom
 
                 UIMsg.Actions = ReturnCombinedActions(UIMsg.Actions, newActionsPost);
 
@@ -1559,7 +1540,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState hasMelody = __instance.Fsm.GetState("Has Melody");
                 if (startLock == null || waitForNotify == null || hasMelody == null) { return; }
 
-                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, waitForNotify, hasMelody, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrueFunc()); // Replaces original persistence check with custom
+                waitForNotify.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasMelody, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("puzzle cylinders", "Citadel Ascent Melody Architect")), GetTrueFunc()); // Replaces original persistence check with custom
 
                 int numberOfNewActions = 1;
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
@@ -1738,9 +1719,11 @@ namespace Open_Ended_Item_Replacer
                 FsmState crestChange = __instance.Fsm.GetState("Crest Change");
                 FsmState crestChangeEnd = __instance.Fsm.GetState("Crest Change End");
                 FsmState firstUpgDlg = __instance.Fsm.GetState("First Upg Dlg");
+                FsmState offerDlg = __instance.Fsm.GetState("Offer Dlg");
 
                 FsmState init = __instance.Fsm.GetState("Init");
                 FsmState endDialogue = __instance.Fsm.GetState("End Dialogue");
+                FsmState breakState = __instance.Fsm.GetState("Break");
                 FsmState broken = __instance.Fsm.GetState("Broken");
 
                 if (checkCombo1 == null || checkSlot1 == null || checkSlot2 == null || checkHunterv3 == null || checkFinalUpgrade == null || showedPrompt == null) { return; }
@@ -1753,25 +1736,37 @@ namespace Open_Ended_Item_Replacer
 
                 // A lot of the following checks are somewhat pointless, but I am mimicking the original checks where possible (even though they also are mostly pointless)
 
-                checkCombo1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkCombo1, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetTrueFunc()); // hunter 2
-                checkCombo1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkCombo1, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkCombo1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetTrueFunc()); // hunter 2
+                checkCombo1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
 
-                checkSlot1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
-                checkSlot1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataYellowSlot), GetTrueFunc()); // yellow slot
-                checkSlot1.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkSlot1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
+                checkSlot1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataYellowSlot), GetTrueFunc()); // yellow slot
+                checkSlot1.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
 
                 checkSlot2.Actions[0].Enabled = false;
-                checkSlot2.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot2, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
-                checkSlot2.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot2, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkSlot2.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
+                checkSlot2.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
 
-                checkHunterv3.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkHunterv3.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
 
-                checkFinalUpgrade.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, showedPrompt, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()); // bound eva
+                checkFinalUpgrade.Actions[1] = new SetFsmActiveState(__instance.Fsm, showedPrompt, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()); // bound eva
 
                 // The following handle replacing getting the upgrades
 
+                bool CheckCurrentCrestPoints()
+                {
+                    if (__instance.Fsm.GetFsmInt("Current Crest Points").Value >= 12)
+                    {
+                        __instance.Fsm.GetFsmBool("Stay In Sequence").Value = true;
+                        return true;
+                    }
+
+                    return false;
+                }
+
                 GameObject hunter_v2GameObject = new GameObject("Hunter_v2");
-                unlockCrestUpg1.Actions[3] = new GetCheck(hunter_v2GameObject, "Hunter_v2");
+                unlockCrestUpg1.Actions[3].Enabled = false;
+                firstUpgDlg.Actions = ReturnCombinedActions(new FsmStateAction[] { new GetCheck(hunter_v2GameObject, "Hunter_v2"), new SetFsmActiveState(__instance.Fsm, checkSlot1, CheckCurrentCrestPoints, GetTrueFunc()) }, firstUpgDlg.Actions);
 
                 GameObject yellowSlot_GameObject = new GameObject("Yellow Slot");
                 unlockFirstSlot.Actions[5] = new GetCheck(yellowSlot_GameObject, "Yellow Slot");
@@ -1790,38 +1785,42 @@ namespace Open_Ended_Item_Replacer
 
                 // The following handles removing the incorrect animations for hunter crest upgrades
 
-                unlockCrestUpg1.Actions = ReturnCombinedActions(unlockCrestUpg1.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg1, crestChangeAntic) });
-                unlockCrestUpg2.Actions = ReturnCombinedActions(unlockCrestUpg2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockCrestUpg2, crestChangeAntic) });
+                unlockCrestUpg1.Actions = ReturnCombinedActions(unlockCrestUpg1.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, crestChangeAntic) });
+                unlockCrestUpg2.Actions = ReturnCombinedActions(unlockCrestUpg2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, crestChangeAntic) });
 
-                crestChange.Actions[1].Enabled = false;
-                crestChange.Actions[2].Enabled = false;
-                crestChange.Actions[3].Enabled = false;
+                crestChangeAntic.Actions[1].Enabled = false; // Play animation
+                crestChangeAntic.Actions[7].Enabled = false; // Wait
+                crestChangeAntic.Actions[9].Enabled = false; // Wait
+                crestChangeAntic.Actions[10].Enabled = false; // Send event
+                crestChangeAntic.Actions[11].Enabled = false; // Wait
 
-                crestChangeAntic.Actions[1].Enabled = false;
-                crestChangeAntic.Actions[10].Enabled = false;
-                crestChangeAntic.Actions[11].Enabled = false;
+                crestChange.Actions[1].Enabled = false; // Auto equip crest
+                crestChange.Actions[2].Enabled = false; // Send event
+                crestChange.Actions[3].Enabled = false; // Wait
 
-                crestChangeEnd.Actions[1].Enabled = false;
-                crestChangeEnd.Actions[3] = new SetFsmActiveState(__instance.Fsm, crestChangeEnd, firstUpgDlg);
+                crestChangeEnd.Actions[1].Enabled = false; // Play animation
+                crestChangeEnd.Actions[3] = new SetFsmActiveState(__instance.Fsm, firstUpgDlg, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetFalseFunc());
+                crestChangeEnd.Actions = ReturnCombinedActions(crestChangeEnd.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, offerDlg, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()) });
 
                 // The following handles removing the incorrect animations for slot upgrades
 
                 unlockFirstSlot.Actions[6].Enabled = false;
                 unlockFirstSlot.Actions[7].Enabled = false;
                 unlockFirstSlot.Actions[8].Enabled = false;
-                unlockFirstSlot.Actions = ReturnCombinedActions(unlockFirstSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockFirstSlot, checkSlot2) }); // Added to the end instead of replacing to make it clear 6-8 are disabled
+                unlockFirstSlot.Actions = ReturnCombinedActions(unlockFirstSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, checkSlot2) }); // Added to the end instead of replacing to make it clear 6-8 are disabled
 
                 unlockOtherSlot.Actions[5].Enabled = false;
                 unlockOtherSlot.Actions[6].Enabled = false;
                 unlockOtherSlot.Actions[7].Enabled = false;
-                unlockOtherSlot.Actions = ReturnCombinedActions(unlockOtherSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, unlockOtherSlot, checkHunterv3) }); // Added to the end instead of replacing to make it clear 5-7 are disabled
+                unlockOtherSlot.Actions = ReturnCombinedActions(unlockOtherSlot.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, checkHunterv3) }); // Added to the end instead of replacing to make it clear 5-7 are disabled
 
                 // The following handles removing the incorrect animations and persistence for Sylphsong
 
-                init.Actions[0] = new SetFsmActiveState(__instance.Fsm, init, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
+                init.Actions[0].Enabled = false;
+                init.Actions = ReturnCombinedActions(init.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()) });
                 setBound.Actions[0].Enabled = false;
                 endDialogue.Actions[2] = endDialogue.Actions[3];
-                endDialogue.Actions[3] = new SetFsmActiveState(__instance.Fsm, endDialogue, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
+                endDialogue.Actions[3] = new SetFsmActiveState(__instance.Fsm, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
             }
         }
 
