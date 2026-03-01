@@ -66,6 +66,7 @@ namespace Open_Ended_Item_Replacer
         public override void OnEnter()
         {
             Open_Ended_Item_Replacer.logSource.LogWarning("action ran");
+            Open_Ended_Item_Replacer.logSource.LogInfo(this.State.Name);
 
             Active = false;
             Finished = true;
@@ -254,9 +255,9 @@ namespace Open_Ended_Item_Replacer
             {
                 fsm.SwitchState(newState);
 
-                Traverse.Create(fsm).Field("activeState").SetValue(newState);
-                Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
-                fsm.Start();
+                //Traverse.Create(fsm).Field("activeState").SetValue(newState);
+                //Traverse.Create(fsm).Field("activeStateName").SetValue(newState.Name);
+                //fsm.Start();
             }
 
             Active = false;
@@ -790,11 +791,6 @@ namespace Open_Ended_Item_Replacer
                 }
             }
 
-            /*foreach (QuestTest test in ___questTests)
-            {
-                logSource.LogInfo(test.Quest.DisplayName);
-            }*/
-
             return true;
         }
 
@@ -817,17 +813,17 @@ namespace Open_Ended_Item_Replacer
                 logSource.LogMessage(quest.DisplayName);
             }*/
 
-                    //logSource.LogMessage("Slash Postfix");
+            //logSource.LogMessage("Slash Postfix");
 
-                    //HeroController heroControl = GameManager.instance.hero_ctrl;
+            //HeroController heroControl = GameManager.instance.hero_ctrl;
 
-                    //logSource.LogInfo(test.GetComponent<Rigidbody2D>().gravityScale);
-                    //logSource.LogInfo(testAction.gravityScale);
+            //logSource.LogInfo(test.GetComponent<Rigidbody2D>().gravityScale);
+            //logSource.LogInfo(testAction.gravityScale);
 
-                    /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
-                    spawningReplacementCollectableItemPickup = true;
-                    SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
-                    spawningReplacementCollectableItemPickup = false;*/
+            /*UniqueID uniqueID = new UniqueID("pickupName", "sceneName");
+            spawningReplacementCollectableItemPickup = true;
+            SpawnGenericInteractablePickup(uniqueID, null, heroControl.transform, new Vector3(0, 0, 0));
+            spawningReplacementCollectableItemPickup = false;*/
         }
 
         public static string replacementFlag = "_(Replacement)";
@@ -1719,6 +1715,9 @@ namespace Open_Ended_Item_Replacer
                 FsmState crestChange = __instance.Fsm.GetState("Crest Change");
                 FsmState crestChangeEnd = __instance.Fsm.GetState("Crest Change End");
                 FsmState firstUpgDlg = __instance.Fsm.GetState("First Upg Dlg");
+                FsmState upgradeSequence5 = __instance.Fsm.GetState("Upgrade Sequence 5");
+
+                FsmState wasUpgraded = __instance.Fsm.GetState("Was Upgraded?");
                 FsmState offerDlg = __instance.Fsm.GetState("Offer Dlg");
 
                 FsmState init = __instance.Fsm.GetState("Init");
@@ -1734,22 +1733,24 @@ namespace Open_Ended_Item_Replacer
                 PersistentItemData<bool> persistentBoolDataBlueSlot = GeneratePersistentBoolData_SameScene("Blue Slot", "Blue Slot");
                 PersistentItemData<bool> persistentBoolDataSylphsong = GeneratePersistentBoolData_SameScene("Sylphsong", "Sylphsong");
 
-                // A lot of the following checks are somewhat pointless, but I am mimicking the original checks where possible (even though they also are mostly pointless)
+                // The following handles replacing the majority of persistence checks
 
-                checkCombo1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetTrueFunc()); // hunter 2
-                checkCombo1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                // my one thought is that checkCombo1 is being run and not properly reset, causing it to hang on second entry from denying and reentering the dialogue
+                checkCombo1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkCombo1, checkSlot1, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetTrueFunc()); // hunter 2
+                checkCombo1.Actions[1].Enabled = false;
 
-                checkSlot1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
-                checkSlot1.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataYellowSlot), GetTrueFunc()); // yellow slot
-                checkSlot1.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkSlot1.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot1, checkSlot2, GetPersistentBoolFromDataFunc(persistentBoolDataYellowSlot), GetTrueFunc()); // yellow slot
+                checkSlot1.Actions[1].Enabled = false;
+                checkSlot1.Actions[2].Enabled = false;
 
-                checkSlot2.Actions[0].Enabled = false;
-                checkSlot2.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
-                checkSlot2.Actions[2] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
+                checkSlot2.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkSlot2, checkHunterv3, GetPersistentBoolFromDataFunc(persistentBoolDataBlueSlot), GetTrueFunc()); // blue slot
+                checkSlot2.Actions[1].Enabled = false;
+                checkSlot2.Actions[2].Enabled = false;
+             
+                checkHunterv3.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkHunterv3, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
 
-                checkHunterv3.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()); // hunter 3
-
-                checkFinalUpgrade.Actions[1] = new SetFsmActiveState(__instance.Fsm, showedPrompt, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()); // bound eva
+                checkFinalUpgrade.Actions[0].Enabled = false;
+                checkFinalUpgrade.Actions[1] = new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, showedPrompt, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc()); // bound eva
 
                 // The following handle replacing getting the upgrades
 
@@ -1760,13 +1761,16 @@ namespace Open_Ended_Item_Replacer
                         __instance.Fsm.GetFsmBool("Stay In Sequence").Value = true;
                         return true;
                     }
-
-                    return false;
+                    else
+                    {
+                        return false;
+                    }
                 }
 
                 GameObject hunter_v2GameObject = new GameObject("Hunter_v2");
+                unlockCrestUpg1.Actions[2].Enabled = false;
                 unlockCrestUpg1.Actions[3].Enabled = false;
-                firstUpgDlg.Actions = ReturnCombinedActions(new FsmStateAction[] { new GetCheck(hunter_v2GameObject, "Hunter_v2"), new SetFsmActiveState(__instance.Fsm, checkSlot1, CheckCurrentCrestPoints, GetTrueFunc()) }, firstUpgDlg.Actions);
+                firstUpgDlg.Actions = ReturnCombinedActions(new FsmStateAction[] { new GetCheck(hunter_v2GameObject, "Hunter_v2"), new SetFsmActiveState(__instance.Fsm, firstUpgDlg, checkSlot1, CheckCurrentCrestPoints, GetTrueFunc()) }, firstUpgDlg.Actions);
 
                 GameObject yellowSlot_GameObject = new GameObject("Yellow Slot");
                 unlockFirstSlot.Actions[5] = new GetCheck(yellowSlot_GameObject, "Yellow Slot");
@@ -1800,7 +1804,7 @@ namespace Open_Ended_Item_Replacer
 
                 crestChangeEnd.Actions[1].Enabled = false; // Play animation
                 crestChangeEnd.Actions[3] = new SetFsmActiveState(__instance.Fsm, firstUpgDlg, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v2), GetFalseFunc());
-                crestChangeEnd.Actions = ReturnCombinedActions(crestChangeEnd.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, offerDlg, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()) });
+                //crestChangeEnd.Actions = ReturnCombinedActions(crestChangeEnd.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, checkFinalUpgrade, GetPersistentBoolFromDataFunc(persistentBoolDataHunter_v3), GetTrueFunc()) });
 
                 // The following handles removing the incorrect animations for slot upgrades
 
@@ -1821,6 +1825,15 @@ namespace Open_Ended_Item_Replacer
                 setBound.Actions[0].Enabled = false;
                 endDialogue.Actions[2] = endDialogue.Actions[3];
                 endDialogue.Actions[3] = new SetFsmActiveState(__instance.Fsm, broken, GetPersistentBoolFromDataFunc(persistentBoolDataSylphsong), GetTrueFunc());
+
+                // The following handles incorrect dialogue and other misc fixes
+                
+                (offerDlg.Actions[2] as RunDialogue).Key = "CREST_UPGRADE_ALL"; // Makes sure the correct dialogue plays
+                (wasUpgraded.Actions[2] as GetIsCrestUnlocked).falseEvent = FsmEvent.GetFsmEvent("CONVO_END"); // Ensures skipping dialogue always
+
+                // As a note here, by adding dummy code to a test action for testing, I don't think that its some pc specific async issue based on processing time or some bs like that
+                showedPrompt.Actions[7].Enabled = false; // For some reason, the Wait here completely stops working and the state moves on before anything past it happens, so I disable it
+                showedPrompt.Actions[8].Enabled = false; // The animation also causes issues, which I suspect relates to the wait?
             }
         }
 
@@ -1863,6 +1876,42 @@ namespace Open_Ended_Item_Replacer
             HandleFaydownCloak(__instance);
 
             HandleEva(__instance);
+        }
+
+
+        // The original code does not skip base level hunter, so this needs to be removed
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CountCrestUnlockPoints), "OnEnter")]
+        private static void CountCrestUnlockPoints_OnEnter_Postfix(CountCrestUnlockPoints __instance)
+        {
+            ToolCrestList toolCrestList = __instance.CrestList.Value as ToolCrestList;
+
+            int currentPointsTally = 0;
+            int maxPointsTally = 0;
+            ToolCrest hunter = toolCrestList.GetByName("Hunter");
+
+            if (!hunter.IsUpgradedVersionUnlocked)
+            {
+                ToolCrest.SlotInfo[] slots = hunter.Slots;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    _ = ref slots[i];
+                    maxPointsTally++;
+                }
+
+                ToolCrest.SlotInfo[] slots2 = hunter.Slots;
+                List<ToolCrestsData.SlotData> slots3 = hunter.SaveData.Slots;
+                for (int j = 0; j < slots2.Length; j++)
+                {
+                    if (!slots2[j].IsLocked || (slots3 != null && j < slots3.Count && slots3[j].IsUnlocked))
+                    {
+                        currentPointsTally++;
+                    }
+                }
+            }
+
+            __instance.StoreCurrentPoints.Value -= currentPointsTally;
+            __instance.StoreMaxPoints.Value -= maxPointsTally;
         }
 
         /*HarmonyPostfix]
@@ -2104,37 +2153,6 @@ namespace Open_Ended_Item_Replacer
                 HandleUiMsgCrestEvolve(playMakerFsm);
             }*/
         }
-
-        /*[HarmonyPostfix]
-        [HarmonyPatch(typeof(LocalisedString), "ToString", new Type[] { typeof(bool) })]
-        public static void LocalisedString_ToString(LocalisedString __instance, ref string __result)
-        {
-            if (__result.Contains("!!/!!"))
-            {
-                __result = "boingo";
-            }
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(QuestManager), "Start")]
-        public static void QuestManager_StartPostFix(FullQuestBase __instance)
-        {
-            var quests = QuestManager.GetAllQuests();
-
-            foreach (var quest in quests)
-            {
-                logSource.LogInfo(Traverse.Create(quest).Field("DisplayName").GetValue<LocalisedString>());
-
-                logSource.LogInfo(Traverse.Create(quest).Field("DisplayName").SetValue(new LocalisedString("", "")));
-            }
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(BasicQuestBase), "Init")]
-        public static void BasicQuestBase_InitPostFix(BasicQuestBase __instance)
-        {
-            logSource.LogInfo(Traverse.Create(__instance.QuestType).Field("displayName").SetValue(new LocalisedString("", "")));
-        }*/
 
         // Replaces CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
