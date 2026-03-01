@@ -769,8 +769,6 @@ namespace Open_Ended_Item_Replacer
             {
                 for (int i = 0; i < testGroup.Tests.Length; i++)
                 {
-                    logSource.LogInfo(testGroup.Tests[i].FieldName);
-
                     if (testGroup.Tests[i].FieldName == "hasBrolly")
                     {
 
@@ -1849,6 +1847,41 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static void HandleNuu(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Hunter Fan Control")
+            {
+                FsmState check = __instance.Fsm.GetState("Check");
+                FsmState left = __instance.Fsm.GetState("Left");
+                if (check == null) { return; }
+
+                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, left, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Nuu", "Hunter Memento")), GetTrueFunc());
+            }
+
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Nuu")
+            {
+                FsmState hasJournal = __instance.Fsm.GetState("Has Journal?");
+                FsmState journal = __instance.Fsm.GetState("Journal");
+                FsmState journalRepeat = __instance.Fsm.GetState("Journal Repeat");
+                FsmState journalHint = __instance.Fsm.GetState("Journal Hint");
+                FsmState convoChoice = __instance.Fsm.GetState("Convo Choice");
+                FsmState completionEvaluate = __instance.Fsm.GetState("Completion Evaluate");
+                FsmState giveMemento = __instance.Fsm.GetState("Give Memento");
+                if (hasJournal == null || journal == null || journalRepeat == null || convoChoice == null || completionEvaluate == null) { return; }
+
+                hasJournal.Actions = new FsmStateAction[3];
+                hasJournal.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasJournal, journalRepeat, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Hunter's Journal", "Hunter's Journal")), GetFalseFunc());
+                hasJournal.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasJournal, journalHint, GetPlayerDataBoolFunc("hasJournal"), GetFalseFunc());
+                hasJournal.Actions[2] = new SetFsmActiveState(__instance.Fsm, hasJournal, convoChoice, GetPlayerDataBoolFunc("hasJournal"), GetTrueFunc());
+
+                GameObject dummyGameObject = new GameObject("Hunter's Journal");
+                journal.Actions[1] = new GetCheck(dummyGameObject, "Hunter's Journal");
+
+                completionEvaluate.Actions[0].Enabled = false;
+                giveMemento.Actions[2].Enabled = false;
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -1888,6 +1921,8 @@ namespace Open_Ended_Item_Replacer
             HandleFaydownCloak(__instance);
 
             HandleEva(__instance);
+
+            HandleNuu(__instance);
         }
 
 
@@ -1925,13 +1960,6 @@ namespace Open_Ended_Item_Replacer
             __instance.StoreCurrentPoints.Value -= currentPointsTally;
             __instance.StoreMaxPoints.Value -= maxPointsTally;
         }
-
-        /*HarmonyPostfix]
-        [HarmonyPatch(typeof(Fsm), "Start")]
-        private static void PlayMakerFSM_AwakePostfix(Fsm __instance)
-        {
-            logSource.LogInfo(__instance.Name);
-        }*/
 
         // Handles when FSMs run CollectableItemCollect
         // Should handle the vast majority of cases of being given an item from an NPC
