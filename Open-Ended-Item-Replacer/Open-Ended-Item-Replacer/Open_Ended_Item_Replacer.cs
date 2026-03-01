@@ -1355,11 +1355,23 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Needle Spell Get")
             {
-                // Removes original persistence checking
-                FsmState checkUnlockedState = __instance.Fsm.GetState("Check Unlocked");
-                (checkUnlockedState.Actions[0] as GetIsCrestUnlocked).trueEvent = new FsmEvent("");
+                FsmState checkUnlocked = __instance.Fsm.GetState("Check Unlocked");
+                FsmState inactive = __instance.Fsm.GetState("Inactive");
+                FsmState msg = __instance.Fsm.GetState("Msg");
+                FsmState end = __instance.Fsm.GetState("End");
+                if (checkUnlocked == null || inactive == null || msg == null || end == null) { return; }
 
-                Replace(__instance.gameObject, __instance.Fsm.Variables.GetFsmEnum("Silk Needle").Value.ToString(), true, null);
+                checkUnlocked.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkUnlocked, inactive, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Pale Nails", "Pale Nails")), GetTrueFunc());
+
+                msg.Actions[0].Enabled = false;
+                msg.Actions[2].Enabled = false;
+
+                end.Actions[0].Enabled = false;
+                end.Actions[1].Enabled = false;
+                end.Actions[2].Enabled = false;
+
+                GameObject dummyGameObject = new GameObject("Pale Nails");
+                end.Actions[3] = new GetCheck(dummyGameObject, "Pale Nails");
             }
         }
 
