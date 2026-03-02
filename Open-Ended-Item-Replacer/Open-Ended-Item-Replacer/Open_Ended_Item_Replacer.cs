@@ -26,6 +26,7 @@ using static GamepadVibrationMixer.GamepadVibrationEmission;
 using static HutongGames.EasingFunction;
 using static HutongGames.PlayMaker.FsmEventTarget;
 using static PlayerDataTest;
+using static SceneData;
 using static tk2dSpriteCollectionDefinition;
 using static UnityEngine.UI.Image;
 using static UnityEngine.UI.Selectable;
@@ -58,6 +59,11 @@ namespace Open_Ended_Item_Replacer
             // Defining the unique id for the new pickup
             this.PickupName = replacedObject.name + "-" + replacedItemName;
             this.SceneName = GameManager.GetBaseSceneName(replacedObject.scene.name);
+        }
+
+        public override string ToString()
+        {
+            return PickupName + "-" + SceneName;
         }
     }
 
@@ -832,34 +838,73 @@ namespace Open_Ended_Item_Replacer
             // Sets up the replacement object to not be replaced itself
             spawningReplacementCollectableItemPickup = true;
 
-            // Removes the original object
-            replacedObject.SetActive(false);
-
-            // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-            logSource.LogInfo("Pickup: " + replacedObject.name);
-
-            // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-            logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
-
-            UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
-
-            Transform output;
-
-            // Attempts to spawn the replacement object
-            logSource.LogInfo("Pickup Drop Attempt Start");
-            if (interactable)
+            try
             {
-                output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
+                logSource.LogInfo("Pickup: " + replacedObject.name);
+
+                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
+                logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
+
+                UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
+
+                Transform output;
+
+                // Attempts to spawn the replacement object
+                logSource.LogInfo("Pickup Drop Attempt Start");
+                if (interactable)
+                {
+                    output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                }
+                else
+                {
+                    output = SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                }
+                logSource.LogInfo("Pickup Drop Attempt End");
+
+
+                // This will flag if the item is unique
+                logSource.LogError(replacedObject.transform.GetComponent<CollectableItemPickup>().Item.IsUnique);
+
+                // CURRENT PROBLEM: ORIGINAL CHECKS FOR HAVING TOOLS, ITEMS, ETC, THAT DISABLE THE ORIGINAL WILL STILL DISABLE THE NEW EVEN THOUGH THEIR PERSISTENCE SHOULD BE INDEPENDANT
+                // My one thought is if I can find where collectableItemPickups specifically check for these alternative persistence trackings I can intercept them?
+                // -> I should aim to remove it initially instead of intercepting so that way it only effects replaced pickups
+
+                // If I check whether a collectableItemPickup has a persistence, as long as items are not double checked then this should not be a problem
+                // I can do this "or"ed with IsUnique to hopefully catch all options
+                // This being said, finding them is only half the issue
+
+                // Okay it looks like CheckActivation is a good basis
+                // It is ran in setup meaning this is likely what handles ALL persistence
+
+                // Removes the original object, along with removing its gravity and collision
+                // Note that scenes in this game only extend in postive x and y, so -250 -250 should be plenty out of the way
+                replacedObject.transform.position = new Vector3(-250, -250);
+
+                Rigidbody2D replacementRigidBody2D = replacedObject.GetComponent<Rigidbody2D>();
+                if (replacementRigidBody2D != null)
+                {
+                    replacementRigidBody2D.gravityScale = 0;
+                }
+
+                Collider2D replacementCollider2D = replacedObject.GetComponent<Collider2D>();
+                if (replacementCollider2D != null)
+                {
+                    replacementCollider2D.enabled = false;
+                }
+
+                output.parent = replacedObject.transform;
+
+                spawningReplacementCollectableItemPickup = false;
+
+                return output;
             }
-            else
+            catch (Exception e)
             {
-                output = SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                spawningReplacementCollectableItemPickup = false;
             }
-            logSource.LogInfo("Pickup Drop Attempt End");
 
-            spawningReplacementCollectableItemPickup = false;
-
-            return output;
+            return null;
         }
 
         public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
@@ -2199,31 +2244,214 @@ namespace Open_Ended_Item_Replacer
         // I have somewhat arbitrarily picked OnEnable over awake here as I am hoping that if there are pickups that start disabled they aren't replaced until they are enabled
         private static bool spawningReplacementCollectableItemPickup = false;
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CollectableItemPickup), "OnEnable")]
-        private static void CollectableItemPickup_OnEnable_Postfix(CollectableItemPickup __instance) //, PersistentBoolItem ___persistent)
+        [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
+        private static void CollectableItemPickup_Awake_Postfix(CollectableItemPickup __instance)
         {
-            logSource.LogMessage("CollectableItemPickup Enabled");
+            logSource.LogMessage("CollectableItemPickup Awake");
 
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
             if (!spawningReplacementCollectableItemPickup)
             {
-                // Using Harmony's traverse tool, the private field "persistent" can be copied
-                // Persistance tracks data about pickups independantly to the item they contain, so this needs to be preserved to allow tracking of what pickups have been interacted with
-                //PersistentBoolItem replacedPersistent = ___persistent;
-                
-                // Traverse.Create(__instance).Field("persistent").GetValue<PersistentBoolItem>();
-
                 /*if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
                 {
                     return;
                 }*/
 
+
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }
+
+                bool originalActive = __instance.gameObject.activeSelf;
+
 
                 Replace(__instance.gameObject, __instance.Item.name, true, null);
             }
         }
+
+        // As some items check persistence using whether an item can be gotten anymore, this needs to be intercepted
+        // A transpiler could be used instead to change the one line that is modified, but the relative difficulty compared to this method means this is what I will be doing for now
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CollectableItemPickup), "CheckActivation")]
+        private static bool CollectableItemPickup_CheckActivation_Prefix(CollectableItemPickup __instance, bool ___activatedRead, string ___playerDataBool, PersistentBoolItem ___persistent, SavedItem ___item)
+        {
+            if (___activatedRead) // This first part resets items that can be continuously gotten that have already been picked up; this doesn't need changing for now
+            {
+                if (string.IsNullOrEmpty(___playerDataBool) && ___persistent == null && (___item == null || (!___item.IsUnique && ___item.CanGetMore())))
+                {
+                    ___activatedRead = false;
+                    return false; // This stops the original code running
+                }
+            }
+            else // This second part usually looks like "activatedRead = (bool)item && !item.CanGetMore();", but has been changed to ignore CanGetMore()
+            {
+                bool flag = false;
+
+                for (int i = 0; i < __instance.transform.childCount; i++)
+                {
+                    GameObject replacementObject = __instance.transform.GetChild(i).gameObject;
+                    if (replacementObject == null) { continue; } // Not sure if this is necessary
+
+                    if (replacementObject.name.Contains(__instance.gameObject.name) && replacementObject.GetComponent<CollectableItemPickup>() != null)
+                    {
+                        flag = true;
+                    }
+                }
+
+                if (flag)
+                {
+                    ___activatedRead = false;
+                }
+                else // If the item was never replaced (from either config or other reasons) the original code should run
+                {
+                    ___activatedRead = (bool)___item && !___item.CanGetMore();
+                }
+            }
+
+            // The rest of this is unchanged
+            if (___activatedRead)
+            {
+                if (__instance.OnPickedUp != null)
+                {
+                    __instance.OnPickedUp.Invoke();
+                }
+
+                if (__instance.OnPreviouslyPickedUp != null)
+                {
+                    __instance.OnPreviouslyPickedUp.Invoke();
+                }
+
+                __instance.gameObject.SetActive(value: false);
+            }
+
+            // This stops the original code running
+            return false;
+        }
+
+        // If a CollectableItemPickup changes active, the replaced object should instead
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(GameObject), "SetActive")]
+        private static bool GameObject_SetActive_Prefix(GameObject __instance, bool value)
+        {
+            if (__instance.GetComponent<CollectableItemPickup>() != null && !spawningReplacementCollectableItemPickup)
+            {
+                logSource.LogWarning("Changing active");
+
+                GameObject replacementObject = GameObject.Find(__instance.name + replacementFlag);
+
+                replacementObject.SetActive(value);
+
+                return false;
+            }
+
+            return true;
+        }*/
+
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(CollectableItemPickup), "OnSetSaveState")]
+        private static void testtest(bool value)
+        {
+            logSource.LogMessage("VALUE: " + value);
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentItem<bool>), "Start")]
+        private static bool PersistentItem_Bool_Start_Prefix(PersistentItem<bool> __instance)
+        {
+            if (__instance.ItemData.ID.Contains("Weaver Totem"))
+            {
+                logSource.LogError("Flag 1");
+                logSource.LogWarning(__instance.ItemData.Value);
+
+                logSource.LogError("Flag end 1");
+            }
+
+            return true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PersistentItem<bool>), "Start")]
+        private static void PersistentItem_Bool_Start_Postfix(PersistentItem<bool> __instance)
+        {
+            if (__instance.ItemData.ID.Contains("Weaver Totem"))
+            {
+                logSource.LogError("Flag 2");
+                logSource.LogWarning(__instance.ItemData.Value);
+                logSource.LogWarning(__instance.LoadedValue);
+                logSource.LogError("Flag end 2");
+            }
+        }*/
+
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentItemDataCollection<bool, SerializableBoolData>), "SetValue")]
+        private static bool PersistentItemDataCollection_Bool_SetValue_Prefix(PersistentItemDataCollection<bool, SerializableBoolData> __instance, PersistentItemData<bool> itemData)
+        {
+            //throw new NotImplementedException();
+
+            if (itemData.ID.Contains("Weaver Totem"))
+            {
+                logSource.LogError("FLAG 2");
+                logSource.LogInfo(itemData.ID);
+                logSource.LogInfo(itemData.Value);
+                logSource.LogError("FLAG END 2");
+            }
+
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentItem<bool>), "SaveStateNoCondition")]
+        private static bool PersistentItem_Bool_SaveStateNoCondition_Prefix(PersistentItem<bool> __instance)
+        {
+            //throw new NotImplementedException();
+
+            if (__instance.ItemData.ID.Contains("Weaver Totem"))
+            {
+                logSource.LogError("FLAG");
+                var fieldInfo = typeof(PersistentItem<bool>).GetField(
+                    "OnSetSaveState", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (fieldInfo != null)
+                {
+                    var eventDelegate = fieldInfo.GetValue(__instance) as MulticastDelegate;
+                    if (eventDelegate != null) // will be null if no subscribed event consumers
+                    {
+                        var delegates = eventDelegate.GetInvocationList();
+
+                        foreach (var deleg in delegates)
+                        {
+                            if (deleg != null)
+                            {
+                                logSource.LogWarning(deleg.Method.DeclaringType);
+                            }
+                        }
+                    }
+                }
+
+                logSource.LogInfo(__instance.ItemData.ID);
+                logSource.LogInfo(__instance.ItemData.Value);
+
+                var fieldInfo2 = typeof(PersistentItem<bool>).GetField(
+                    "OnGetSaveState", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (fieldInfo2 != null)
+                {
+                    var eventDelegate2 = fieldInfo2.GetValue(__instance) as MulticastDelegate;
+                    if (eventDelegate2 != null) // will be null if no subscribed event consumers
+                    {
+                        var delegates = eventDelegate2.GetInvocationList();
+
+                        foreach (var deleg in delegates)
+                        {
+                            if (deleg != null)
+                            {
+                                logSource.LogWarning(deleg.Method.DeclaringType);
+                            }
+                        }
+                    }
+                }
+
+                logSource.LogError("FLAG END");
+            }
+            return true;
+        }*/
 
         // Spawns a replacement pickup, defining the item with uniqueID
         private static Transform SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset)
@@ -2236,7 +2464,7 @@ namespace Open_Ended_Item_Replacer
             }
 
             // Defines the spawn location of the replacement pickup
-            Vector3 vector = spawnPoint.TransformPoint(offset);
+            Vector3 vector = spawnPoint.position + offset;
             Vector3 position = vector;
 
             CollectableItemPickup collectableItemPickup;
@@ -2262,7 +2490,7 @@ namespace Open_Ended_Item_Replacer
             }
 
             // Defines the spawn location of the replacement pickup
-            Vector3 vector = spawnPoint.TransformPoint(offset);
+            Vector3 vector = spawnPoint.position + offset;
             Vector3 position = vector;
 
             CollectableItemPickup collectableItemPickup;
@@ -2297,6 +2525,9 @@ namespace Open_Ended_Item_Replacer
             collectableItemPickup.SetItem(genericItem, true);
             logSource.LogInfo("Pickup Item Set: " + genericItem.name);
 
+            // Ensures new replacements made post-pickup don't reset the persistent data
+            Traverse.Create(collectableItemPickup).Field("activatedSave").SetValue(true);
+
             // Handles persistence set by new item
             if (GetPersistentBoolFromData(persistent.ItemData))
             {
@@ -2313,6 +2544,9 @@ namespace Open_Ended_Item_Replacer
 
             // Sets persistent data
             SetGenericPersistentBoolDataInfo(uniqueID, persistent.ItemData);
+
+            // The value needs to be overidden to stop the default handling breaking things
+            persistent.SetValueOverride(persistent.ItemData.Value);
         }
 
         public static void SetGenericPersistentBoolDataInfo(UniqueID uniqueID, PersistentItemData<bool> persistentBoolData)
@@ -2321,8 +2555,8 @@ namespace Open_Ended_Item_Replacer
             persistentBoolData.ID = uniqueID.PickupName + replacementFlag;
             persistentBoolData.SceneName = uniqueID.SceneName;
             persistentBoolData.IsSemiPersistent = false;
-            persistentBoolData.Value = false;
-            persistentBoolData.Mutator = SceneData.PersistentMutatorTypes.None;
+            persistentBoolData.Value = GetPersistentBoolFromData(persistentBoolData); // By default this returns false, but if it has been picked up before it is true
+            persistentBoolData.Mutator = PersistentMutatorTypes.None;
         }
     }
 }
