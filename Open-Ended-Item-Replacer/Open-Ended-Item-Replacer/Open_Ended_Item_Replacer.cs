@@ -862,21 +862,6 @@ namespace Open_Ended_Item_Replacer
                 }
                 logSource.LogInfo("Pickup Drop Attempt End");
 
-
-                // This will flag if the item is unique
-                logSource.LogError(replacedObject.transform.GetComponent<CollectableItemPickup>().Item.IsUnique);
-
-                // CURRENT PROBLEM: ORIGINAL CHECKS FOR HAVING TOOLS, ITEMS, ETC, THAT DISABLE THE ORIGINAL WILL STILL DISABLE THE NEW EVEN THOUGH THEIR PERSISTENCE SHOULD BE INDEPENDANT
-                // My one thought is if I can find where collectableItemPickups specifically check for these alternative persistence trackings I can intercept them?
-                // -> I should aim to remove it initially instead of intercepting so that way it only effects replaced pickups
-
-                // If I check whether a collectableItemPickup has a persistence, as long as items are not double checked then this should not be a problem
-                // I can do this "or"ed with IsUnique to hopefully catch all options
-                // This being said, finding them is only half the issue
-
-                // Okay it looks like CheckActivation is a good basis
-                // It is ran in setup meaning this is likely what handles ALL persistence
-
                 // Removes the original object, along with removing its gravity and collision
                 // Note that scenes in this game only extend in postive x and y, so -250 -250 should be plenty out of the way
                 replacedObject.transform.position = new Vector3(-250, -250);
@@ -901,6 +886,7 @@ namespace Open_Ended_Item_Replacer
             }
             catch (Exception e)
             {
+                logSource.LogInfo("Failed to replace");
                 spawningReplacementCollectableItemPickup = false;
             }
 
