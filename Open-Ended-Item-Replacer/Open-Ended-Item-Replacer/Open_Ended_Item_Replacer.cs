@@ -810,7 +810,7 @@ namespace Open_Ended_Item_Replacer
             //logSource.LogMessage(PlayerData.instance.HasMelodyLibrarian);
 
             //logSource.LogMessage(testTransform.position);
-            //logSource.LogMessage(testTransform.gameObject.activeSelf);
+            //logSource.LogMessage(testTransform.gameObject.activeInHierarchy);
 
             /*var quests = QuestManager.GetAllQuests();
 
@@ -833,14 +833,14 @@ namespace Open_Ended_Item_Replacer
         }
 
         public static string replacementFlag = "_(Replacement)";
-        
-        // Deactivates and replaces a given object
+
+        // Moves and replaces a given object
         public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
         {
             return Replace(replacedObject, replacedObject, replacedItemName, interactable, replacementPrefab, offset);
         }
 
-        // Deactivates and replaces a given object
+        // Moves and replaces a given object
         public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
         {
             // Sets up the replacement object to not be replaced itself
@@ -1261,13 +1261,13 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.gameObject == null) { return; }
 
-            if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.name.Contains("Control"))
+            if (__instance.gameObject.name.Contains("Snowflake Chunk - Flea") && __instance.Fsm.Name.Contains("Control"))
             {
                 logSource.LogInfo("Frozen flea flagged");
 
                 fleaObject.transform.position = __instance.transform.position;
                 __instance.gameObject.SetActive(false);
-                Replace(fleaObject, genericFleaItemName, false, null);
+                Replace(fleaObject, genericFleaItemName, false, null); // Note that in this case parenthood is given to the dummy object; for some reason giving it to the original flea causes random displacement
             }
         }
 
@@ -2514,6 +2514,9 @@ namespace Open_Ended_Item_Replacer
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
             genericItem.UniqueID = uniqueID;
+
+            // Ignores areas that disallow replacement pickups such that it can exist anyways
+            Traverse.Create(collectableItemPickup).Field("ignoreCanExist").SetValue(true);
 
             // This logs where the pickup has been placed
             logSource.LogInfo("New Pickup Placed At: " + collectableItemPickup.transform.position);
