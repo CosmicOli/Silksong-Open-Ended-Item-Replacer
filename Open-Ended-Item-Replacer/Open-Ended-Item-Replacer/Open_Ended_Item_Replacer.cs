@@ -10,6 +10,7 @@ using InControl;
 using QuestPlaymakerActions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using TeamCherry.Localization;
@@ -435,6 +436,7 @@ namespace Open_Ended_Item_Replacer
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
         public static ManualLogSource logSource = new ManualLogSource("logSource");
+        public static Vector3 defaultReplacedParentLocation = new Vector3(-250, -250);
 
         private void Awake()
         {
@@ -833,7 +835,13 @@ namespace Open_Ended_Item_Replacer
         public static string replacementFlag = "_(Replacement)";
         
         // Deactivates and replaces a given object
-        public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab)
+        public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
+        {
+            return Replace(replacedObject, replacedObject, replacedItemName, interactable, replacementPrefab, offset);
+        }
+
+        // Deactivates and replaces a given object
+        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
         {
             // Sets up the replacement object to not be replaced itself
             spawningReplacementCollectableItemPickup = true;
@@ -854,17 +862,18 @@ namespace Open_Ended_Item_Replacer
                 logSource.LogInfo("Pickup Drop Attempt Start");
                 if (interactable)
                 {
-                    output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                    output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
                 }
                 else
                 {
-                    output = SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, new Vector3(0, 0, 0));
+                    output = SpawnGenericCollisionPickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
                 }
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 // Removes the original object, along with removing its gravity and collision
                 // Note that scenes in this game only extend in postive x and y, so -250 -250 should be plenty out of the way
-                replacedObject.transform.position = new Vector3(-250, -250);
+                replacedObject.transform.position = defaultReplacedParentLocation;
+                activeParent.transform.position = defaultReplacedParentLocation;
 
                 Rigidbody2D replacementRigidBody2D = replacedObject.GetComponent<Rigidbody2D>();
                 if (replacementRigidBody2D != null)
@@ -878,7 +887,7 @@ namespace Open_Ended_Item_Replacer
                     replacementCollider2D.enabled = false;
                 }
 
-                output.parent = replacedObject.transform;
+                output.parent = activeParent.transform;
 
                 spawningReplacementCollectableItemPickup = false;
 
@@ -1082,14 +1091,22 @@ namespace Open_Ended_Item_Replacer
                             {
                                 containsFleaSprite = true;
                             }
-
-                            if (!containsFleaSprite)
-                            {
-                                fleaObject.transform.position = __instance.transform.position;
-                                Replace(fleaObject, genericFleaItemName, false, null);
-                                return;
-                            }
                         }
+
+                        if (!containsFleaSprite)
+                        {
+                            fleaObject.transform.position = __instance.transform.position;
+                            Replace(fleaObject, gameObject, genericFleaItemName, false, null);
+                            return;
+                        }
+                    }
+                    
+                    // The slab cage flea specifically looks like a flea but is not animated the same way
+                    if (gameObject.name.ToLower().Contains("flea slab cage"))
+                    {
+                        fleaObject.transform.position = __instance.transform.position;
+                        Replace(fleaObject, gameObject, genericFleaItemName, true, null);
+                        return;
                     }
 
                     PersistentItemData<bool> persistentBoolData = GeneratePersistentBoolData(gameObject, genericFleaItemName);
@@ -1101,14 +1118,12 @@ namespace Open_Ended_Item_Replacer
                     if (fleaFsmGameObject.Value == null)
                     {
                         fleaObject.transform.position = __instance.transform.position;
-                        __instance.gameObject.SetActive(false);
-                        replacmentTransform = Replace(fleaObject, genericFleaItemName, true, null);
+                        replacmentTransform = Replace(fleaObject, gameObject, genericFleaItemName, true, null);
                     }
                     else
                     {
                         fleaObject.transform.position = fleaFsmGameObject.Value.transform.position;
-                        fleaFsmGameObject.Value.SetActive(false);
-                        replacmentTransform = Replace(fleaObject, genericFleaItemName, true, null);
+                        replacmentTransform = Replace(fleaObject, fleaFsmGameObject.Value, genericFleaItemName, true, null);
                     }
 
                     // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
@@ -1169,8 +1184,10 @@ namespace Open_Ended_Item_Replacer
                     // Handles persistence for the container
                     if (GetPersistentBoolFromData(persistentBoolData))
                     {
-                        gameObject.SetActive(false);
-                        logSource.LogInfo("Container set inactive");
+                        Vector3 oldLocation = replacmentTransform.position;
+                        gameObject.transform.position = defaultReplacedParentLocation;
+                        replacmentTransform.position = oldLocation;
+                        logSource.LogInfo("Container moved");
                     }
                     else
                     {
