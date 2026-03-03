@@ -1417,6 +1417,8 @@ namespace Open_Ended_Item_Replacer
                 FsmState end = __instance.Fsm.GetState("End");
                 if (checkUnlocked == null || inactive == null || msg == null || end == null) { return; }
 
+                string paleNails = "Pale Nails";
+
                 checkUnlocked.Actions[0] = new SetFsmActiveState(__instance.Fsm, checkUnlocked, inactive, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Pale Nails", "Pale Nails")), GetTrueFunc());
 
                 msg.Actions[0].Enabled = false;
@@ -1426,8 +1428,8 @@ namespace Open_Ended_Item_Replacer
                 end.Actions[1].Enabled = false;
                 end.Actions[2].Enabled = false;
 
-                GameObject dummyGameObject = new GameObject("Pale Nails");
-                end.Actions[3] = new GetCheck(dummyGameObject, "Pale Nails");
+                GameObject dummyGameObject = new GameObject(paleNails);
+                end.Actions[3] = new GetCheck(dummyGameObject, paleNails);
             }
         }
 
@@ -1435,14 +1437,16 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.Fsm.Name == "Silk Heart Memory Return" && __instance.gameObject?.name == "Silk Heart Memory Return")
             {
+                string silkHeart = "Silk Heart";
+
                 FsmState save = __instance.Fsm.GetState("Save");
 
                 int numberOfNewActions = 2;
 
                 FsmStateAction[] newActions = new FsmStateAction[save.Actions.Length + numberOfNewActions];
 
-                GameObject dummyGameObject = new GameObject("Silk Heart");
-                newActions[0] = new GetCheck(dummyGameObject, "Silk Heart"); // Replace
+                GameObject dummyGameObject = new GameObject(silkHeart);
+                newActions[0] = new GetCheck(dummyGameObject, silkHeart); // Replace
                 newActions[1] = new RemoveExtraSilkHeart();
 
                 //Array.Copy(save.Actions, 0, newActions, numberOfNewActions, save.Actions.Length);
@@ -1475,6 +1479,8 @@ namespace Open_Ended_Item_Replacer
                 FsmState endScene = __instance.Fsm.GetState("End Scene");
                 if (needolinPrompt == null || endScene == null) { return; }
 
+                string needolin = "Needolin";
+
                 needolinPrompt.Actions[1].Enabled = false; // disables giving needolin
                 endScene.Actions[0].Enabled = false; // disables giving needolin
 
@@ -1482,8 +1488,8 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActions = new FsmStateAction[numberOfNewActions];
 
-                GameObject dummyGameObject = new GameObject("Needolin");
-                newActions[0] = new GetCheck(dummyGameObject, "Needolin"); // Replace
+                GameObject dummyGameObject = new GameObject(needolin);
+                newActions[0] = new GetCheck(dummyGameObject, needolin); // Replace
 
                 //Array.Copy(endScene.Actions, 0, newActions, numberOfNewActions, endScene.Actions.Length);
                 endScene.Actions = ReturnCombinedActions(newActions, endScene.Actions);
@@ -1492,6 +1498,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static string runeRage = "Rune Rage";
         private static void HandleFirstSinnerPersistenceAndPickup(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine First Weaver")
@@ -1499,11 +1506,13 @@ namespace Open_Ended_Item_Replacer
                 FsmState init = __instance.Fsm.GetState("Init");
                 if (init == null) { return; }
 
+
+
                 (init.Actions[0] as PlayerDataBoolTest).isTrue = new FsmEvent(""); // disables checking for rune bomb
 
                 // Handles persistence set by new item
-                GameObject dummyGameObject = new GameObject("Rune Bomb");
-                UniqueID uniqueID = new UniqueID(dummyGameObject, "Rune Bomb");
+                GameObject dummyGameObject = new GameObject(runeRage);
+                UniqueID uniqueID = new UniqueID(dummyGameObject, runeRage);
                 if (GetPersistentBoolFromData("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
                 {
                     __instance.gameObject.SetActive(false);
@@ -1530,8 +1539,8 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActions = new FsmStateAction[getRuneBomb.Actions.Length + numberOfNewActions];
 
-                GameObject dummyGameObject = new GameObject("Rune Rage");
-                newActions[0] = new GetCheck(dummyGameObject, "Rune Rage"); // Replace
+                GameObject dummyGameObject = new GameObject(runeRage);
+                newActions[0] = new GetCheck(dummyGameObject, runeRage); // Replace
 
                 //Array.Copy(getRuneBomb.Actions, 0, newActions, numberOfNewActions, getRuneBomb.Actions.Length);
                 getRuneBomb.Actions = ReturnCombinedActions(newActions, getRuneBomb.Actions);
@@ -1548,6 +1557,8 @@ namespace Open_Ended_Item_Replacer
                 FsmState setData = __instance.Fsm.GetState("Set Data");
                 if (UIMsg == null || setData == null) { return; }
 
+                string parry = "Parry";
+
                 UIMsg.Actions[1].Enabled = false; // disables giving parry
                 UIMsg.Actions[5].Enabled = false; // disables auto equipping parry
                 UIMsg.Actions[6].Enabled = false; // disables displaying parry
@@ -1556,8 +1567,8 @@ namespace Open_Ended_Item_Replacer
 
                 FsmStateAction[] newActionsPre = new FsmStateAction[1];
 
-                GameObject dummyGameObject = new GameObject("Parry");
-                newActionsPre[0] = new GetCheck(dummyGameObject, "Parry"); // Replace
+                GameObject dummyGameObject = new GameObject(parry);
+                newActionsPre[0] = new GetCheck(dummyGameObject, parry); // Replace
 
                 /*FsmOwnerDefault ownerDefault = new FsmOwnerDefault();
                 ownerDefault.GameObject = __instance.gameObject;
@@ -1690,8 +1701,10 @@ namespace Open_Ended_Item_Replacer
                 FsmState msg = __instance.Fsm.GetState("Msg");
                 if (msg == null) { return; }
 
-                GameObject dummyGameObject = new GameObject("Drifter's Cloak");
-                msg.Actions[3] = new GetCheck(dummyGameObject, "Drifter's Cloak");
+                string driftersCloak = "Drifter's Cloak";
+
+                GameObject dummyGameObject = new GameObject(driftersCloak);
+                msg.Actions[3] = new GetCheck(dummyGameObject, driftersCloak);
             }
         }
 
@@ -1719,13 +1732,15 @@ namespace Open_Ended_Item_Replacer
 
         private static void HandlePinstress(PlayMakerFSM __instance)
         {
+            string needleStrike = "Needle Strike";
+
             if (__instance.Fsm.Name == "States" && __instance.gameObject?.name == "Pinstress States")
             {
                 FsmState check = __instance.Fsm.GetState("Check");
                 FsmState ground = __instance.Fsm.GetState("Ground");
                 if (check == null || ground == null) { return; }
 
-                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
+                check.Actions[0] = new SetFsmActiveState(__instance.Fsm, check, ground, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(needleStrike, needleStrike)), GetFalseFunc());
             }
 
             if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject?.name == "Pinstress Interior Ground Sit")
@@ -1735,10 +1750,10 @@ namespace Open_Ended_Item_Replacer
                 FsmState reofferDlg = __instance.Fsm.GetState("Reoffer Dlg");
                 if (save == null || met == null) { return; }
 
-                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike")), GetFalseFunc());
+                met.Actions[4] = new SetFsmActiveState(__instance.Fsm, met, reofferDlg, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(needleStrike, needleStrike)), GetFalseFunc());
 
-                GameObject dummyGameObject = new GameObject("Needle Strike");
-                save.Actions[2] = new GetCheck(dummyGameObject, "Needle Strike");
+                GameObject dummyGameObject = new GameObject(needleStrike);
+                save.Actions[2] = new GetCheck(dummyGameObject, needleStrike);
             }
         }
 
@@ -1753,12 +1768,14 @@ namespace Open_Ended_Item_Replacer
 
                 if (hasDJ == null || startBlizzardAudio == null || completed == null || breakTuningFork == null) { return; }
 
-                hasDJ.Actions = new FsmStateAction[2];
-                hasDJ.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasDJ, startBlizzardAudio, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Faydown Cloak", "Faydown Cloak")), GetFalseFunc());
-                hasDJ.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasDJ, completed, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Faydown Cloak", "Faydown Cloak")), GetTrueFunc());
+                string faydownCloak = "Faydown Cloak";
 
-                GameObject dummyGameObject = new GameObject("Faydown Cloak");
-                breakTuningFork.Actions[3] = new GetCheck(dummyGameObject, "Faydown Cloak");
+                hasDJ.Actions = new FsmStateAction[2];
+                hasDJ.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasDJ, startBlizzardAudio, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(faydownCloak, faydownCloak)), GetFalseFunc());
+                hasDJ.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasDJ, completed, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(faydownCloak, faydownCloak)), GetTrueFunc());
+
+                GameObject dummyGameObject = new GameObject(faydownCloak);
+                breakTuningFork.Actions[3] = new GetCheck(dummyGameObject, faydownCloak);
             }
         }
 
@@ -1795,11 +1812,17 @@ namespace Open_Ended_Item_Replacer
 
                 if (checkCombo1 == null || checkSlot1 == null || checkSlot2 == null || checkHunterv3 == null || checkFinalUpgrade == null || showedPrompt == null) { return; }
 
-                PersistentItemData<bool> persistentBoolDataHunter_v2 = GeneratePersistentBoolData_SameScene("Hunter_v2", "Hunter_v2");
-                PersistentItemData<bool> persistentBoolDataHunter_v3 = GeneratePersistentBoolData_SameScene("Hunter_v3", "Hunter_v3");
-                PersistentItemData<bool> persistentBoolDataYellowSlot = GeneratePersistentBoolData_SameScene("Yellow Slot", "Yellow Slot");
-                PersistentItemData<bool> persistentBoolDataBlueSlot = GeneratePersistentBoolData_SameScene("Blue Slot", "Blue Slot");
-                PersistentItemData<bool> persistentBoolDataSylphsong = GeneratePersistentBoolData_SameScene("Sylphsong", "Sylphsong");
+                string hunter_v2 = "Hunter_v2";
+                string hunter_v3 = "Hunter_v3";
+                string yellowSlot = "Yellow Slot";
+                string blueSlot = "Blue Slot";
+                string sylphsong = "Sylphsong";
+
+                PersistentItemData<bool> persistentBoolDataHunter_v2 = GeneratePersistentBoolData_SameScene(hunter_v2, hunter_v2);
+                PersistentItemData<bool> persistentBoolDataHunter_v3 = GeneratePersistentBoolData_SameScene(hunter_v3, hunter_v3);
+                PersistentItemData<bool> persistentBoolDataYellowSlot = GeneratePersistentBoolData_SameScene(yellowSlot, yellowSlot);
+                PersistentItemData<bool> persistentBoolDataBlueSlot = GeneratePersistentBoolData_SameScene(blueSlot, blueSlot);
+                PersistentItemData<bool> persistentBoolDataSylphsong = GeneratePersistentBoolData_SameScene(sylphsong, sylphsong);
 
                 // The following handles replacing the majority of persistence checks
 
@@ -1835,25 +1858,25 @@ namespace Open_Ended_Item_Replacer
                     }
                 }
 
-                GameObject hunter_v2GameObject = new GameObject("Hunter_v2");
+                GameObject hunter_v2GameObject = new GameObject(hunter_v2);
                 unlockCrestUpg1.Actions[2].Enabled = false;
                 unlockCrestUpg1.Actions[3].Enabled = false;
-                firstUpgDlg.Actions = ReturnCombinedActions(new FsmStateAction[] { new GetCheck(hunter_v2GameObject, "Hunter_v2"), new SetFsmActiveState(__instance.Fsm, firstUpgDlg, checkSlot1, CheckCurrentCrestPoints, GetTrueFunc()) }, firstUpgDlg.Actions);
+                firstUpgDlg.Actions = ReturnCombinedActions(new FsmStateAction[] { new GetCheck(hunter_v2GameObject, hunter_v2), new SetFsmActiveState(__instance.Fsm, firstUpgDlg, checkSlot1, CheckCurrentCrestPoints, GetTrueFunc()) }, firstUpgDlg.Actions);
 
-                GameObject yellowSlot_GameObject = new GameObject("Yellow Slot");
-                unlockFirstSlot.Actions[5] = new GetCheck(yellowSlot_GameObject, "Yellow Slot");
+                GameObject yellowSlot_GameObject = new GameObject(yellowSlot);
+                unlockFirstSlot.Actions[5] = new GetCheck(yellowSlot_GameObject, yellowSlot);
 
-                GameObject blueSlot_GameObject = new GameObject("Blue Slot");
+                GameObject blueSlot_GameObject = new GameObject(blueSlot);
                 unlockOtherSlot.Actions[2] = new SetIntValue();
                 (unlockOtherSlot.Actions[2] as SetIntValue).intVariable = __instance.Fsm.GetFsmInt("Slot Index");
                 (unlockOtherSlot.Actions[2] as SetIntValue).intValue = 1;
-                unlockOtherSlot.Actions[4] = new GetCheck(blueSlot_GameObject, "Blue Slot");
+                unlockOtherSlot.Actions[4] = new GetCheck(blueSlot_GameObject, blueSlot);
 
-                GameObject hunter_v3GameObject = new GameObject("Hunter_v3");
-                unlockCrestUpg2.Actions[2] = new GetCheck(hunter_v3GameObject, "Hunter_v3");
+                GameObject hunter_v3GameObject = new GameObject(hunter_v3);
+                unlockCrestUpg2.Actions[2] = new GetCheck(hunter_v3GameObject, hunter_v3);
 
-                GameObject sylphsong_GameObject = new GameObject("Sylphsong");
-                setBound.Actions[2] = new GetCheck(sylphsong_GameObject, "Sylphsong");
+                GameObject sylphsong_GameObject = new GameObject(sylphsong);
+                setBound.Actions[2] = new GetCheck(sylphsong_GameObject, sylphsong);
 
                 // The following handles removing the incorrect animations for hunter crest upgrades
 
@@ -1927,16 +1950,56 @@ namespace Open_Ended_Item_Replacer
                 FsmState giveMemento = __instance.Fsm.GetState("Give Memento");
                 if (hasJournal == null || journal == null || journalRepeat == null || convoChoice == null || completionEvaluate == null) { return; }
 
+                string huntersJournal = "Hunter's Journal";
+
                 hasJournal.Actions = new FsmStateAction[3];
-                hasJournal.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasJournal, journalRepeat, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Hunter's Journal", "Hunter's Journal")), GetFalseFunc());
+                hasJournal.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasJournal, journalRepeat, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(huntersJournal, huntersJournal)), GetFalseFunc());
                 hasJournal.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasJournal, journalHint, GetPlayerDataBoolFunc("hasJournal"), GetFalseFunc());
                 hasJournal.Actions[2] = new SetFsmActiveState(__instance.Fsm, hasJournal, convoChoice, GetPlayerDataBoolFunc("hasJournal"), GetTrueFunc());
 
-                GameObject dummyGameObject = new GameObject("Hunter's Journal");
-                journal.Actions[1] = new GetCheck(dummyGameObject, "Hunter's Journal");
+                GameObject dummyGameObject = new GameObject(huntersJournal);
+                journal.Actions[1] = new GetCheck(dummyGameObject, huntersJournal);
 
                 completionEvaluate.Actions[0].Enabled = false;
                 giveMemento.Actions[2].Enabled = false;
+            }
+        }
+
+        public static void HandleGrishkin(PlayMakerFSM __instance)
+        {
+            if (__instance.gameObject == null) { return; }
+
+            if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject.name.Contains("Caravan Troup Member Short"))
+            {
+                FsmState brew = __instance.Fsm.GetState("Brew?");
+                FsmState met2 = __instance.Fsm.GetState("Met? 2");
+                FsmState meetBrew = __instance.Fsm.GetState("Meet Brew");
+                FsmState giveBrew = __instance.Fsm.GetState("Give Brew");
+                FsmState endDialogue = __instance.Fsm.GetState("End Dialogue");
+                if (brew == null || met2 == null || endDialogue == null) { return; }
+
+                string fleaBrew = "Flea Brew";
+
+                GameObject fleaBrewGameObject = new GameObject(fleaBrew); // Standardises the object name across all locations
+                giveBrew.Actions[2] = new GetCheck(fleaBrewGameObject, fleaBrew);
+
+                bool CheckAllCaravanScenesForFleaBrew()
+                {
+                    PersistentItemData<bool> data = GeneratePersistentBoolData_SameScene(fleaBrew, fleaBrew);
+
+                    data.SceneName = "Greymoor_08";
+                    bool greymoor = GetPersistentBoolFromData(data);
+
+                    data.SceneName = "Coral_Judge_Arena";
+                    bool ljArena = GetPersistentBoolFromData(data);
+
+                    data.SceneName = "Aqueduct_05";
+                    bool fleatopia = GetPersistentBoolFromData(data);
+
+                    return (greymoor || ljArena || fleatopia);
+                }
+
+                brew.Actions[1] = new SetFsmActiveState(__instance.Fsm, brew, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc());
             }
         }
 
@@ -1981,6 +2044,8 @@ namespace Open_Ended_Item_Replacer
             HandleEva(__instance);
 
             HandleNuu(__instance);
+
+            HandleGrishkin(__instance);
         }
 
 
