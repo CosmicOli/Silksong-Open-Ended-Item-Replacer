@@ -704,7 +704,7 @@ namespace Open_Ended_Item_Replacer
             PlayerData playerData = PlayerData.instance;
             if (!hasGranted)
             {
-                if (sceneName.ToLower().Contains("memory") && (sceneName.ToLower().Contains("silk_heart") || sceneName.ToLower().Contains("needolin") || sceneName.ToLower().Contains("first_sinner")))
+                if (sceneName.ToLowerInvariant().Contains("memory") && (sceneName.ToLowerInvariant().Contains("silk_heart") || sceneName.ToLowerInvariant().Contains("needolin") || sceneName.ToLowerInvariant().Contains("first_sinner")))
                 {
                     hasGranted = true;
 
@@ -727,7 +727,7 @@ namespace Open_Ended_Item_Replacer
             }
             else
             {
-                if (!sceneName.ToLower().Contains("memory"))
+                if (!sceneName.ToLowerInvariant().Contains("memory"))
                 {
                     hasGranted = false;
 
@@ -771,7 +771,7 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SceneAdditiveLoadConditional), "TryTestLoad")]
         private static bool SceneAdditiveLoadConditional_TryTestLoad_Prefix(SceneAdditiveLoadConditional __instance, PlayerDataTest ___tests, QuestTest[] ___questTests, ref bool __result)
         {
-            if (!Traverse.Create(__instance).Field("sceneNameToLoad").GetValue<string>().ToLower().Contains("bone_east_08")) { return true; }
+            if (!Traverse.Create(__instance).Field("sceneNameToLoad").GetValue<string>().ToLowerInvariant().Contains("bone_east_08")) { return true; }
 
             foreach (TestGroup testGroup in ___tests.TestGroups)
             {
@@ -993,13 +993,13 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(PersistentBoolItem), "Awake")]
         private static void PersistentBoolItem_Awake_Postfix(PersistentBoolItem __instance)
         {
-            if (__instance.ItemData.ID.ToLower().StartsWith("heart piece"))
+            if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("heart piece"))
             {
                 //logSource.LogInfo("Heart Piece");
                 Replace(__instance.gameObject, "Heart Piece", false, null);
             }
 
-            if (__instance.ItemData.ID.ToLower().StartsWith("silk spool"))
+            if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("silk spool"))
             {
                 //logSource.LogInfo("Silk Spool");
                 Replace(__instance.gameObject, "Silk Spool", false, null);
@@ -1087,7 +1087,7 @@ namespace Open_Ended_Item_Replacer
                     {
                         foreach (NamedVariable variable in fsmGameObjects)
                         {
-                            if (variable.Name.ToLower().Contains("flea") && variable.Name.ToLower().Contains("sprite"))
+                            if (variable.Name.ToLowerInvariant().Contains("flea") && variable.Name.ToLowerInvariant().Contains("sprite"))
                             {
                                 containsFleaSprite = true;
                             }
@@ -1102,7 +1102,7 @@ namespace Open_Ended_Item_Replacer
                     }
                     
                     // The slab cage flea specifically looks like a flea but is not animated the same way
-                    if (gameObject.name.ToLower().Contains("flea slab cage"))
+                    if (gameObject.name.ToLowerInvariant().Contains("flea slab cage"))
                     {
                         fleaObject.transform.position = __instance.transform.position;
                         Replace(fleaObject, gameObject, genericFleaItemName, true, null);
@@ -1141,7 +1141,7 @@ namespace Open_Ended_Item_Replacer
                                 if (activateGameObject != null)
                                 {
                                     string associatedGameObjectName = activateGameObject.gameObject?.GameObject?.Name;
-                                    if (associatedGameObjectName.ToLower().Contains("flea"))
+                                    if (associatedGameObjectName.ToLowerInvariant().Contains("flea"))
                                     {
                                         parentFsmStateAction.Enabled = false;
                                     }
@@ -2217,7 +2217,7 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.gameObject.Value == null) { return; }
 
-            string loweredName = __instance.gameObject.Value.name.ToLower();
+            string loweredName = __instance.gameObject.Value.name.ToLowerInvariant();
 
             if (loweredName.Contains("silk spool") || loweredName.Contains("heart piece"))
             {
@@ -2276,9 +2276,12 @@ namespace Open_Ended_Item_Replacer
 
                 bool originalActive = __instance.gameObject.activeSelf;
 
-                if (__instance.gameObject.name.ToLower().Contains("tool metal"))
+                
+
+                if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal"))
                 {
-                    // DO SOMETHING UNIQUE TO FIX THE PROBLEM
+                    GameObject dummyGameObject = new GameObject(__instance.gameObject.name + "-DummyParent");
+                    Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true, null);
                 }
                 else
                 {
