@@ -478,17 +478,19 @@ namespace Open_Ended_Item_Replacer
             return GetBool;
         }
 
+        public static bool GetPlayerDataBool(string playerDataBool)
+        {
+            if (!VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
+            {
+                return false;
+            }
+
+            return GameManager.instance.GetPlayerDataBool(playerDataBool);
+        }
+
         static Func<bool> GetPlayerDataBoolFunc(string playerDataBool)
         {
-            bool GetBool() 
-            {
-                if (!VariableExtensions.VariableExists<bool, PlayerData>(playerDataBool))
-                {
-                    return false;
-                }
-
-                return GameManager.instance.GetPlayerDataBool(playerDataBool); 
-            }
+            bool GetBool() { return GetPlayerDataBool(playerDataBool); }
 
             return GetBool;
         }
@@ -1965,6 +1967,23 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        private static string fleaBrew = "Flea Brew";
+        private static bool CheckAllCaravanScenesForFleaBrew()
+        {
+            PersistentItemData<bool> data = GeneratePersistentBoolData_SameScene(fleaBrew, fleaBrew);
+
+            data.SceneName = "Greymoor_08";
+            bool greymoor = GetPersistentBoolFromData(data);
+
+            data.SceneName = "Coral_Judge_Arena";
+            bool ljArena = GetPersistentBoolFromData(data);
+
+            data.SceneName = "Aqueduct_05";
+            bool fleatopia = GetPersistentBoolFromData(data);
+
+            return (greymoor || ljArena || fleatopia);
+        }
+
         public static void HandleGrishkin(PlayMakerFSM __instance)
         {
             if (__instance.gameObject == null) { return; }
@@ -1973,33 +1992,20 @@ namespace Open_Ended_Item_Replacer
             {
                 FsmState brew = __instance.Fsm.GetState("Brew?");
                 FsmState met2 = __instance.Fsm.GetState("Met? 2");
+                FsmState brewFull = __instance.Fsm.GetState("Brew Full?");
                 FsmState meetBrew = __instance.Fsm.GetState("Meet Brew");
                 FsmState giveBrew = __instance.Fsm.GetState("Give Brew");
-                FsmState endDialogue = __instance.Fsm.GetState("End Dialogue");
-                if (brew == null || met2 == null || endDialogue == null) { return; }
-
-                string fleaBrew = "Flea Brew";
+                FsmState repeatDlg = __instance.Fsm.GetState("Repeat Dlg");
+                if (brew == null || met2 == null || brewFull == null || meetBrew == null || giveBrew == null || repeatDlg == null) { return; }
 
                 GameObject fleaBrewGameObject = new GameObject(fleaBrew); // Standardises the object name across all locations
                 giveBrew.Actions[2] = new GetCheck(fleaBrewGameObject, fleaBrew);
 
-                bool CheckAllCaravanScenesForFleaBrew()
-                {
-                    PersistentItemData<bool> data = GeneratePersistentBoolData_SameScene(fleaBrew, fleaBrew);
-
-                    data.SceneName = "Greymoor_08";
-                    bool greymoor = GetPersistentBoolFromData(data);
-
-                    data.SceneName = "Coral_Judge_Arena";
-                    bool ljArena = GetPersistentBoolFromData(data);
-
-                    data.SceneName = "Aqueduct_05";
-                    bool fleatopia = GetPersistentBoolFromData(data);
-
-                    return (greymoor || ljArena || fleatopia);
-                }
-
                 brew.Actions[1] = new SetFsmActiveState(__instance.Fsm, brew, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc());
+
+                (met2.Actions[2] as BoolTest).isFalse = FsmEvent.GetFsmEvent("");
+                met2.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, met2, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()) }, met2.Actions);
+                met2.Actions = ReturnCombinedActions(met2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, brew) });
             }
         }
 
@@ -2162,10 +2168,29 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SetToolUnlocked), "OnEnter")]
         private static bool SetToolUnlocked_OnEnter_Prefix(SetToolUnlocked __instance)
         {
+            bool flag = false;
+
+            ToolItem item = __instance.Tool.Value as ToolItem;
+
+            if (item?.name == "Flea Brew" && item.SavedData.IsUnlocked) // If this item is flea brew and flea brew is owned
+            {
+                flag = true;
+
+                /*if (!CheckAllCaravanScenesForFleaBrew()) // If the player hasn't gotten the flea brew check yet, give it now
+                {
+                    GameObject fleaBrewGameObject = new GameObject(fleaBrew);
+
+                    GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+                    genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(fleaBrewGameObject, fleaBrew, genericItem);
+                }*/
+
+                return flag;
+            }
+
             ReplaceFsmToolGet(__instance);
 
             __instance.Finish();
-            return false;
+            return flag;
         }
 
         // Handles when FSMs run SetToolLocked
