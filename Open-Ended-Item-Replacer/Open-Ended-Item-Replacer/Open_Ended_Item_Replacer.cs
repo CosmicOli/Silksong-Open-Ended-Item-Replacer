@@ -1988,7 +1988,7 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.gameObject == null) { return; }
 
-            if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject.name.Contains("Caravan Troup Member Short"))
+            if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject.name.Contains("Caravan Troup Member Short")) // Yes troup is right
             {
                 FsmState brew = __instance.Fsm.GetState("Brew?");
                 FsmState met2 = __instance.Fsm.GetState("Met? 2");
@@ -2006,6 +2006,33 @@ namespace Open_Ended_Item_Replacer
                 (met2.Actions[2] as BoolTest).isFalse = FsmEvent.GetFsmEvent("");
                 met2.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, met2, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()) }, met2.Actions);
                 met2.Actions = ReturnCombinedActions(met2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, brew) });
+            }
+        }
+
+        // This only handles the persistence
+        public static void HandleFleaCharm(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Caravan Troupe Leader Fleatopia NPC") // Yes troupe is right
+            {
+                FsmState shouldWave = __instance.Fsm.GetState("Should Wave?");
+                FsmState met = __instance.Fsm.GetState("Met?");
+                if (shouldWave == null || met == null) { return; }
+
+                UniqueID uniqueID = new UniqueID(__instance.gameObject, "Flea Charm");
+
+                GetPersistentBoolFromSaveData fleaCharmGetPersistentBool = new GetPersistentBoolFromSaveData();
+
+                fleaCharmGetPersistentBool.Target = new FsmOwnerDefault();
+                fleaCharmGetPersistentBool.Target.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+                fleaCharmGetPersistentBool.Target.GameObject = new FsmGameObject();
+                fleaCharmGetPersistentBool.Target.GameObject.Value = null;
+
+                fleaCharmGetPersistentBool.ID = uniqueID.PickupName + replacementFlag;
+                fleaCharmGetPersistentBool.SceneName = uniqueID.SceneName;
+                fleaCharmGetPersistentBool.StoreValue = __instance.Fsm.GetFsmBool("Has Flea Charm");
+
+                shouldWave.Actions[4] = fleaCharmGetPersistentBool;
+                met.Actions[3] = fleaCharmGetPersistentBool;
             }
         }
 
@@ -2052,6 +2079,7 @@ namespace Open_Ended_Item_Replacer
             HandleNuu(__instance);
 
             HandleGrishkin(__instance);
+            HandleFleaCharm(__instance);
         }
 
 
@@ -2176,6 +2204,7 @@ namespace Open_Ended_Item_Replacer
             {
                 flag = true;
 
+                // Commented out to handle flea caravan side
                 /*if (!CheckAllCaravanScenesForFleaBrew()) // If the player hasn't gotten the flea brew check yet, give it now
                 {
                     GameObject fleaBrewGameObject = new GameObject(fleaBrew);
@@ -2303,9 +2332,9 @@ namespace Open_Ended_Item_Replacer
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CreateObject), "OnEnter")]
-        private static void CreateObject_OnEnter_Prefix(CreateObject __instance)
+        private static bool CreateObject_OnEnter_Prefix(CreateObject __instance)
         {
-            if (__instance.gameObject.Value == null) { return; }
+            if (__instance.gameObject.Value == null) { return true; }
 
             string loweredName = __instance.gameObject.Value.name.ToLowerInvariant();
 
@@ -2331,7 +2360,19 @@ namespace Open_Ended_Item_Replacer
                 {
                     genericItem.Get();
                 }
+
+                foreach (var transition in __instance.State.Transitions)
+                {
+                    if (transition.EventName.Contains("SILK SPOOL UI END") || transition.EventName.Contains("HEART PIECE UI END"))
+                    {
+                        __instance.Fsm.SetState(transition.ToState);
+                    }
+                }
+
+                return false;
             }
+
+            return true;
 
             /*if (loweredName.Contains("ui msg crest evolve"))
             {
