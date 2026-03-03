@@ -2276,8 +2276,14 @@ namespace Open_Ended_Item_Replacer
 
                 bool originalActive = __instance.gameObject.activeSelf;
 
-
-                Replace(__instance.gameObject, __instance.Item.name, true, null);
+                if (__instance.gameObject.name.ToLower().Contains("tool metal"))
+                {
+                    // DO SOMETHING UNIQUE TO FIX THE PROBLEM
+                }
+                else
+                {
+                    Replace(__instance.gameObject, __instance.Item.name, true, null);
+                }
             }
         }
 
