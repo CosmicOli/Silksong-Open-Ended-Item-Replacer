@@ -1342,13 +1342,23 @@ namespace Open_Ended_Item_Replacer
         {
             if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine Weaver Ability")
             {
-                Fsm fsm = __instance.Fsm;
+                FsmState collectedCheckState = __instance.Fsm.GetState("Collected Check");
+                FsmState abilityCollected = __instance.Fsm.GetState("Ability Collected");
+                FsmState autoEquip = __instance.Fsm.GetState("Auto Equip");
+                FsmState heal = __instance.Fsm.GetState("Heal");
+                FsmState end = __instance.Fsm.GetState("End");
+                if (collectedCheckState == null || abilityCollected == null || autoEquip == null || heal == null || end == null) { return; }
 
-                // Removes original persistence checking
-                FsmState collectedCheckState = fsm.GetState("Collected Check");
-                (collectedCheckState.Actions[0] as PlayerDataBoolTest).isTrue = new FsmEvent("");
+                string abilityName = __instance.Fsm.GetFsmEnum("Ability").Value.ToString();
 
-                Replace(__instance.gameObject, fsm.Variables.GetFsmEnum("Ability").Value.ToString(), true, null);
+                collectedCheckState.Actions[0] = new SetFsmActiveState(__instance.Fsm, abilityCollected, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene(abilityName, abilityName)), GetTrueFunc()); // Replaces original persistence checking
+
+                autoEquip.Actions = new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, heal) }; // Disables auto equipping tool
+
+                GameObject dummyGameObject = new GameObject(abilityName);
+                end.Actions[2] = new GetCheck(dummyGameObject, abilityName);
+                end.Actions[3].Enabled = false;
+                end.Actions[4].Enabled = false;
             }
         }
 
