@@ -2007,6 +2007,28 @@ namespace Open_Ended_Item_Replacer
                 met2.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, met2, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()) }, met2.Actions);
                 met2.Actions = ReturnCombinedActions(met2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, brew) });
             }
+
+            if (__instance.Fsm.Name == "FSM" && __instance.gameObject.name.Contains("Refill Inspect")) // For fleatopia
+            {
+                FsmState brew = __instance.Fsm.GetState("Brew?");
+                FsmState take = __instance.Fsm.GetState("Take?");
+                FsmState brewFull = __instance.Fsm.GetState("Brew Full?");
+                FsmState giveBrew = __instance.Fsm.GetState("Give Brew");
+                if (brew == null || take == null || brewFull == null || giveBrew == null) { return; }
+
+                // if flea brew persistence = false, go to give brew
+                // if brew owned, go to brew full as normal
+                // NOTE: make sure to give brew regardless of brew owned first
+
+                GameObject fleaBrewGameObject = new GameObject(fleaBrew); // Standardises the object name across all locations
+                giveBrew.Actions[0] = new GetCheck(fleaBrewGameObject, fleaBrew);
+
+                brew.Actions[1] = new SetFsmActiveState(__instance.Fsm, brew, take, CheckAllCaravanScenesForFleaBrew, GetFalseFunc());
+
+                (met2.Actions[2] as BoolTest).isFalse = FsmEvent.GetFsmEvent("");
+                met2.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, met2, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()) }, met2.Actions);
+                met2.Actions = ReturnCombinedActions(met2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, brew) });
+            }
         }
 
         // This only handles the persistence
@@ -2033,6 +2055,35 @@ namespace Open_Ended_Item_Replacer
 
                 shouldWave.Actions[4] = fleaCharmGetPersistentBool;
                 met.Actions[3] = fleaCharmGetPersistentBool;
+            }
+        }
+
+        // This only handles the persistence
+        public static void HandleSethMemento(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seth Sit NPC Fleatopia")
+            {
+                FsmState convoChoice = __instance.Fsm.GetState("Convo Choice");
+                FsmState awardMemento = __instance.Fsm.GetState("Award Memento?");
+                if (convoChoice == null || awardMemento == null) { return; }
+
+                UniqueID uniqueID = new UniqueID(__instance.gameObject, "Memento Seth");
+
+                GetPersistentBoolFromSaveData mementoSethGetPersistentBool = new GetPersistentBoolFromSaveData();
+
+                mementoSethGetPersistentBool.Target = new FsmOwnerDefault();
+                mementoSethGetPersistentBool.Target.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+                mementoSethGetPersistentBool.Target.GameObject = new FsmGameObject();
+                mementoSethGetPersistentBool.Target.GameObject.Value = null;
+
+                mementoSethGetPersistentBool.ID = uniqueID.PickupName + replacementFlag;
+                mementoSethGetPersistentBool.SceneName = uniqueID.SceneName;
+                mementoSethGetPersistentBool.StoreValue = __instance.Fsm.GetFsmBool("Memento Collected");
+
+                convoChoice.Actions[2] = mementoSethGetPersistentBool;
+                convoChoice.Actions[3].Enabled = false; // Disabled flipping the bool
+
+                awardMemento.Actions[1] = new GetCheck(__instance.gameObject, "Memento Seth");
             }
         }
 
@@ -2080,6 +2131,7 @@ namespace Open_Ended_Item_Replacer
 
             HandleGrishkin(__instance);
             HandleFleaCharm(__instance);
+            HandleSethMemento(__instance);
         }
 
 
