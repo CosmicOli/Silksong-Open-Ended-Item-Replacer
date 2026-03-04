@@ -303,6 +303,10 @@ namespace Open_Ended_Item_Replacer
             {
                 genericItem.Get();
             }
+            else
+            {
+                Open_Ended_Item_Replacer.logSource.LogInfo("Replacement GetCheck set inactive");
+            }
 
             Active = false;
             Finished = true;
@@ -2011,23 +2015,20 @@ namespace Open_Ended_Item_Replacer
             if (__instance.Fsm.Name == "FSM" && __instance.gameObject.name.Contains("Refill Inspect")) // For fleatopia
             {
                 FsmState brew = __instance.Fsm.GetState("Brew?");
-                FsmState take = __instance.Fsm.GetState("Take?");
-                FsmState brewFull = __instance.Fsm.GetState("Brew Full?");
+                FsmState brewInspect = __instance.Fsm.GetState("Brew Inspect");
                 FsmState giveBrew = __instance.Fsm.GetState("Give Brew");
-                if (brew == null || take == null || brewFull == null || giveBrew == null) { return; }
-
-                // if flea brew persistence = false, go to give brew
-                // if brew owned, go to brew full as normal
-                // NOTE: make sure to give brew regardless of brew owned first
+                if (brew == null || brewInspect == null || giveBrew == null) { return; }
 
                 GameObject fleaBrewGameObject = new GameObject(fleaBrew); // Standardises the object name across all locations
                 giveBrew.Actions[0] = new GetCheck(fleaBrewGameObject, fleaBrew);
 
-                brew.Actions[1] = new SetFsmActiveState(__instance.Fsm, brew, take, CheckAllCaravanScenesForFleaBrew, GetFalseFunc());
+                bool HasPersistentAndNotBrew()
+                {
+                    return CheckAllCaravanScenesForFleaBrew() && !__instance.Fsm.GetFsmBool("Brew unlocked").Value;
+                }
 
-                (met2.Actions[2] as BoolTest).isFalse = FsmEvent.GetFsmEvent("");
-                met2.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, met2, meetBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()) }, met2.Actions);
-                met2.Actions = ReturnCombinedActions(met2.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, brew) });
+                brew.Actions = ReturnCombinedActions(new FsmStateAction[2] { new SetFsmActiveState(__instance.Fsm, brew, giveBrew, CheckAllCaravanScenesForFleaBrew, GetFalseFunc()), brew.Actions[0] }, brew.Actions);
+                brew.Actions[2] = new SetFsmActiveState(__instance.Fsm, brew, brewInspect, HasPersistentAndNotBrew, GetTrueFunc());
             }
         }
 
