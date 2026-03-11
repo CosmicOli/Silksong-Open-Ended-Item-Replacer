@@ -771,13 +771,6 @@ namespace Open_Ended_Item_Replacer
                     }
                 }
             }
-
-            logSource.LogInfo(__instance.GetCurrentMapZone());
-            logSource.LogInfo(__instance.lastTimePassesMapZone);
-            if (__instance.GetCurrentMapZone() != __instance.lastTimePassesMapZone)
-            {
-                logSource.LogInfo("Time Passes Elsewhere");
-            }
         }
 
         [HarmonyPostfix]
@@ -2580,6 +2573,9 @@ namespace Open_Ended_Item_Replacer
                     return;
                 }*/
 
+                // Fixes original persistence taking effect
+                Traverse.Create(__instance).Field("persistent").SetValue(null);
+
                 // For logging
                 string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
                 if (!playerDataBool.IsNullOrWhiteSpace())
@@ -2604,8 +2600,6 @@ namespace Open_Ended_Item_Replacer
                 {
                     testTransform = Replace(__instance.gameObject, __instance.Item.name, true, null);
                 }
-
-                //__instance.transform.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
             }
         }
 
