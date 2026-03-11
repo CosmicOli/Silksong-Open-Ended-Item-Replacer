@@ -2556,6 +2556,28 @@ namespace Open_Ended_Item_Replacer
             }*/
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
+        private static void CollectableItemPickup_Awake_Prefix(CollectableItemPickup __instance)
+        {
+            // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
+            if (!spawningReplacementCollectableItemPickup)
+            {
+                // Fixes original persistence taking effect
+                Traverse.Create(__instance).Field("persistent").SetValue(null);
+
+                // For logging
+                string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
+                if (!playerDataBool.IsNullOrWhiteSpace())
+                {
+                    logSource.LogInfo("PlayerDataBool: " + playerDataBool);
+                }
+
+                // Stops player data bool based persistence checks
+                Traverse.Create(__instance).Field("playerDataBool").SetValue(null);
+            }
+        }
+
         // Replaces CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
         private static bool spawningReplacementCollectableItemPickup = false;
@@ -2574,7 +2596,7 @@ namespace Open_Ended_Item_Replacer
                 }*/
 
                 // Fixes original persistence taking effect
-                Traverse.Create(__instance).Field("persistent").SetValue(null);
+                /*Traverse.Create(__instance).Field("persistent").SetValue(null);
 
                 // For logging
                 string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
@@ -2584,7 +2606,8 @@ namespace Open_Ended_Item_Replacer
                 }
 
                 // Stops player data bool based persistence checks
-                Traverse.Create(__instance).Field("playerDataBool").SetValue(null); 
+                // NEED TO FIX, HAPPENS PRESUMABLY TOO LATE
+                Traverse.Create(__instance).Field("playerDataBool").SetValue(null); */
 
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }
