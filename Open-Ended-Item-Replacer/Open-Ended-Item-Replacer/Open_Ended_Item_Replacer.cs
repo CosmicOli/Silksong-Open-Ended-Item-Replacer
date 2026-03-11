@@ -755,12 +755,12 @@ namespace Open_Ended_Item_Replacer
             PlayerData playerData = __instance.playerData;
             string sceneNameString = __instance.GetSceneNameString();
 
+            logSource.LogInfo("Time Passes");
+
             if (sceneNameString != "Room_Pinstress")
             {
                 if (playerData.blackThreadWorld)
                 {
-                    logSource.LogInfo("time passed");
-
                     if (GetPersistentBoolFromData("Room_Pinstress", GeneratePersistentBoolData_SameScene("Needle Strike", "Needle Strike").ID))
                     {
                         playerData.pinstressQuestReady = true;
@@ -771,6 +771,20 @@ namespace Open_Ended_Item_Replacer
                     }
                 }
             }
+
+            logSource.LogInfo(__instance.GetCurrentMapZone());
+            logSource.LogInfo(__instance.lastTimePassesMapZone);
+            if (__instance.GetCurrentMapZone() != __instance.lastTimePassesMapZone)
+            {
+                logSource.LogInfo("Time Passes Elsewhere");
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameManager), "TimePassesElsewhere")]
+        public static void GameManager_TimePassesElsewhere_Postfix(GameManager __instance)
+        {
+            logSource.LogInfo("Time Passes Elsewhere");
         }
 
         [HarmonyPrefix]
@@ -2368,6 +2382,36 @@ namespace Open_Ended_Item_Replacer
             return false;
         }
 
+        /*public static void Ignore(string name, ref FsmEvent IsCollected, FsmEvent NotCollected)
+        {
+            // Not sure if this is necessary, but may be useful in the future for other checks
+            if (name.ToLowerInvariant().Contains("memento"))
+            {
+                IsCollected = NotCollected;
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CollectableItemGetData), "DoAction")]
+        public static void CollectableItemGetData_DoAction_Postfix(CollectableItemGetData __instance)
+        {
+            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CollectableItemGetDataV2), "DoAction")]
+        public static void CollectableItemGetDataV2_DoAction_Postfix(CollectableItemGetDataV2 __instance)
+        {
+            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CollectableItemGetDataV3), "DoAction")]
+        public static void CollectableItemGetDataV3_DoAction_Postfix(CollectableItemGetDataV3 __instance)
+        {
+            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
+        }*/
+
         private static void HandleUiMsgGetItem(PlayMakerFSM playMakerFsm)
         {
             // As these fsms are spawned from a template, I am unsure whether the names will exactly match
@@ -2536,6 +2580,15 @@ namespace Open_Ended_Item_Replacer
                     return;
                 }*/
 
+                // For logging
+                string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
+                if (!playerDataBool.IsNullOrWhiteSpace())
+                {
+                    logSource.LogInfo("PlayerDataBool: " + playerDataBool);
+                }
+
+                // Stops player data bool based persistence checks
+                Traverse.Create(__instance).Field("playerDataBool").SetValue(null); 
 
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }
