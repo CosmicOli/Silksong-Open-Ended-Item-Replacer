@@ -811,6 +811,13 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void NailSlash_StartSlash_Postfix(NailSlash __instance)
         {
+            logSource.LogWarning(testTransform.name);
+            logSource.LogMessage(testTransform.GetComponent<Rigidbody2D>().gravityScale);
+            logSource.LogMessage(testTransform.position);
+            logSource.LogMessage(testTransform.parent.name);
+            logSource.LogMessage(testTransform.parent.GetComponent<Rigidbody2D>().gravityScale);
+            logSource.LogMessage(testTransform.parent.position);
+
             //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
             //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);
             //logSource.LogMessage(PlayerData.instance.HasMelodyLibrarian);
@@ -885,6 +892,7 @@ namespace Open_Ended_Item_Replacer
                 if (replacementRigidBody2D != null)
                 {
                     replacementRigidBody2D.gravityScale = 0;
+                    replacementRigidBody2D.constraints = RigidbodyConstraints2D.FreezeAll;
                 }
 
                 Collider2D replacementCollider2D = replacedObject.GetComponent<Collider2D>();
@@ -2088,6 +2096,77 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        public static void HandleChef(PlayMakerFSM __instance)
+        {
+            if (__instance.gameObject == null) { return; }
+
+            if (__instance.Fsm.Name == "Death" && __instance.gameObject.name.Contains("Corpse Roachkeeper Chef"))
+            {
+                FsmState splashIn = __instance.Fsm.GetState("Splash In");
+                if (splashIn == null) { return; }
+
+                GameObject dummyGameObject = new GameObject("Return Pickup");
+                splashIn.Actions[9] = new GetCheck(dummyGameObject, "Pickled Roach Egg");
+            }
+        }
+
+        public static void HandleNectar(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "HH Bartender")
+            {
+                FsmState nectar = __instance.Fsm.GetState("Nectar?");
+                FsmState questState = __instance.Fsm.GetState("Quest State");
+                if (nectar == null || questState == null) { return; }
+
+                GameObject dummyGameObject = new GameObject("Collectable Item Pickup");
+                PersistentItemData<bool> persistentData = GeneratePersistentBoolData(dummyGameObject, "Vintage Nectar");
+                persistentData.SceneName = "Ant_08";
+
+                nectar.Actions[2].Enabled = false;
+                nectar.Actions[3] = new SetFsmActiveState(__instance.Fsm, questState, GetPersistentBoolFromDataFunc(persistentData), GetTrueFunc());// This usually is what checks for the item itself, so I am replacing it in particular with the persistence check
+                nectar.Actions[4].Enabled = false;
+            }
+
+            if (__instance.Fsm.Name == "Trapdoor" && __instance.gameObject?.name == "cellar trapdoor set")
+            {
+                FsmState hasNectar = __instance.Fsm.GetState("Has Nectar");
+                FsmState opened = __instance.Fsm.GetState("Opened");
+                FsmState close = __instance.Fsm.GetState("Close");
+                if (hasNectar == null || close == null) { return; }
+
+                GameObject dummyGameObject = new GameObject("Collectable Item Pickup");
+                PersistentItemData<bool> persistentData = GeneratePersistentBoolData(dummyGameObject, "Vintage Nectar");
+                persistentData.SceneName = "Ant_08";
+
+                hasNectar.Actions = new FsmStateAction[2];
+                hasNectar.Actions[0] = new SetFsmActiveState(__instance.Fsm, hasNectar, opened, GetPersistentBoolFromDataFunc(persistentData), GetFalseFunc());
+                hasNectar.Actions[1] = new SetFsmActiveState(__instance.Fsm, hasNectar, close, GetPersistentBoolFromDataFunc(persistentData), GetTrueFunc());
+            }
+
+            if (__instance.gameObject == null) { return; }
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject.name.Contains("BattleStart Inspect Region"))
+            {
+                FsmState wave1Start = __instance.Fsm.GetState("Wave 1 Start");
+                logSource.LogInfo("Start");
+                logSource.LogInfo(__instance.gameObject.scene.name);
+                logSource.LogInfo(wave1Start);
+                if (wave1Start == null || __instance.gameObject.scene.name != "Ant_08") { return; }
+
+                logSource.LogInfo("Continue");
+                wave1Start.Actions[1].Enabled = false;
+            }
+        }
+
+        public static void HandleMossDruid(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seth Sit NPC Fleatopia")
+            {
+                FsmState convoChoice = __instance.Fsm.GetState("Convo Choice");
+                FsmState awardMemento = __instance.Fsm.GetState("Award Memento?");
+                if (convoChoice == null || awardMemento == null) { return; }
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -2133,6 +2212,10 @@ namespace Open_Ended_Item_Replacer
             HandleGrishkin(__instance);
             HandleFleaCharm(__instance);
             HandleSethMemento(__instance);
+
+            HandleChef(__instance);
+            HandleNectar(__instance);
+            HandleMossDruid(__instance);
         }
 
 
@@ -2200,10 +2283,10 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SavedItemGetV2), "OnEnter")]
         private static bool SavedItemGetV2_OnEnter_Prefix(SavedItemGetV2 __instance)
         {
-            if (__instance.Item.Value.name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
+            /*if (__instance.Item.Value.name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
             {
                 return true;
-            }
+            }*/
 
             if (__instance.Item.Value.name.Contains("Needle Upgrade"))
             {
@@ -2438,7 +2521,6 @@ namespace Open_Ended_Item_Replacer
 
         // Replaces CollectableItemPickups
         // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
-        // I have somewhat arbitrarily picked OnEnable over awake here as I am hoping that if there are pickups that start disabled they aren't replaced until they are enabled
         private static bool spawningReplacementCollectableItemPickup = false;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
@@ -2460,17 +2542,17 @@ namespace Open_Ended_Item_Replacer
 
                 bool originalActive = __instance.gameObject.activeSelf;
 
-                
-
                 if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal"))
                 {
                     GameObject dummyGameObject = new GameObject(__instance.gameObject.name + "-DummyParent");
-                    Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true, null);
+                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true, null);
                 }
                 else
                 {
-                    Replace(__instance.gameObject, __instance.Item.name, true, null);
+                    testTransform = Replace(__instance.gameObject, __instance.Item.name, true, null);
                 }
+
+                //__instance.transform.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
             }
         }
 
