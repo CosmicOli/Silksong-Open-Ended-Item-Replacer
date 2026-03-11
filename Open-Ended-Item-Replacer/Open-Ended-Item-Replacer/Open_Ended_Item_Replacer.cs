@@ -58,7 +58,7 @@ namespace Open_Ended_Item_Replacer
         public UniqueID(GameObject replacedObject, string replacedItemName)
         {
             // Defining the unique id for the new pickup
-            this.PickupName = replacedObject.name + "-" + replacedItemName;
+            this.PickupName = replacedObject.name + "-" + replacedItemName + Open_Ended_Item_Replacer.replacementFlag;
             this.SceneName = GameManager.GetBaseSceneName(replacedObject.scene.name);
         }
 
@@ -852,7 +852,7 @@ namespace Open_Ended_Item_Replacer
             spawningReplacementCollectableItemPickup = false;*/
         }
 
-        public static string replacementFlag = "_(Replacement)";
+        public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
         public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
@@ -1534,7 +1534,7 @@ namespace Open_Ended_Item_Replacer
                 // Handles persistence set by new item
                 GameObject dummyGameObject = new GameObject(runeRage);
                 UniqueID uniqueID = new UniqueID(dummyGameObject, runeRage);
-                if (GetPersistentBoolFromData("Memory_First_Sinner", uniqueID.PickupName + replacementFlag))
+                if (GetPersistentBoolFromData("Memory_First_Sinner", uniqueID.PickupName))
                 {
                     __instance.gameObject.SetActive(false);
                 }
@@ -2065,7 +2065,7 @@ namespace Open_Ended_Item_Replacer
                 fleaCharmGetPersistentBool.Target.GameObject = new FsmGameObject();
                 fleaCharmGetPersistentBool.Target.GameObject.Value = null;
 
-                fleaCharmGetPersistentBool.ID = uniqueID.PickupName + replacementFlag;
+                fleaCharmGetPersistentBool.ID = uniqueID.PickupName;
                 fleaCharmGetPersistentBool.SceneName = uniqueID.SceneName;
                 fleaCharmGetPersistentBool.StoreValue = __instance.Fsm.GetFsmBool("Has Flea Charm");
 
@@ -2092,7 +2092,7 @@ namespace Open_Ended_Item_Replacer
                 mementoSethGetPersistentBool.Target.GameObject = new FsmGameObject();
                 mementoSethGetPersistentBool.Target.GameObject.Value = null;
 
-                mementoSethGetPersistentBool.ID = uniqueID.PickupName + replacementFlag;
+                mementoSethGetPersistentBool.ID = uniqueID.PickupName;
                 mementoSethGetPersistentBool.SceneName = uniqueID.SceneName;
                 mementoSethGetPersistentBool.StoreValue = __instance.Fsm.GetFsmBool("Memento Collected");
 
@@ -2112,7 +2112,7 @@ namespace Open_Ended_Item_Replacer
                 FsmState splashIn = __instance.Fsm.GetState("Splash In");
                 if (splashIn == null) { return; }
 
-                GameObject dummyGameObject = new GameObject("Return Pickup");
+                GameObject dummyGameObject = new GameObject("Pickup");
                 splashIn.Actions[9] = new GetCheck(dummyGameObject, "Pickled Roach Egg");
             }
         }
@@ -2371,6 +2371,17 @@ namespace Open_Ended_Item_Replacer
         [HarmonyPatch(typeof(SetToolLocked), "OnEnter")]
         private static bool SetToolLocked_OnEnter_Prefix(SetToolLocked __instance)
         {
+            /*string name = ((ToolItem)__instance.Tool.Value).name;
+            if (name == "Silk Snare" || name == "Extractor")
+            {
+                return true;
+            }
+            else
+            {
+                __instance.Finish();
+                return false;
+            }*/
+
             __instance.Finish();
             return false;
         }
@@ -2595,20 +2606,6 @@ namespace Open_Ended_Item_Replacer
                     return;
                 }*/
 
-                // Fixes original persistence taking effect
-                /*Traverse.Create(__instance).Field("persistent").SetValue(null);
-
-                // For logging
-                string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
-                if (!playerDataBool.IsNullOrWhiteSpace())
-                {
-                    logSource.LogInfo("PlayerDataBool: " + playerDataBool);
-                }
-
-                // Stops player data bool based persistence checks
-                // NEED TO FIX, HAPPENS PRESUMABLY TOO LATE
-                Traverse.Create(__instance).Field("playerDataBool").SetValue(null); */
-
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }
 
@@ -2830,7 +2827,7 @@ namespace Open_Ended_Item_Replacer
             // Creates the new pickup and sets its position
             collectableItemPickup = Instantiate(prefab);
             collectableItemPickup.transform.position = position;
-            collectableItemPickup.gameObject.name = uniqueID.PickupName + replacementFlag;
+            collectableItemPickup.gameObject.name = uniqueID.PickupName;
 
             SetGenericPickupInfo(uniqueID, collectableItemPickup);
 
@@ -2856,7 +2853,7 @@ namespace Open_Ended_Item_Replacer
             // Creates the new pickup and sets its position
             collectableItemPickup = Instantiate(prefab);
             collectableItemPickup.transform.position = position;
-            collectableItemPickup.gameObject.name = uniqueID.PickupName + replacementFlag;
+            collectableItemPickup.gameObject.name = uniqueID.PickupName;
             collectableItemPickup.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
 
             SetGenericPickupInfo(uniqueID, collectableItemPickup);
@@ -2913,7 +2910,7 @@ namespace Open_Ended_Item_Replacer
         public static void SetGenericPersistentBoolDataInfo(UniqueID uniqueID, PersistentItemData<bool> persistentBoolData)
         {
             // Sets persistent data
-            persistentBoolData.ID = uniqueID.PickupName + replacementFlag;
+            persistentBoolData.ID = uniqueID.PickupName;
             persistentBoolData.SceneName = uniqueID.SceneName;
             persistentBoolData.IsSemiPersistent = false;
             persistentBoolData.Value = GetPersistentBoolFromData(persistentBoolData); // By default this returns false, but if it has been picked up before it is true
