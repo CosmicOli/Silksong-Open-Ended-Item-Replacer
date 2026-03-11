@@ -2147,23 +2147,23 @@ namespace Open_Ended_Item_Replacer
             if (__instance.Fsm.Name == "Control" && __instance.gameObject.name.Contains("BattleStart Inspect Region"))
             {
                 FsmState wave1Start = __instance.Fsm.GetState("Wave 1 Start");
-                logSource.LogInfo("Start");
-                logSource.LogInfo(__instance.gameObject.scene.name);
-                logSource.LogInfo(wave1Start);
                 if (wave1Start == null || __instance.gameObject.scene.name != "Ant_08") { return; }
-
-                logSource.LogInfo("Continue");
                 wave1Start.Actions[1].Enabled = false;
             }
         }
 
         public static void HandleMossDruid(PlayMakerFSM __instance)
         {
-            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seth Sit NPC Fleatopia")
+            if (__instance.Fsm.Name == "Conversation Control" && __instance.gameObject?.name == "Moss Creep NPC")
             {
-                FsmState convoChoice = __instance.Fsm.GetState("Convo Choice");
-                FsmState awardMemento = __instance.Fsm.GetState("Award Memento?");
-                if (convoChoice == null || awardMemento == null) { return; }
+                FsmState choice = __instance.Fsm.GetState("Choice");
+                FsmState ingredientConvo = __instance.Fsm.GetState("Ingredient Convo");
+                if (choice == null || ingredientConvo == null) { return; }
+
+                choice.Actions[5].Enabled = false;
+                choice.Actions[6].Enabled = false;
+                choice.Actions[7].Enabled = false;
+                choice.Actions[8] = new SetFsmActiveState(__instance.Fsm, choice, ingredientConvo, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Moss Creep NPC", "Mossberry Stew")), GetFalseFunc());
             }
         }
 
