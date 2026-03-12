@@ -7,6 +7,7 @@ using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using InControl;
+using InControl.UnityDeviceProfiles;
 using QuestPlaymakerActions;
 using System;
 using System.Collections.Generic;
@@ -270,6 +271,30 @@ namespace Open_Ended_Item_Replacer
             Active = false;
             Finished = true;
             Finish();
+        }
+    }
+
+    public class SendEventOnComparison : SendEvent
+    {
+        Func<bool> comparisonFirstHalf;
+        Func<bool> comparisonSecondHalf;
+
+        public SendEventOnComparison(FsmEventTarget eventTarget, FsmEvent sendEvent, FsmFloat delay, bool everyFrame, Func<bool> comparisonFirstHalf, Func<bool> comparisonSecondHalf)
+        {
+            this.eventTarget = eventTarget;
+            this.sendEvent = sendEvent;
+            this.delay = delay;
+            this.everyFrame = everyFrame;
+            this.comparisonFirstHalf = comparisonFirstHalf;
+            this.comparisonSecondHalf = comparisonSecondHalf;
+        }
+
+        public override void OnEnter()
+        {
+            if (comparisonFirstHalf.Invoke() == comparisonSecondHalf.Invoke())
+            {
+                base.OnEnter();
+            }
         }
     }
 
@@ -898,6 +923,13 @@ namespace Open_Ended_Item_Replacer
                 Rigidbody2D replacementRigidBody2D = replacedObject.GetComponent<Rigidbody2D>();
                 if (replacementRigidBody2D != null)
                 {
+                    Rigidbody2D outputRigidBody2D = output.GetComponent<Rigidbody2D>();
+                    if (outputRigidBody2D != null)
+                    {
+                        outputRigidBody2D.gravityScale = replacementRigidBody2D.gravityScale;
+                        outputRigidBody2D.constraints = replacementRigidBody2D.constraints;
+                    }
+
                     replacementRigidBody2D.gravityScale = 0;
                     replacementRigidBody2D.constraints = RigidbodyConstraints2D.FreezeAll;
                 }
@@ -1681,15 +1713,34 @@ namespace Open_Ended_Item_Replacer
                 FsmStateAction[] newActions = new FsmStateAction[2];
 
                 newActions[0] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc());
-
                 newActions[1] = new SetFsmActiveState(__instance.Fsm, needolinPreWait, dlgEnd, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Librarian", "Citadel Ascent Melody Librarian Return")), GetTrueFunc());
 
                 needolinPreWait.Actions = ReturnCombinedActions(newActions, needolinPreWait.Actions);
+            }
 
-                if (PlayerData.instance.HasMelodyLibrarian)
+            if (__instance.Fsm.Name == "Behaviour" && __instance.gameObject?.name == "Gramaphone")
+            {
+                FsmState start = __instance.Fsm.GetState("Start");
+                if (start == null || __instance.gameObject.scene.name != "Library_08") { return; }
+
+                bool GetIfLibrarianMelodyCylinderDeposited()
                 {
-                    (openRelicBoard.Actions[2] as ShowRelicBoard).ClosedEvent = FsmEvent.GetFsmEvent("MELODY CYLINDER PLAYED");
+                    if (PlayerData.instance.Relics.GetData("Librarian Melody Cylinder").IsDeposited == true)
+                    {
+                        if (!GetPersistentBoolFromData(GeneratePersistentBoolData_SameScene("Librarian", "Citadel Ascent Melody Librarian Return")))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
                 }
+
+                FsmEventTarget eventTarget = new FsmEventTarget();
+                eventTarget.target = EventTarget.BroadcastAll;
+                SendEventOnComparison sendEventOnComparison = new SendEventOnComparison(eventTarget, FsmEvent.GetFsmEvent("MELODY CYLINDER PLAYED"), 0, false, GetIfLibrarianMelodyCylinderDeposited, GetTrueFunc());
+
+                start.Actions = ReturnCombinedActions(new FsmStateAction[] { sendEventOnComparison }, start.Actions);
             }
         }
 
