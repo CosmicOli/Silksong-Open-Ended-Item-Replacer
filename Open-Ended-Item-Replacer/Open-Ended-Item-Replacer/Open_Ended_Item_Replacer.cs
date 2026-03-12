@@ -2174,6 +2174,19 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
+        public static void HandleSurfaceMemento(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Memory Sequence" && __instance.gameObject?.name == "Memory Group")
+            {
+                FsmState dropItemAnimator = __instance.Fsm.GetState("Drop Item Animator");
+                FsmState activated = __instance.Fsm.GetState("Activated");
+                if (dropItemAnimator == null || __instance.gameObject.scene.name != "Abandoned_town") { return; }
+
+                dropItemAnimator.Actions[2].Enabled = false;
+                dropItemAnimator.Actions[3] = new SetFsmActiveState(__instance.Fsm, activated, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData_SameScene("Collectable Item Pickup", "Memento Surface")), GetFalseFunc());
+            }
+        }
+
         // Handles FSM checks
         // All fleas have SavedItems that are gotten at the end of their fsms
         [HarmonyPostfix]
@@ -2223,6 +2236,8 @@ namespace Open_Ended_Item_Replacer
             HandleChef(__instance);
             HandleNectar(__instance);
             HandleMossDruid(__instance);
+
+            HandleSurfaceMemento(__instance);
         }
 
 
