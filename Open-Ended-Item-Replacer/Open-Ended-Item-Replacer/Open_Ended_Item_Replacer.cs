@@ -2678,6 +2678,10 @@ namespace Open_Ended_Item_Replacer
                     }
                 }
 
+                // I believe this should be intended
+                HeroController.instance.RegainControl(true);
+                HeroController.instance.StartAnimationControl();
+
                 return false;
             }
 
