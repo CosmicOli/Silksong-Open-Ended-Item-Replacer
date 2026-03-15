@@ -102,8 +102,50 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\PlayMakerFSM Patch Components\BrollyAndAssociatedHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\CreigeHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\EvaHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\FaydownHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\FleaCaravanHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\LugoliHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\NuuHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\PinstressHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\SilkAndSoulHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\SurfaceMementoHandler.cs" />
+    <Compile Include="FsmStateActions\AllowPickup.cs" />
+    <Compile Include="FsmStateActions\GetCheck.cs" />
+    <Compile Include="FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />
+    <Compile Include="FsmStateActions\GetReplacedProgressiveLevel.cs" />
+    <Compile Include="FsmStateActions\RemoveExtraSilkHeart.cs" />
+    <Compile Include="FsmStateActions\ReplacePickup.cs" />
+    <Compile Include="FsmStateActions\SendEventOnComparison.cs" />
+    <Compile Include="FsmStateActions\SetContainerPersistence.cs" />
+    <Compile Include="FsmStateActions\SetFsmActiveState.cs" />
+    <Compile Include="FsmStateActions\TestAction.cs" />
     <Compile Include="Open_Ended_Item_Replacer.cs" />
+    <Compile Include="Patches\GameManager Patches\LevelActivated.cs" />
+    <Compile Include="Patches\GameManager Patches\TimePasses.cs" />
+    <Compile Include="Patches\GameManager Patches\TimePassesElsewhere.cs" />
+    <Compile Include="Patches\NailSlash Patches\StartSlash.cs" />
+    <Compile Include="Patches\PlayMakerFSM Patches\Awake.cs" />
+    <Compile Include="Patches\SceneAdditiveLoadConditional Patches\TryTestLoad.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Components\Replacement Components\GenericSavedItem.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\CrestHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\FirstSinnerHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\FleaHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\MossDruidHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\NeedolinHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\PhantomHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\PlinneyHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\SilkHeartHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\SilkNeedleHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\ThreefoldSongHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\WeaverStatueHandler.cs" />
+    <Compile Include="Components\Replacement Components\UniqueID.cs" />
+    <Compile Include="Utils\FsmStateActionUtils.cs" />
+    <Compile Include="Utils\GetBoolFuncs.cs" />
+    <Compile Include="Utils\PersistenceUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
