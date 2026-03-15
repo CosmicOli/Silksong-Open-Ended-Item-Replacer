@@ -3,6 +3,7 @@ using HutongGames.PlayMaker.Actions;
 using Open_Ended_Item_Replacer.FsmStateActions;
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
@@ -40,17 +41,26 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        // This is another instance of getting an item specifically while in a quest; I should probably also make this accessible at any point
+        // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
         public static void HandleBellHermit(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Bell Hermit")
             {
+                FsmState doSnareConvo = __instance.Fsm.GetState("Do Snare Convo?");
                 FsmState snareSoulDlg = __instance.Fsm.GetState("Snare Soul Dlg");
-                if (snareSoulDlg == null) { return; }
+                FsmState branchCheck = __instance.Fsm.GetState("Branch Check");
+                if (doSnareConvo == null || snareSoulDlg == null || branchCheck == null) { return; }
 
                 logSource.LogWarning("WORKING");
 
-                snareSoulDlg.Actions[1] = new GetPersistentBoolUsingPersistentItemBool(GeneratePersistentBoolData(__instance.gameObject, "Soul Bell Hermit"), __instance.Fsm.GetFsmBool("Has Any"));
+                doSnareConvo.Actions[3] = new SetFsmActiveState(__instance.Fsm, doSnareConvo, snareSoulDlg, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData(__instance.gameObject, "Snare Soul Bell Hermit")), GetFalseFunc());
+                doSnareConvo.Actions = ReturnCombinedActions(doSnareConvo.Actions, new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, doSnareConvo, branchCheck, GetPersistentBoolFromDataFunc(GeneratePersistentBoolData(__instance.gameObject, "Snare Soul Bell Hermit")), GetTrueFunc()) });
+
+                snareSoulDlg.Actions[1].Enabled = false;
+                snareSoulDlg.Actions[2].Enabled = false;
+                snareSoulDlg.Actions[3].Enabled = false;
+                snareSoulDlg.Actions[4].Enabled = false;
+                (snareSoulDlg.Actions[5] as ConvertBoolToString).trueString = (snareSoulDlg.Actions[5] as ConvertBoolToString).falseString;
             }
         }
     }
