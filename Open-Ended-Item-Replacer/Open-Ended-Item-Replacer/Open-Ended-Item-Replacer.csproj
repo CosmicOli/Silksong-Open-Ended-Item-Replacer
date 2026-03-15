@@ -158,6 +158,9 @@
     <Compile Include="Utils\FsmStateActionUtils.cs" />
     <Compile Include="Utils\GetBoolFuncs.cs" />
     <Compile Include="Utils\PersistenceUtils.cs" />
+    <Compile Include="Utils\Replace Utils\InfoUtils.cs" />
+    <Compile Include="Utils\Replace Utils\ReplaceUtils.cs" />
+    <Compile Include="Utils\Replace Utils\SpawnUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

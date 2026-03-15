@@ -2,7 +2,7 @@
 using HutongGames.PlayMaker.Actions;
 using Open_Ended_Item_Replacer.Components;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 
 namespace Open_Ended_Item_Replacer.Patches.SavedItemGet_V1_2_Patches

@@ -1,8 +1,9 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
 {

@@ -3,9 +3,10 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Open_Ended_Item_Replacer.FsmStateActions;
-using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {

@@ -1,5 +1,6 @@
 ﻿using HutongGames.PlayMaker;
 using UnityEngine;
+using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
 
 namespace Open_Ended_Item_Replacer.FsmStateActions
 {
@@ -15,7 +16,7 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
 
         public override void OnEnter()
         {
-            Open_Ended_Item_Replacer.Replace(gameObject, itemName, true, null);
+            Replace(gameObject, itemName, true, null);
 
             Active = false;
             Finished = true;
