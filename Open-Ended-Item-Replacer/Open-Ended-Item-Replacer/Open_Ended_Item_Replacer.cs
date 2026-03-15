@@ -54,6 +54,7 @@ using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.C
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.MossDruidHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SurfaceMementoHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SilkAndSoulHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.HeartsHandler;
 
 
 namespace Open_Ended_Item_Replacer
@@ -175,6 +176,8 @@ namespace Open_Ended_Item_Replacer
             AwakePatchEvent += TEST;
             AwakePatchEvent += HandleBellHermit;
             AwakePatchEvent += HandleChurchkeeper;
+
+            AwakePatchEvent += HandleCoralHeart;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");
