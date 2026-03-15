@@ -161,6 +161,7 @@
     <Compile Include="Utils\Replace Utils\InfoUtils.cs" />
     <Compile Include="Utils\Replace Utils\ReplaceUtils.cs" />
     <Compile Include="Utils\Replace Utils\SpawnUtils.cs" />
+    <Compile Include="Utils\Replace Utils\UiReplaceUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
