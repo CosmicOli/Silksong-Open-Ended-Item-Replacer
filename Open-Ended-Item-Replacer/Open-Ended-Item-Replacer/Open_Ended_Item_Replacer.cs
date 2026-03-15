@@ -17,9 +17,21 @@ using Open_Ended_Item_Replacer.Patches.GameManager_Patches;
 using Open_Ended_Item_Replacer.Patches.SceneAdditiveLoadConditional_Patches;
 using Open_Ended_Item_Replacer.Patches.NailSlash_Patches;
 using Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches;
+using Open_Ended_Item_Replacer.Patches.PersistentBoolItem_Patches;
+using Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches;
+using Open_Ended_Item_Replacer.Patches.CountCrestUnlockPoints_Patches;
+using Open_Ended_Item_Replacer.Patches.CollectableItemCollect_Patches;
+using Open_Ended_Item_Replacer.Patches.SavedItemGet_V1_2_Patches;
+using Open_Ended_Item_Replacer.Patches.SavedItemGetDelayed_Patches;
+using Open_Ended_Item_Replacer.Patches.CreateUIMsgGetItem_Patches;
+using Open_Ended_Item_Replacer.Patches.SpawnObjectFromGlobalPool_Patches;
+using Open_Ended_Item_Replacer.Patches.CreateObject_Patches;
+using Open_Ended_Item_Replacer.Patches.SetToolUnlocked_Patches;
+using Open_Ended_Item_Replacer.Patches.SetToolLocked_Patches;
 
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
 using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
+using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
@@ -77,7 +89,42 @@ namespace Open_Ended_Item_Replacer
             harmony.PatchAll(typeof(StartSlash));
 
             // PlayMakerFsm Patches
-            harmony.PatchAll(typeof(Awake));
+            harmony.PatchAll(typeof(Patches.PlayMakerFSM_Patches.Awake));
+
+            // PersistentBoolItem Patches
+            harmony.PatchAll(typeof(Patches.PersistentBoolItem_Patches.Awake));
+
+            // CollectableItemPickup Patches
+            harmony.PatchAll(typeof(Patches.CollectableItemPickup_Patches.Awake));
+            harmony.PatchAll(typeof(CheckActivation));
+
+            // CountCrestUnlockPoints Patches
+            harmony.PatchAll(typeof(Patches.CountCrestUnlockPoints_Patches.OnEnter));
+
+            // CollectableItemCollect Patches
+            harmony.PatchAll(typeof(DoAction));
+
+            // SavedItemGet V1-2 Patches
+            harmony.PatchAll(typeof(Patches.SavedItemGet_V1_2_Patches.OnEnter));
+
+            // SavedItemGetDelayed Patches
+            harmony.PatchAll(typeof(DoGet));
+
+            // CreateUIMsgGetItem Patches
+            harmony.PatchAll(typeof(Patches.CreateUIMsgGetItem_Patches.OnEnter));
+
+            // SpawnObjectFromGlobalPool Patches
+            harmony.PatchAll(typeof(Patches.SpawnObjectFromGlobalPool_Patches.OnEnter));
+
+            // CreateObject Patches
+            harmony.PatchAll(typeof(Patches.CreateObject_Patches.OnEnter));
+
+            // SetToolUnlocked Patches
+            harmony.PatchAll(typeof(Patches.SetToolUnlocked_Patches.OnEnter));
+
+            // SetToolLocked Patches
+            harmony.PatchAll(typeof(Patches.SetToolLocked_Patches.OnEnter));
+
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas
             // NOTE: Some of these exist within the same handler but are still seperated in case another mod wished to override a distinct function
@@ -151,8 +198,6 @@ namespace Open_Ended_Item_Replacer
             logSource.LogFatal(info.EntryGateName);
             logSource.LogFatal(info.HeroLeaveDirection);
         }*/
-
-        
 
         public static string replacementFlag = "-(Replacement)";
 
@@ -317,291 +362,11 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        // Replaces physical Mask Shards and Spool Fragments
-        // All physically placed mask shards (heart piece) and spool fragments (silk spool) have persistent bools attributed to them
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(PersistentBoolItem), "Awake")]
-        private static void PersistentBoolItem_Awake_Postfix(PersistentBoolItem __instance)
-        {
-            if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("heart piece"))
-            {
-                //logSource.LogInfo("Heart Piece");
-                Replace(__instance.gameObject, "Heart Piece", false, null);
-            }
-
-            if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("silk spool"))
-            {
-                //logSource.LogInfo("Silk Spool");
-                Replace(__instance.gameObject, "Silk Spool", false, null);
-            }
-        }
 
         
 
-        
 
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        // Handles FSM checks
-        // All fleas have SavedItems that are gotten at the end of their fsms
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(PlayMakerFSM), "Awake")]
-        private static void PlayMakerFSM_Awake_Postfix(PlayMakerFSM __instance)
-        {
-            /*HandleFlea(__instance);
-
-            HandleWeaverStatue(__instance);
-
-            HandleCrest(__instance);
-            HandleCrestDoor(__instance);
-
-            HandleSilkNeedle(__instance);
-
-            HandleSilkHeart(__instance);
-
-            HandleNeedolinPreMemory(__instance);
-            HandleNeedolinInMemory(__instance);
-
-            HandleFirstSinnerPersistenceAndPickup(__instance);
-            HandleFirstSinnerInMemory(__instance);
-
-            HandlePhantom(__instance);
-
-            HandleArchitectMelody(__instance);
-            HandleConductorMelody(__instance);
-            HandleLibrarianMelody(__instance);
-
-            HandlePlinney(__instance);
-
-            HandleSeamstress(__instance);
-            HandleFourthChorus(__instance);
-
-            HandlePinstress(__instance);
-
-            HandleFaydownCloak(__instance);
-
-            HandleEva(__instance);
-
-            HandleNuu(__instance);
-
-            HandleGrishkin(__instance);
-            HandleFleaCharm(__instance);
-            HandleSethMemento(__instance);
-
-            HandleChef(__instance);
-            HandleNectar(__instance);
-            //HandleMossDruid(__instance);
-
-            HandleSurfaceMemento(__instance);
-
-            TEST(__instance);
-            HandleBellHermit(__instance);*/
-        }
-
-
-        // The original code does not skip base level hunter, so this needs to be removed
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CountCrestUnlockPoints), "OnEnter")]
-        private static void CountCrestUnlockPoints_OnEnter_Postfix(CountCrestUnlockPoints __instance)
-        {
-            ToolCrestList toolCrestList = __instance.CrestList.Value as ToolCrestList;
-
-            int currentPointsTally = 0;
-            int maxPointsTally = 0;
-            ToolCrest hunter = toolCrestList.GetByName("Hunter");
-
-            if (!hunter.IsUpgradedVersionUnlocked)
-            {
-                ToolCrest.SlotInfo[] slots = hunter.Slots;
-                for (int i = 0; i < slots.Length; i++)
-                {
-                    _ = ref slots[i];
-                    maxPointsTally++;
-                }
-
-                ToolCrest.SlotInfo[] slots2 = hunter.Slots;
-                List<ToolCrestsData.SlotData> slots3 = hunter.SaveData.Slots;
-                for (int j = 0; j < slots2.Length; j++)
-                {
-                    if (!slots2[j].IsLocked || (slots3 != null && j < slots3.Count && slots3[j].IsUnlocked))
-                    {
-                        currentPointsTally++;
-                    }
-                }
-            }
-
-            __instance.StoreCurrentPoints.Value -= currentPointsTally;
-            __instance.StoreMaxPoints.Value -= maxPointsTally;
-        }
-
-        // Handles when FSMs run CollectableItemCollect
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CollectableItemCollect), "DoAction")]
-        private static bool CollectableItemCollect_DoAction_Prefix(CollectableItemCollect __instance, CollectableItem item)
-        {
-            ReplaceFsmItemGet(__instance, item);
-
-            return false;
-        }
-
-        // Handles when FSMs run SavedItemGet
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SavedItemGet), "OnEnter")]
-        private static bool SavedItemGet_OnEnter_Prefix(SavedItemGet __instance)
-        {
-            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
-
-            __instance.Finish();
-            return false;
-        }
-
-        // Handles when FSMs run SavedItemGetV2
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SavedItemGetV2), "OnEnter")]
-        private static bool SavedItemGetV2_OnEnter_Prefix(SavedItemGetV2 __instance)
-        {
-            /*if (__instance.Item.Value.name.Contains(genericFleaItemName) && __instance.Item.Name.Contains("Generic_Item-"))
-            {
-                return true;
-            }*/
-
-            if (__instance.Item.Value.name.Contains("Needle Upgrade"))
-            {
-                GenericSavedItem needleUpgradeItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                PersistentItemData<bool> needleUpgradePersistentBoolData;
-
-                for (int i = 1; i <= 4; i++)
-                {
-                    needleUpgradeItem.name = "Needle Upgrade " + i.ToString();
-                    needleUpgradePersistentBoolData = GeneratePersistentBoolData_SameScene(__instance.Fsm.Owner.name, "Needle Upgrade " + i.ToString());
-
-                    if (!GetPersistentBoolFromData(needleUpgradePersistentBoolData))
-                    {
-                        ReplaceFsmItemGet(__instance, needleUpgradeItem);
-                        break;
-                    }
-                }
-
-                return false;
-            }
-
-            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
-
-            __instance.Finish();
-            return false;
-        }
-        
-        // Handles when FSMs run SavedItemGetDelayed
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SavedItemGetDelayed), "DoGet")]
-        private static bool SavedItemGetDelayed_DoGet_Prefix(SavedItemGet __instance)
-        {
-            ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
-
-            __instance.Finish();
-            return false;
-        }
-
-        // Handles when FSMs run SetToolUnlocked
-        // Should handle the vast majority of cases of being given an item from an NPC
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SetToolUnlocked), "OnEnter")]
-        private static bool SetToolUnlocked_OnEnter_Prefix(SetToolUnlocked __instance)
-        {
-            bool flag = false;
-
-            ToolItem item = __instance.Tool.Value as ToolItem;
-
-            if (item?.name == "Flea Brew" && item.SavedData.IsUnlocked) // If this item is flea brew and flea brew is owned
-            {
-                flag = true;
-
-                // Commented out to handle flea caravan side
-                /*if (!CheckAllCaravanScenesForFleaBrew()) // If the player hasn't gotten the flea brew check yet, give it now
-                {
-                    GameObject fleaBrewGameObject = new GameObject(fleaBrew);
-
-                    GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                    genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(fleaBrewGameObject, fleaBrew, genericItem);
-                }*/
-
-                return flag;
-            }
-
-            ReplaceFsmToolGet(__instance);
-
-            __instance.Finish();
-            return flag;
-        }
-
-        // Handles when FSMs run SetToolLocked
-        // Stops NPCs locking tools when not actually replacing them
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SetToolLocked), "OnEnter")]
-        private static bool SetToolLocked_OnEnter_Prefix(SetToolLocked __instance)
-        {
-            /*string name = ((ToolItem)__instance.Tool.Value).name;
-            if (name == "Silk Snare" || name == "Extractor")
-            {
-                return true;
-            }
-            else
-            {
-                __instance.Finish();
-                return false;
-            }*/
-
-            __instance.Finish();
-            return false;
-        }
-
-        /*public static void Ignore(string name, ref FsmEvent IsCollected, FsmEvent NotCollected)
-        {
-            // Not sure if this is necessary, but may be useful in the future for other checks
-            if (name.ToLowerInvariant().Contains("memento"))
-            {
-                IsCollected = NotCollected;
-            }
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CollectableItemGetData), "DoAction")]
-        public static void CollectableItemGetData_DoAction_Postfix(CollectableItemGetData __instance)
-        {
-            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CollectableItemGetDataV2), "DoAction")]
-        public static void CollectableItemGetDataV2_DoAction_Postfix(CollectableItemGetDataV2 __instance)
-        {
-            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CollectableItemGetDataV3), "DoAction")]
-        public static void CollectableItemGetDataV3_DoAction_Postfix(CollectableItemGetDataV3 __instance)
-        {
-            Ignore(__instance.Item.Name, ref __instance.IsCollected, __instance.NotCollected);
-        }*/
-
-        private static void HandleUiMsgGetItem(PlayMakerFSM playMakerFsm)
+        public static void HandleUiMsgGetItem(PlayMakerFSM playMakerFsm)
         {
             // As these fsms are spawned from a template, I am unsure whether the names will exactly match
             if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Get Item"))
@@ -622,7 +387,7 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static void HandleUiMsgGetItemMelody(PlayMakerFSM playMakerFsm, SpawnObjectFromGlobalPool __instance)
+        public static void HandleUiMsgGetItemMelody(PlayMakerFSM playMakerFsm, SpawnObjectFromGlobalPool __instance)
         {
             // As these fsms are spawned from a template, I am unsure whether the names will exactly match
             if (playMakerFsm.Fsm.Name.Contains("Msg Control") && playMakerFsm.gameObject.name.Contains("UI Msg Get Item Melody"))
@@ -680,196 +445,17 @@ namespace Open_Ended_Item_Replacer
             }
         }*/
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CreateUIMsgGetItem), "OnEnter")]
-        private static void CreateUIMsgGetItem_OnEnter_Prefix(CreateUIMsgGetItem __instance)
-        {
-            PlayMakerFSM playMakerFsm = __instance.storeObject.Value.transform.GetComponent<PlayMakerFSM>();
+        
 
-            HandleUiMsgGetItem(playMakerFsm);
-        }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SpawnObjectFromGlobalPool), "OnEnter")]
-        private static void SpawnObjectFromGlobalPool_OnEnter_Prefix(SpawnObjectFromGlobalPool __instance)
-        {
-            PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
-            if (playMakerFsm == null) { return; }
 
-            HandleUiMsgGetItemMelody(playMakerFsm, __instance);
-        }
+        
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CreateObject), "OnEnter")]
-        private static bool CreateObject_OnEnter_Prefix(CreateObject __instance)
-        {
-            if (__instance.gameObject.Value == null) { return true; }
+        
 
-            string loweredName = __instance.gameObject.Value.name.ToLowerInvariant();
+        
 
-            if (loweredName.Contains("silk spool") || loweredName.Contains("heart piece"))
-            {
-                string itemName;
-
-                if (loweredName.Contains("silk spool"))
-                {
-                    itemName = "Silk Spool";
-                }
-                else
-                {
-                    itemName = "Heart Piece";
-                }
-
-                GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-
-                genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(__instance.Fsm.GameObject, itemName, genericItem);
-
-                // Handles persistence set by new item
-                if (!GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
-                {
-                    genericItem.Get();
-                }
-
-                foreach (var transition in __instance.State.Transitions)
-                {
-                    if (transition.EventName.Contains("SILK SPOOL UI END") || transition.EventName.Contains("HEART PIECE UI END"))
-                    {
-                        __instance.Fsm.SetState(transition.ToState);
-                    }
-                }
-
-                // I believe this should be intended
-                HeroController.instance.RegainControl(true);
-                HeroController.instance.StartAnimationControl();
-
-                return false;
-            }
-
-            return true;
-
-            /*if (loweredName.Contains("ui msg crest evolve"))
-            {
-                PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
-                if (playMakerFsm == null) { return; }
-
-                HandleUiMsgCrestEvolve(playMakerFsm);
-            }*/
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
-        private static void CollectableItemPickup_Awake_Prefix(CollectableItemPickup __instance)
-        {
-            // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacementCollectableItemPickup)
-            {
-                // Fixes original persistence taking effect
-                Traverse.Create(__instance).Field("persistent").SetValue(null);
-
-                // For logging
-                string playerDataBool = Traverse.Create(__instance).Field("playerDataBool").GetValue<string>();
-                if (!playerDataBool.IsNullOrWhiteSpace())
-                {
-                    logSource.LogInfo("PlayerDataBool: " + playerDataBool);
-                }
-
-                // Stops player data bool based persistence checks
-                Traverse.Create(__instance).Field("playerDataBool").SetValue(null);
-            }
-        }
-
-        // Replaces CollectableItemPickups
-        // Done in post to avoid any following code attempting to run after the associated game object has been destroyed
-        private static bool spawningReplacementCollectableItemPickup = false;
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
-        private static void CollectableItemPickup_Awake_Postfix(CollectableItemPickup __instance)
-        {
-            logSource.LogMessage("CollectableItemPickup Awake");
-
-            // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacementCollectableItemPickup)
-            {
-                /*if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
-                {
-                    return;
-                }*/
-
-                if (__instance.Item == null) { return; }
-                if (__instance.gameObject == null) { return; }
-
-                bool originalActive = __instance.gameObject.activeSelf;
-
-                if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal"))
-                {
-                    GameObject dummyGameObject = new GameObject(__instance.gameObject.name + "-DummyParent");
-                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true, null);
-                }
-                else
-                {
-                    testTransform = Replace(__instance.gameObject, __instance.Item.name, true, null);
-                }
-            }
-        }
-
-        // As some items check persistence using whether an item can be gotten anymore, this needs to be intercepted
-        // A transpiler could be used instead to change the one line that is modified, but the relative difficulty compared to this method means this is what I will be doing for now
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CollectableItemPickup), "CheckActivation")]
-        private static bool CollectableItemPickup_CheckActivation_Prefix(CollectableItemPickup __instance, bool ___activatedRead, string ___playerDataBool, PersistentBoolItem ___persistent, SavedItem ___item)
-        {
-            if (___activatedRead) // This first part resets items that can be continuously gotten that have already been picked up; this doesn't need changing for now
-            {
-                if (string.IsNullOrEmpty(___playerDataBool) && ___persistent == null && (___item == null || (!___item.IsUnique && ___item.CanGetMore())))
-                {
-                    ___activatedRead = false;
-                    return false; // This stops the original code running
-                }
-            }
-            else // This second part usually looks like "activatedRead = (bool)item && !item.CanGetMore();", but has been changed to ignore CanGetMore()
-            {
-                bool flag = false;
-
-                for (int i = 0; i < __instance.transform.childCount; i++)
-                {
-                    GameObject replacementObject = __instance.transform.GetChild(i).gameObject;
-                    if (replacementObject == null) { continue; } // Not sure if this is necessary
-
-                    if (replacementObject.name.Contains(__instance.gameObject.name) && replacementObject.GetComponent<CollectableItemPickup>() != null)
-                    {
-                        flag = true;
-                    }
-                }
-
-                if (flag)
-                {
-                    ___activatedRead = false;
-                }
-                else // If the item was never replaced (from either config or other reasons) the original code should run
-                {
-                    ___activatedRead = (bool)___item && !___item.CanGetMore();
-                }
-            }
-
-            // The rest of this is unchanged
-            if (___activatedRead)
-            {
-                if (__instance.OnPickedUp != null)
-                {
-                    __instance.OnPickedUp.Invoke();
-                }
-
-                if (__instance.OnPreviouslyPickedUp != null)
-                {
-                    __instance.OnPreviouslyPickedUp.Invoke();
-                }
-
-                __instance.gameObject.SetActive(value: false);
-            }
-
-            // This stops the original code running
-            return false;
-        }
+        
 
         // If a CollectableItemPickup changes active, the replaced object should instead
         /*[HarmonyPrefix]

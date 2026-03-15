@@ -1,0 +1,18 @@
+﻿using HarmonyLib;
+using HutongGames.PlayMaker.Actions;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+
+namespace Open_Ended_Item_Replacer.Patches.SpawnObjectFromGlobalPool_Patches
+{
+    [HarmonyPatch(typeof(SpawnObjectFromGlobalPool), "OnEnter")]
+    internal class OnEnter
+    {
+        private static void Prefix(SpawnObjectFromGlobalPool __instance)
+        {
+            PlayMakerFSM playMakerFsm = __instance.gameObject?.Value?.transform?.GetComponent<PlayMakerFSM>();
+            if (playMakerFsm == null) { return; }
+
+            HandleUiMsgGetItemMelody(playMakerFsm, __instance);
+        }
+    }
+}

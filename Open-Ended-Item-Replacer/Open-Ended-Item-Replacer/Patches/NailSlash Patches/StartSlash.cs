@@ -4,11 +4,11 @@ using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
 {
+    [HarmonyPatch(typeof(NailSlash), "StartSlash")]
     internal class StartSlash
     {
         private static bool logging = true;
         public static Transform testTransform;
-        [HarmonyPatch(typeof(NailSlash), "StartSlash")]
         private static void Postfix(NailSlash __instance)
         {
             if (logging)
