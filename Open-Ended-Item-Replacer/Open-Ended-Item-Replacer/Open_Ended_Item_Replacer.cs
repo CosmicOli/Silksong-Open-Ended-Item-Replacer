@@ -174,6 +174,7 @@ namespace Open_Ended_Item_Replacer
 
             AwakePatchEvent += TEST;
             AwakePatchEvent += HandleBellHermit;
+            AwakePatchEvent += HandleChurchkeeper;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");
