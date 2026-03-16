@@ -149,6 +149,7 @@ namespace Open_Ended_Item_Replacer
             AwakePatchEvent += HandleArchitectMelody;
             AwakePatchEvent += HandleConductorMelody;
             AwakePatchEvent += HandleLibrarianMelody;
+            AwakePatchEvent += HandleThreefoldSongLift;
 
             AwakePatchEvent += HandlePlinney;
 

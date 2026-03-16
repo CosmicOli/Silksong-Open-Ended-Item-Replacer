@@ -93,5 +93,20 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
                 start.Actions = ReturnCombinedActions(new FsmStateAction[] { sendEventOnComparison }, start.Actions);
             }
         }
+
+        public static void HandleThreefoldSongLift(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Sequence" && __instance.gameObject?.name == "Boss Scene")
+            {
+                FsmState lockInspectIdle = __instance.Fsm.GetState("Lock Inspect Idle");
+                FsmState npcTalksEnd = __instance.Fsm.GetState("NPC Talks End");
+                if (lockInspectIdle == null || npcTalksEnd == null) { return; }
+
+                npcTalksEnd.Actions = ReturnCombinedActions(npcTalksEnd.Actions, new FsmStateAction[] { npcTalksEnd.Actions[6] });
+                npcTalksEnd.Actions[6] = npcTalksEnd.Actions[5];
+
+                npcTalksEnd.Actions[5] = new SetFsmActiveState(__instance.Fsm, npcTalksEnd, lockInspectIdle, GetPlayerDataBoolFunc("hasNeedolin"), GetFalseFunc());
+            }
+        }
     }
 }
