@@ -1,7 +1,11 @@
 ﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using Open_Ended_Item_Replacer.FsmStateActions;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
+using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
@@ -31,6 +35,12 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
                 FsmState endScene = __instance.Fsm.GetState("End Scene");
                 if (needolinPrompt == null || endScene == null) { return; }
 
+                // Ensures this is the needolin fsm
+                if ((endScene.Actions[0] as SetPlayerDataVariable)?.VariableName.Value != "hasNeedolin")
+                {
+                    return;
+                }
+
                 string needolin = "Needolin";
 
                 needolinPrompt.Actions[1].Enabled = false; // disables giving needolin
@@ -47,6 +57,32 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
                 endScene.Actions = ReturnCombinedActions(newActions, endScene.Actions);
 
                 //endScene.Actions = newActions;
+            }
+        }
+
+        // Defined for refencing elsewhere
+        public static string BeastlingCall = "Beastling Call";
+        public static string BeastlingCallGameObjectName = "Bell Beast DefeatedCentipede NPC";
+        public static void HandleBeastlingCall(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == BeastlingCallGameObjectName)
+            {
+                FsmState timePasses = __instance.Fsm.GetState("Time Passes");
+                if (timePasses == null) { return; }
+
+                timePasses.Actions[1] = new GetCheck(__instance.gameObject, BeastlingCall);
+            }
+
+            if (__instance.Fsm.Name == "Hero Fling Out" && __instance.gameObject?.name == "Bone Beast NPC")
+            {
+                FsmState endQuest = __instance.Fsm.GetState("End Quest?");
+                FsmState idle = __instance.Fsm.GetState("Idle");
+                if (endQuest == null) { return; }
+
+                PersistentItemData<bool> persistent = GeneratePersistentBoolData_SameScene(BeastlingCallGameObjectName, BeastlingCall);
+                persistent.SceneName = "Bellway_Centipede_Arena";
+
+                endQuest.Actions[0] = new SetFsmActiveState(__instance.Fsm, endQuest, idle, GetPersistentBoolFromDataFunc(persistent), GetFalseFunc());
             }
         }
     }

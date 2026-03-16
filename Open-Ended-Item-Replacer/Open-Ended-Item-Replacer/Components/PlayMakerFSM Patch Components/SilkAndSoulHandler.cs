@@ -4,13 +4,13 @@ using Open_Ended_Item_Replacer.FsmStateActions;
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
-using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class SilkAndSoulHandler
     {
-        public static void TEST(PlayMakerFSM __instance)
+        // Interesting fact from testing: Snare Setter is taken in some other way than SetToolLocked, which honestly is a good thing because it means I don't have to fix it not being taken
+        /*public static void TEST(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Enclave Caretaker")
             {
@@ -39,7 +39,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 
                 repeat.Actions = ReturnCombinedActions(new FsmStateAction[] { new SetFsmActiveState(__instance.Fsm, repeat, offer) }, repeat.Actions);
             }
-        }
+        }*/
 
         // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
         public static void HandleBellHermit(PlayMakerFSM __instance)

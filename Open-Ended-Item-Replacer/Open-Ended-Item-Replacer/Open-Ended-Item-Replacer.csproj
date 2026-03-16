@@ -135,6 +135,8 @@
     <Compile Include="Patches\GameManager Patches\TimePassesElsewhere.cs" />
     <Compile Include="Patches\NailSlash Patches\StartSlash.cs" />
     <Compile Include="Patches\PersistentBoolItem Patches\Awake.cs" />
+    <Compile Include="Patches\PlayerData Patches\BellCentipedeLocked_Get.cs" />
+    <Compile Include="Patches\PlayerData Patches\BellCentipedeWaiting_Get.cs" />
     <Compile Include="Patches\PlayMakerFSM Patches\Awake.cs" />
     <Compile Include="Patches\SavedItemGet V1-2 Patches\OnEnter.cs" />
     <Compile Include="Patches\SavedItemGetDelayed Patches\DoGet.cs" />
