@@ -108,6 +108,7 @@
     <Compile Include="Components\PlayMakerFSM Patch Components\FaydownHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\FleaCaravanHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\HeartsHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\KeyOfHereticHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\LugoliHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\NuuHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\PinstressHandler.cs" />

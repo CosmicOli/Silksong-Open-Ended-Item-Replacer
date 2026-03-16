@@ -17,6 +17,13 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
             genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
         }
 
+        public GetCheck(string gameObjectName, string itemName)
+        {
+            genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+
+            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
+        }
+
         public GetCheck(GameObject gameObject, string itemName, string sceneName)
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
