@@ -1,11 +1,12 @@
-﻿using HutongGames.PlayMaker;
+﻿using GlobalEnums;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using Open_Ended_Item_Replacer.FsmStateActions;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
-using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
-using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
+using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
+using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
@@ -83,6 +84,23 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
                 persistent.SceneName = "Bellway_Centipede_Arena";
 
                 endQuest.Actions[0] = new SetFsmActiveState(__instance.Fsm, endQuest, idle, GetPersistentBoolFromDataFunc(persistent), GetFalseFunc());
+            }
+        }
+
+        public static void HandleElegyOfTheDeep(PlayMakerFSM __instance)
+        {
+            if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Snail Shamans Set")
+            {
+                FsmState talk = __instance.Fsm.GetState("Talk?");
+                FsmState updateQuest = __instance.Fsm.GetState("Update Quest");
+                if (talk == null || updateQuest == null) { return; }
+
+                string name = "SuperJump";
+                PersistentItemData<bool> persistent = GeneratePersistentBoolData_SameScene(name, name);
+                persistent.SceneName = "Abyss_08";
+
+                talk.Actions[1] = new GetPersistentBoolUsingPersistentItemBool(persistent, __instance.Fsm.GetFsmBool("Has Superjump"));
+                updateQuest.Actions[0] = new GetCheck(__instance.gameObject, "Elegy of the Deep");
             }
         }
     }

@@ -16,7 +16,7 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
 
         public override void OnEnter()
         {
-            storeResult = GetPersistentBoolFromData(persistence);
+            storeResult.Value = GetPersistentBoolFromData(persistence);
         }
     }
 }

@@ -138,6 +138,7 @@ namespace Open_Ended_Item_Replacer
             AwakePatchEvent += HandleNeedolinPreMemory;
             AwakePatchEvent += HandleNeedolinInMemory;
             AwakePatchEvent += HandleBeastlingCall;
+            AwakePatchEvent += HandleElegyOfTheDeep;
 
             AwakePatchEvent += HandleFirstSinnerPersistenceAndPickup;
             AwakePatchEvent += HandleFirstSinnerInMemory;
