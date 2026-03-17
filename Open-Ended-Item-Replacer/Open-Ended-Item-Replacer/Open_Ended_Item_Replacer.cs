@@ -46,6 +46,7 @@ using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.T
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.WeaverStatueHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.KeyOfHereticHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CurseHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
 using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
 using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
@@ -186,6 +187,7 @@ namespace Open_Ended_Item_Replacer
 
             AwakePatchEvent += HandleWoodWitch;
             AwakePatchEvent += HandleDoctorFly;
+            AwakePatchEvent += HandleSteelSpines;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");

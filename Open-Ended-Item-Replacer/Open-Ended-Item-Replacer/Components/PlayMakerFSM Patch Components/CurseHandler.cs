@@ -6,6 +6,7 @@ using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
+    // See CrullAndBenjinHandler for Steel Spines (seperate as giving independantly to quest)
     internal class CurseHandler
     {
         public static void HandleWoodWitch(PlayMakerFSM __instance)
