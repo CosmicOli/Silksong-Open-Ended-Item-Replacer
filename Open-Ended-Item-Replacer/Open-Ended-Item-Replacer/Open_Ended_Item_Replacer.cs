@@ -98,7 +98,6 @@ namespace Open_Ended_Item_Replacer
             harmony.PatchAll(typeof(CheckActivation));
             harmony.PatchAll(typeof(DoPickupAction));
             harmony.PatchAll(typeof(EndInteraction));
-            harmony.PatchAll(typeof(Pickup));
 
             // CountCrestUnlockPoints Patches
             harmony.PatchAll(typeof(Patches.CountCrestUnlockPoints_Patches.OnEnter));

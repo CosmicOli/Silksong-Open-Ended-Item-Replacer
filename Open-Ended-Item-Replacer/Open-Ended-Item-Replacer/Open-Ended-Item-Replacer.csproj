@@ -132,7 +132,6 @@
     <Compile Include="Patches\CollectableItemPickup Patches\CheckActivation.cs" />
     <Compile Include="Patches\CollectableItemPickup Patches\DoPickupAction.cs" />
     <Compile Include="Patches\CollectableItemPickup Patches\EndInteraction.cs" />
-    <Compile Include="Patches\CollectableItemPickup Patches\Pickup.cs" />
     <Compile Include="Patches\CountCrestUnlockPoints Patches\OnEnter.cs" />
     <Compile Include="Patches\CreateObject Patches\OnEnter.cs" />
     <Compile Include="Patches\CreateUIMsgGetItem Patches\OnEnter.cs" />

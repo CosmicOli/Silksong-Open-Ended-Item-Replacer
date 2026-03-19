@@ -11,7 +11,6 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
         {
             if (choosing)
             {
-                logSource.LogMessage("TESRAIUJNHDSIKA");
                 __result = true;
             }
         }
