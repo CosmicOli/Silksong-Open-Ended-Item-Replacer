@@ -53,6 +53,7 @@ using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
 using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
+using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
 
 
 namespace Open_Ended_Item_Replacer
@@ -61,6 +62,9 @@ namespace Open_Ended_Item_Replacer
     [BepInPlugin("com.oli.OEIR", "OEIR", "1.0.0")]
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
+        // Currently only implemented to block FSMUtility.SendEventUpwards();
+        public static bool blockNextFsmEventTransmition;
+
         public static ManualLogSource logSource = new ManualLogSource("logSource");
         public static Vector3 defaultReplacedParentLocation = new Vector3(-250, -250);
 
@@ -92,6 +96,9 @@ namespace Open_Ended_Item_Replacer
             // CollectableItemPickup Patches
             harmony.PatchAll(typeof(Patches.CollectableItemPickup_Patches.Awake));
             harmony.PatchAll(typeof(CheckActivation));
+            harmony.PatchAll(typeof(DoPickupAction));
+            harmony.PatchAll(typeof(EndInteraction));
+            harmony.PatchAll(typeof(Pickup));
 
             // CountCrestUnlockPoints Patches
             harmony.PatchAll(typeof(Patches.CountCrestUnlockPoints_Patches.OnEnter));
@@ -123,6 +130,9 @@ namespace Open_Ended_Item_Replacer
             // PlayerData Patches
             harmony.PatchAll(typeof(BellCentipedeWaiting_Get));
             harmony.PatchAll(typeof(BellCentipedeLocked_Get));
+
+            // FsmUtility Patches
+            harmony.PatchAll(typeof(SendEventUpwards));
 
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas

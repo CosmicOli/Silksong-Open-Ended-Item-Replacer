@@ -45,7 +45,8 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
                 logSource.LogInfo("Pickup Drop Attempt Start");
                 if (interactable)
                 {
-                    output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
+                    //output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
+                    output = SpawnGenericCostedPickup(uniqueID, replacedObject.transform, offset);
                 }
                 else
                 {
@@ -86,7 +87,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             }
             catch (Exception e)
             {
-                logSource.LogInfo("Failed to replace");
+                logSource.LogError("Failed to replace: " + e);
                 spawningReplacementCollectableItemPickup = false;
             }
 

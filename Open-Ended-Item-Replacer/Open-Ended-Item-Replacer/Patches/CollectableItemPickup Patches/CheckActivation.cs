@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
     internal class CheckActivation
     {
         // As some items check persistence using whether an item can be gotten anymore, this needs to be intercepted
-        // A transpiler could be used instead to change the one line that is modified, but the relative difficulty compared to this method means this is what I will be doing for now
+        // A transpiler could be used instead to change the lines that are modified, but the relative difficulty compared to this method means this is what I will be doing for now
         private static bool Prefix(CollectableItemPickup __instance, bool ___activatedRead, string ___playerDataBool, PersistentBoolItem ___persistent, SavedItem ___item)
         {
             if (___activatedRead) // This first part resets items that can be continuously gotten that have already been picked up; this doesn't need changing for now
