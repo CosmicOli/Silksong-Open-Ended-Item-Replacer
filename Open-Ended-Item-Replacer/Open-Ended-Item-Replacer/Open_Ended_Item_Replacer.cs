@@ -63,6 +63,8 @@ namespace Open_Ended_Item_Replacer
     [BepInPlugin("com.oli.OEIR", "OEIR", "1.0.0")]
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
+        public static bool spawningReplacement = false;
+
         // Currently only implemented to block FSMUtility.SendEventUpwards();
         public static bool blockNextFsmEventTransmition;
 

@@ -1,7 +1,6 @@
 ﻿using HutongGames.PlayMaker;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Utils.Replace_Utils.SpawnUtils;
-using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
@@ -19,7 +18,6 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 
                 UniqueID uniqueID = new UniqueID(__instance.gameObject, playerDataBool.Value);
 
-                Transform output;
                 Vector2 offset = new Vector2(2.5f, 0);
                 int cost;
 

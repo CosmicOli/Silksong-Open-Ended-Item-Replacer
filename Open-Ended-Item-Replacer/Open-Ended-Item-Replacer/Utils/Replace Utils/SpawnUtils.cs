@@ -13,16 +13,15 @@ using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Utils.Replace_Utils.InfoUtils;
 using static UnityEngine.Object;
-using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 
 namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 {
     internal class SpawnUtils
     {
         // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacementCollectableItemPickup = true)
+        public static Transform SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
         {
-            spawningReplacementCollectableItemPickup = SpawningReplacementCollectableItemPickup;
+            spawningReplacement = SpawningReplacement;
 
             try
             {
@@ -46,18 +45,18 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 SetGenericPickupInfo(uniqueID, collectableItemPickup);
 
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
             }
             catch (Exception e)
             {
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;
@@ -65,9 +64,9 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacementCollectableItemPickup = true)
+        public static Transform SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
         {
-            spawningReplacementCollectableItemPickup = SpawningReplacementCollectableItemPickup;
+            spawningReplacement = SpawningReplacement;
 
             try
             {
@@ -92,40 +91,40 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 SetGenericPickupInfo(uniqueID, collectableItemPickup);
 
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
             }
             catch (Exception e)
             {
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;
             }
         }
 
-        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, bool SpawningReplacementCollectableItemPickup = true) 
+        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, bool SpawningReplacement = true) 
         {
-            return SpawnGenericCostedPickup(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, null, null, true, true, null, SpawningReplacementCollectableItemPickup: SpawningReplacementCollectableItemPickup);
+            return SpawnGenericCostedPickup(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, null, null, true, true, null, SpawningReplacement: SpawningReplacement);
         }
 
-        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool SpawningReplacementCollectableItemPickup = true)
+        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool SpawningReplacement = true)
         {
-            return SpawnGenericCostedPickup(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, requiredItems, itemAmounts, true, true, null, SpawningReplacementCollectableItemPickup: SpawningReplacementCollectableItemPickup);
+            return SpawnGenericCostedPickup(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, requiredItems, itemAmounts, true, true, null, SpawningReplacement: SpawningReplacement);
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
         public static bool choosing;
         public static bool purchased;
-        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacementCollectableItemPickup = true)
+        public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
         {
-            spawningReplacementCollectableItemPickup = SpawningReplacementCollectableItemPickup;
+            spawningReplacement = SpawningReplacement;
 
             try
             {
@@ -214,18 +213,18 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
                     }
                 };
 
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
             }
             catch (Exception e)
             {
-                if (SpawningReplacementCollectableItemPickup)
+                if (SpawningReplacement)
                 {
-                    spawningReplacementCollectableItemPickup = false;
+                    spawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;

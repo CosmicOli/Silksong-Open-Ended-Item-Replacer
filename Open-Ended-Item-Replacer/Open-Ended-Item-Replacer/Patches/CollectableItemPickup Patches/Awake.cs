@@ -11,12 +11,10 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
     [HarmonyPatch(typeof(CollectableItemPickup), "Awake")]
     internal class Awake
     {
-        public static bool spawningReplacementCollectableItemPickup = false;
-
         private static void Prefix(CollectableItemPickup __instance)
         {
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacementCollectableItemPickup)
+            if (!spawningReplacement)
             {
                 // Fixes original persistence taking effect
                 Traverse.Create(__instance).Field("persistent").SetValue(null);
@@ -40,7 +38,7 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
             logSource.LogMessage("CollectableItemPickup Awake");
 
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacementCollectableItemPickup)
+            if (!spawningReplacement)
             {
                 /*if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
                 {
