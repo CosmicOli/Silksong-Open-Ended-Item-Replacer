@@ -4,7 +4,9 @@ using HutongGames.PlayMaker.Actions;
 using Open_Ended_Item_Replacer.Components;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
+using GlobalSettings;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
@@ -26,9 +28,6 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
         // Moves and replaces a given object
         public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, CollectableItemPickup replacementPrefab, Vector3 offset = new Vector3())
         {
-            // Sets up the replacement object to not be replaced itself
-            spawningReplacementCollectableItemPickup = true;
-
             try
             {
                 // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
@@ -45,8 +44,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
                 logSource.LogInfo("Pickup Drop Attempt Start");
                 if (interactable)
                 {
-                    //output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
-                    output = SpawnGenericCostedPickup(uniqueID, replacedObject.transform, offset);
+                    output = SpawnGenericInteractablePickup(uniqueID, replacementPrefab, replacedObject.transform, offset);
                 }
                 else
                 {
@@ -81,14 +79,11 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 output.parent = activeParent.transform;
 
-                spawningReplacementCollectableItemPickup = false;
-
                 return output;
             }
             catch (Exception e)
             {
                 logSource.LogError("Failed to replace: " + e);
-                spawningReplacementCollectableItemPickup = false;
             }
 
             return null;

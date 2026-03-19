@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using GlobalSettings;
 
 namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
 {

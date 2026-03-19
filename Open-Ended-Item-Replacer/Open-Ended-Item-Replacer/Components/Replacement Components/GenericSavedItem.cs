@@ -57,7 +57,8 @@ namespace Open_Ended_Item_Replacer.Components
         {
             if (Application.isPlaying)
             {
-                UnityEngine.Debug.LogException(new NotImplementedException());
+                //UnityEngine.Debug.LogException(new NotImplementedException());
+                return persistentBoolItem.ToString();
             }
 
             return null;

@@ -11,6 +11,7 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
         {
             if (choosing)
             {
+                choosing = false;
                 didPickup = purchased;
             }
         }

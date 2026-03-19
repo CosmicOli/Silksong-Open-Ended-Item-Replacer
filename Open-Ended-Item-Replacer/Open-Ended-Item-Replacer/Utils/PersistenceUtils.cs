@@ -2,6 +2,7 @@
 using TeamCherry.SharedUtils;
 using UnityEngine;
 using static SceneData;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Utils
 {
