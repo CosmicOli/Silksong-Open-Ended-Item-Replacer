@@ -117,6 +117,7 @@
     <Compile Include="Components\PlayMakerFSM Patch Components\SilkAndSoulHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\SurfaceMementoHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CurseHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\VentricaHandler.cs" />
     <Compile Include="FsmStateActions\AllowPickup.cs" />
     <Compile Include="FsmStateActions\GetCheck.cs" />
     <Compile Include="FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />

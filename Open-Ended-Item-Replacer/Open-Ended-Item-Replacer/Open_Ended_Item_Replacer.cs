@@ -48,6 +48,7 @@ using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.K
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CurseHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.VentricaHandler;
 using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
 using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
@@ -202,6 +203,7 @@ namespace Open_Ended_Item_Replacer
             AwakePatchEvent += HandleSteelSpines;
 
             AwakePatchEvent += HandleBellway;
+            AwakePatchEvent += HandleVentrica;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");
