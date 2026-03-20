@@ -104,6 +104,7 @@
   <ItemGroup>
     <Compile Include="Components\PlayMakerFSM Patch Components\BellwayHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\BrollyAndAssociatedHandler.cs" />
+    <Compile Include="Components\PlayMakerFSM Patch Components\CraftPickupHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CreigeHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CrullAndBenjinHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\EvaHandler.cs" />

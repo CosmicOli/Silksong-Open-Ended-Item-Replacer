@@ -49,6 +49,7 @@ using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.C
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.VentricaHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CraftPickupHandler;
 using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
 using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
@@ -56,6 +57,9 @@ using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
 using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
+using UnityEngine.SceneManagement;
+using System.Linq;
+using GlobalSettings;
 
 
 namespace Open_Ended_Item_Replacer
@@ -204,6 +208,8 @@ namespace Open_Ended_Item_Replacer
 
             AwakePatchEvent += HandleBellway;
             AwakePatchEvent += HandleVentrica;
+
+            AwakePatchEvent += HandleCraftPickup;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");

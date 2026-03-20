@@ -13,13 +13,13 @@ namespace Open_Ended_Item_Replacer.Patches.PersistentBoolItem_Patches
             if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("heart piece"))
             {
                 //logSource.LogInfo("Heart Piece");
-                Replace(__instance.gameObject, "Heart Piece", false, null);
+                Replace(__instance.gameObject, "Heart Piece", false);
             }
 
             if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("silk spool"))
             {
                 //logSource.LogInfo("Silk Spool");
-                Replace(__instance.gameObject, "Silk Spool", false, null);
+                Replace(__instance.gameObject, "Silk Spool", false);
             }
         }
     }

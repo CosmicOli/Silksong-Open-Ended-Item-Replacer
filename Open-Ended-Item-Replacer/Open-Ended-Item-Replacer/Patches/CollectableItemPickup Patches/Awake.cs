@@ -4,6 +4,8 @@ using UnityEngine;
 using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
 using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
 {
@@ -40,24 +42,23 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
             if (!spawningReplacement)
             {
-                /*if (__instance.Item.name.Contains("Common Spine")) // will generalise a check for active later
-                {
-                    return;
-                }*/
-
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }
 
                 bool originalActive = __instance.gameObject.activeSelf;
 
-                if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal"))
+                if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal")) // Craftmetal has problems replacing the original pickup, so a dummy is used
                 {
                     GameObject dummyGameObject = new GameObject(__instance.gameObject.name + "-DummyParent");
-                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true, null);
+                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true);
                 }
+                /*else if (__instance.Item.name.Contains(""))
+                {
+                    testTransform = ReplaceWithCostedPickup(__instance.gameObject, __instance.Item.name, CurrencyType.Money, 0, new List<SavedItem>() { CollectableItemManager.GetItemByName("Tool Metal") }, new List<int>() { 1 });
+                }*/
                 else
                 {
-                    testTransform = Replace(__instance.gameObject, __instance.Item.name, true, null);
+                    testTransform = Replace(__instance.gameObject, __instance.Item.name, true);
                 }
             }
         }

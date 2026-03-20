@@ -12,11 +12,12 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
         public ReplacePickup(GameObject gameObject, string itemName)
         {
             this.gameObject = gameObject;
+            this.itemName = itemName;
         }
 
         public override void OnEnter()
         {
-            Replace(gameObject, itemName, true, null);
+            Replace(gameObject, itemName, true);
 
             Active = false;
             Finished = true;
