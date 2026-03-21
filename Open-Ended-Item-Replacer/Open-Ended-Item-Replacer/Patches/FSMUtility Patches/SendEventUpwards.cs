@@ -11,9 +11,9 @@ namespace Open_Ended_Item_Replacer.Patches.FSMUtility_Patches
     {
         private static bool Prefix()
         {
-            if (blockNextFsmEventTransmition)
+            if (BlockNextFsmEventTransmition)
             {
-                blockNextFsmEventTransmition = false;
+                BlockNextFsmEventTransmition = false;
                 return false;
             }
 

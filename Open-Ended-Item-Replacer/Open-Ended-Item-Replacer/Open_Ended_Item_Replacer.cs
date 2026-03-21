@@ -1,36 +1,29 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.Components;
-using Open_Ended_Item_Replacer.FsmStateActions;
 using Open_Ended_Item_Replacer.Patches.CollectableItemCollect_Patches;
 using Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches;
-using Open_Ended_Item_Replacer.Patches.CountCrestUnlockPoints_Patches;
-using Open_Ended_Item_Replacer.Patches.CreateObject_Patches;
-using Open_Ended_Item_Replacer.Patches.CreateUIMsgGetItem_Patches;
+using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
 using Open_Ended_Item_Replacer.Patches.GameManager_Patches;
 using Open_Ended_Item_Replacer.Patches.NailSlash_Patches;
-using Open_Ended_Item_Replacer.Patches.PersistentBoolItem_Patches;
 using Open_Ended_Item_Replacer.Patches.PlayerData_Patches;
-using Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches;
-using Open_Ended_Item_Replacer.Patches.SavedItemGet_V1_2_Patches;
 using Open_Ended_Item_Replacer.Patches.SavedItemGetDelayed_Patches;
 using Open_Ended_Item_Replacer.Patches.SceneAdditiveLoadConditional_Patches;
-using Open_Ended_Item_Replacer.Patches.SetToolLocked_Patches;
-using Open_Ended_Item_Replacer.Patches.SetToolUnlocked_Patches;
-using Open_Ended_Item_Replacer.Patches.SpawnObjectFromGlobalPool_Patches;
 using UnityEngine;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BrollyAndAssociatedHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CraftPickupHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CreigeHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrestHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CurseHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.EvaHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FaydownHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FirstSinnerHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FleaCaravanHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.HeartsHandler;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.KeyOfHereticHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.LugoliHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.MossDruidHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.NeedolinHandler;
@@ -43,23 +36,9 @@ using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.S
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SilkNeedleHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SurfaceMementoHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.ThreefoldSongHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.WeaverStatueHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.KeyOfHereticHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CurseHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.VentricaHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CraftPickupHandler;
-using static Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches.Awake;
-using static Open_Ended_Item_Replacer.Patches.NailSlash_Patches.StartSlash;
+using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.WeaverStatueHandler;
 using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
-using static Open_Ended_Item_Replacer.Utils.FsmStateActionUtils;
-using static Open_Ended_Item_Replacer.Utils.GetBoolFuncs;
-using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
-using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
-using UnityEngine.SceneManagement;
-using System.Linq;
-using GlobalSettings;
 
 
 namespace Open_Ended_Item_Replacer
@@ -68,13 +47,23 @@ namespace Open_Ended_Item_Replacer
     [BepInPlugin("com.oli.OEIR", "OEIR", "1.0.0")]
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
-        public static bool spawningReplacement = false;
+        private static bool spawningReplacement = false;
+        public static bool SpawningReplacement
+        {
+            get { return spawningReplacement; }
+            set { spawningReplacement = value; }
+        }
 
         // Currently only implemented to block FSMUtility.SendEventUpwards();
         public static bool blockNextFsmEventTransmition;
+        public static bool BlockNextFsmEventTransmition
+        {
+            get { return blockNextFsmEventTransmition; }
+            set { blockNextFsmEventTransmition = value; }
+        }
 
-        public static ManualLogSource logSource = new ManualLogSource("logSource");
-        public static Vector3 defaultReplacedParentLocation = new Vector3(-250, -250);
+        public readonly static ManualLogSource logSource = new ManualLogSource("logSource");
+        public readonly static Vector3 defaultReplacedParentLocation = new Vector3(-250, -250);
 
         private void Awake()
         {

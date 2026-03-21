@@ -25,7 +25,12 @@ namespace Open_Ended_Item_Replacer.Components
             }
         }
 
-        public PersistentBoolItem persistentBoolItem;
+        private PersistentBoolItem persistentBoolItem;
+        public PersistentBoolItem PersistentBoolItem
+        {
+            get { return persistentBoolItem; }
+            set { persistentBoolItem = value; }
+        }
 
         public override void Get(bool showPopup = true)
         {
@@ -33,9 +38,9 @@ namespace Open_Ended_Item_Replacer.Components
 
             // Show popup (if showPopup)
             // Send get request
-            persistentBoolItem.ItemData.Value = true;
-            SceneData.instance.PersistentBools.SetValue(persistentBoolItem.ItemData);
-            logSource.LogInfo("Item get:  " + persistentBoolItem.ItemData.ID + "  In Scene: " + persistentBoolItem.ItemData.SceneName);
+            PersistentBoolItem.ItemData.Value = true;
+            SceneData.instance.PersistentBools.SetValue(PersistentBoolItem.ItemData);
+            logSource.LogInfo("Item get:  " + PersistentBoolItem.ItemData.ID + "  In Scene: " + PersistentBoolItem.ItemData.SceneName);
         }
 
         public override bool CanGetMore()
@@ -58,7 +63,7 @@ namespace Open_Ended_Item_Replacer.Components
             if (Application.isPlaying)
             {
                 //UnityEngine.Debug.LogException(new NotImplementedException());
-                return persistentBoolItem.ToString();
+                return PersistentBoolItem.ToString();
             }
 
             return null;

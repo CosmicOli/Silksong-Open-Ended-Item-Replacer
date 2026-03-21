@@ -21,7 +21,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
         // Spawns a replacement pickup, defining the item with uniqueID
         public static Transform SpawnGenericInteractablePickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
         {
-            spawningReplacement = SpawningReplacement;
+            Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
@@ -47,7 +47,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
@@ -56,7 +56,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             {
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;
@@ -66,7 +66,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
         // Spawns a replacement pickup, defining the item with uniqueID
         public static Transform SpawnGenericCollisionPickup(UniqueID uniqueID, CollectableItemPickup prefab, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
         {
-            spawningReplacement = SpawningReplacement;
+            Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
@@ -93,7 +93,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
@@ -102,7 +102,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             {
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;
@@ -124,7 +124,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
         public static bool purchased;
         public static Transform SpawnGenericCostedPickup(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
         {
-            spawningReplacement = SpawningReplacement;
+            Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
@@ -159,7 +159,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
                 void OnCancel()
                 {
                     CollectableItemPickup.IsPickupPaused = false;
-                    blockNextFsmEventTransmition = false;
+                    BlockNextFsmEventTransmition = false;
                     purchased = false;
                     choosing = false;
 
@@ -172,7 +172,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
                     logSource.LogWarning("Item set to null to force DoPickupAction to return false");
 
                     CollectableItemPickup.IsPickupPaused = true;
-                    blockNextFsmEventTransmition = true;
+                    BlockNextFsmEventTransmition = true;
                     choosing = true;
                     purchased = false;
 
@@ -215,7 +215,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
 
                 return collectableItemPickup.transform;
@@ -224,7 +224,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             {
                 if (SpawningReplacement)
                 {
-                    spawningReplacement = false;
+                    Open_Ended_Item_Replacer.SpawningReplacement = false;
                 }
                 logSource.LogError(e);
                 return null;

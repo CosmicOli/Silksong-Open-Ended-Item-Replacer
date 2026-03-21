@@ -14,28 +14,36 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
         }
 
         public GetCheck(string gameObjectName, string itemName)
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
         }
 
         public GetCheck(GameObject gameObject, string itemName, string sceneName)
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
-            genericItem.persistentBoolItem.ItemData.SceneName = sceneName;
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
+            genericItem.PersistentBoolItem.ItemData.SceneName = sceneName;
+        }
+
+        public GetCheck(string gameObjectName, string itemName, string sceneName)
+        {
+            genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
+            genericItem.PersistentBoolItem.ItemData.SceneName = sceneName;
         }
 
         public override void OnEnter()
         {
             // Handles persistence set by new item
-            if (!GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
+            if (!GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
             {
                 genericItem.Get();
             }

@@ -131,7 +131,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(fleaObject, GenericFleaItemName, genericItem);
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(fleaObject, GenericFleaItemName, genericItem);
 
             // Handle actions on "Stun" state
             FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
@@ -154,7 +154,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
 
             // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
+            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
             {
                 giantFlea.gameObject.SetActive(false);
                 __instance.gameObject.SetActive(false);
@@ -173,12 +173,12 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
 
             // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
+            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
             {
-                logSource.LogInfo("Replacement set inactive: " + genericItem.persistentBoolItem.ItemData.SceneName + "   " + genericItem.persistentBoolItem.ItemData.ID);
+                logSource.LogInfo("Replacement set inactive: " + genericItem.PersistentBoolItem.ItemData.SceneName + "   " + genericItem.PersistentBoolItem.ItemData.ID);
             }
             else
             {
@@ -198,10 +198,10 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.persistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
+            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
 
             // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.persistentBoolItem.ItemData))
+            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
             {
                 logSource.LogInfo("Replacement set inactive");
             }

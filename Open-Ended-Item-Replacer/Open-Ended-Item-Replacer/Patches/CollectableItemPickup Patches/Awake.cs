@@ -16,7 +16,7 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
         private static void Prefix(CollectableItemPickup __instance)
         {
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacement)
+            if (!SpawningReplacement)
             {
                 // Fixes original persistence taking effect
                 Traverse.Create(__instance).Field("persistent").SetValue(null);
@@ -40,7 +40,7 @@ namespace Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches
             logSource.LogMessage("CollectableItemPickup Awake");
 
             // Currently all replacement prefabs have to be CollectableItemPickups, so they need to not be replaced themselves
-            if (!spawningReplacement)
+            if (!SpawningReplacement)
             {
                 if (__instance.Item == null) { return; }
                 if (__instance.gameObject == null) { return; }

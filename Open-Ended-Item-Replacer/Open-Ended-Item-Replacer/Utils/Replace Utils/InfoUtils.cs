@@ -24,7 +24,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
 
             SetGenericPersistentInfo(uniqueID, persistent);
 
-            genericItem.persistentBoolItem = persistent;
+            genericItem.PersistentBoolItem = persistent;
 
             // Sets the item granted upon pickup
             collectableItemPickup.SetItem(genericItem, true);

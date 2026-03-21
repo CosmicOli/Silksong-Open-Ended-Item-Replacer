@@ -1,10 +1,13 @@
 ﻿using HarmonyLib;
 using HutongGames.PlayMaker;
+using Open_Ended_Item_Replacer.Components;
+using Open_Ended_Item_Replacer.FsmStateActions;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
 
 namespace Open_Ended_Item_Replacer.Patches.GameManager_Patches
 {
@@ -172,6 +175,23 @@ namespace Open_Ended_Item_Replacer.Patches.GameManager_Patches
             if (debugging)
             {
                 LevelActivatedDebugging();
+            }
+
+            // On entering act 3, get missables
+            if (sceneName == "Song_Tower_Destroyed" && PlayerData.instance.blackThreadWorld)
+            {
+                PersistentItemData<bool> ChurchkeeperSoul = GeneratePersistentBoolData_SameScene("", "");
+                PersistentItemData<bool> BellHermitSoul = GeneratePersistentBoolData_SameScene("", "");
+                PersistentItemData<bool> ArchitectMelody = GeneratePersistentBoolData_SameScene("", "");
+                PersistentItemData<bool> SteelSpines = GeneratePersistentBoolData_SameScene("", "");
+
+                GenericSavedItem genericSavedItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+                if (GetPersistentBoolFromData(ChurchkeeperSoul))
+                {
+                    GetCheck
+                    genericSavedItem.PersistentBoolItem = ChurchkeeperSoul;
+                    genericSavedItem.Get();
+                }
             }
 
             // Stops softlocking in memories
