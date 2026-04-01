@@ -4,6 +4,7 @@ using HarmonyLib;
 using Open_Ended_Item_Replacer.Patches.CollectableItemCollect_Patches;
 using Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches;
 using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
+using Open_Ended_Item_Replacer.Patches.FullQuestBase_Patches;
 using Open_Ended_Item_Replacer.Patches.GameManager_Patches;
 using Open_Ended_Item_Replacer.Patches.NailSlash_Patches;
 using Open_Ended_Item_Replacer.Patches.PlayerData_Patches;
@@ -129,6 +130,9 @@ namespace Open_Ended_Item_Replacer
 
             // FsmUtility Patches
             harmony.PatchAll(typeof(SendEventUpwards));
+
+            // FullQuestBase Patches
+            harmony.PatchAll(typeof(RewardIcon_Get));
 
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas

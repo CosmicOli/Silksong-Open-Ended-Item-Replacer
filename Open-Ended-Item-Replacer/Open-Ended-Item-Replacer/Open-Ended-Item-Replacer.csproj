@@ -139,6 +139,7 @@
     <Compile Include="Patches\CreateObject Patches\OnEnter.cs" />
     <Compile Include="Patches\CreateUIMsgGetItem Patches\OnEnter.cs" />
     <Compile Include="Patches\FSMUtility Patches\SendEventUpwards.cs" />
+    <Compile Include="Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
     <Compile Include="Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Patches\GameManager Patches\TimePasses.cs" />
     <Compile Include="Patches\GameManager Patches\TimePassesElsewhere.cs" />

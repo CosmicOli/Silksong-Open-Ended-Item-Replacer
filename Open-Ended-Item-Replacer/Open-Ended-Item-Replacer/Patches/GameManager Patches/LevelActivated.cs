@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GlobalSettings;
+using HarmonyLib;
 using HutongGames.PlayMaker;
 using Open_Ended_Item_Replacer.Components;
 using Open_Ended_Item_Replacer.FsmStateActions;
@@ -188,9 +189,9 @@ namespace Open_Ended_Item_Replacer.Patches.GameManager_Patches
                 GenericSavedItem genericSavedItem = ScriptableObject.CreateInstance<GenericSavedItem>();
                 if (GetPersistentBoolFromData(ChurchkeeperSoul))
                 {
-                    GetCheck
-                    genericSavedItem.PersistentBoolItem = ChurchkeeperSoul;
-                    genericSavedItem.Get();
+                    //GetCheck
+                    //genericSavedItem.PersistentBoolItem = ChurchkeeperSoul;
+                    //genericSavedItem.Get();
                 }
             }
 
