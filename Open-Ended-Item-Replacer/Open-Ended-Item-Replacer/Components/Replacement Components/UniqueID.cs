@@ -4,7 +4,7 @@ using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
 
 namespace Open_Ended_Item_Replacer.Components
 {
-    public class UniqueID
+    public struct UniqueID
     {
         public string PickupName
         {

@@ -102,6 +102,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Core Components\UniquePickup.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\BellwayHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\BrollyAndAssociatedHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CraftPickupHandler.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Components\PlayMakerFSM Patch Components\SurfaceMementoHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CurseHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\VentricaHandler.cs" />
+    <Compile Include="Core\Core.cs" />
     <Compile Include="FsmStateActions\AllowPickup.cs" />
     <Compile Include="FsmStateActions\GetCheck.cs" />
     <Compile Include="FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />
