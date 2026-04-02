@@ -16,7 +16,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         // This does mean I would need to add a seperate karm flagger though, as without waking up from the memory the heart doesn't flag
         // This is also the case for Nyleth and Verdania from the looks of it
 
-        public static void HandleCoralHeart(PlayMakerFSM __instance)
+        public static void Handle_CoralHeart(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "activate memory on tool pickup" && __instance.gameObject?.name == "before")
             {

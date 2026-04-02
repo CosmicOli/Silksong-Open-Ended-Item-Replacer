@@ -8,7 +8,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class WeaverStatueHandler
     {
-        public static void HandleWeaverStatue(PlayMakerFSM __instance)
+        public static void Handle_WeaverStatue(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine Weaver Ability")
             {

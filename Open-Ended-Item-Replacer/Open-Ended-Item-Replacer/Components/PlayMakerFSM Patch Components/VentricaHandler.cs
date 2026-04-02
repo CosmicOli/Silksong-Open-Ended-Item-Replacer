@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class VentricaHandler
     {
-        public static void HandleVentrica(PlayMakerFSM __instance)
+        public static void Handle_Ventrica(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Unlock Behaviour" && __instance.gameObject?.name == "tube_toll_machine")
             {

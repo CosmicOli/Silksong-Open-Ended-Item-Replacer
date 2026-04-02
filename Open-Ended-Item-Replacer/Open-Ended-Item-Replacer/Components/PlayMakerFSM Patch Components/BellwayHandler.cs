@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class BellwayHandler
     {
-        public static void HandleBellway(PlayMakerFSM __instance)
+        public static void Handle_Bellway(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Unlock Behaviour" && __instance.gameObject?.name == "Bellway Toll Machine")
             {

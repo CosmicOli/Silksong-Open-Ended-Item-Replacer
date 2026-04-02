@@ -8,7 +8,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class PlinneyHandler
     {
-        public static void HandlePlinney(PlayMakerFSM __instance)
+        public static void Handle_Plinney(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Plinney Inside")
             {

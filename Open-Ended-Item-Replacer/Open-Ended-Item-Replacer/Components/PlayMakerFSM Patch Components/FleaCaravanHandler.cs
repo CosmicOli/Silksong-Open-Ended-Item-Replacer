@@ -27,7 +27,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             return (greymoor || ljArena || fleatopia);
         }
 
-        public static void HandleGrishkin(PlayMakerFSM __instance)
+        public static void Handle_Grishkin(PlayMakerFSM __instance)
         {
             if (__instance.gameObject == null) { return; }
 
@@ -72,7 +72,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         // This only handles the persistence
-        public static void HandleFleaCharm(PlayMakerFSM __instance)
+        public static void Handle_FleaCharm(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Caravan Troupe Leader Fleatopia NPC") // Yes troupe is right
             {
@@ -99,7 +99,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         // This only handles the persistence
-        public static void HandleSethMemento(PlayMakerFSM __instance)
+        public static void Handle_SethMemento(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seth Sit NPC Fleatopia")
             {

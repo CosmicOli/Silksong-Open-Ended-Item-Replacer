@@ -11,6 +11,10 @@ using Open_Ended_Item_Replacer.Patches.PlayerData_Patches;
 using Open_Ended_Item_Replacer.Patches.QuestBoardInteractable_Patches;
 using Open_Ended_Item_Replacer.Patches.SavedItemGetDelayed_Patches;
 using Open_Ended_Item_Replacer.Patches.SceneAdditiveLoadConditional_Patches;
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
 using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BrollyAndAssociatedHandler;
@@ -49,6 +53,8 @@ namespace Open_Ended_Item_Replacer
     [BepInPlugin("com.oli.OEIR", "OEIR", "1.0.0")]
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
+        public static GameObject HeartPieceInstant;
+
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement
         {
@@ -79,6 +85,7 @@ namespace Open_Ended_Item_Replacer
             harmony.PatchAll(typeof(LevelActivated));
             harmony.PatchAll(typeof(TimePasses));
             harmony.PatchAll(typeof(TimePassesElsewhere));
+            harmony.PatchAll(typeof(RunContinueGame));
 
             // SceneAdditiveLoadConditional Patches
             harmony.PatchAll(typeof(TryTestLoad));
@@ -141,72 +148,72 @@ namespace Open_Ended_Item_Replacer
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas
             // NOTE: Some of these exist within the same handler but are still seperated in case another mod wished to override a distinct function
-            AwakePatchEvent += HandleFlea;
+            AwakePatchEvent += Handle_Flea;
 
-            AwakePatchEvent += HandleWeaverStatue;
+            AwakePatchEvent += Handle_WeaverStatue;
 
-            AwakePatchEvent += HandleCrest;
-            AwakePatchEvent += HandleCrestDoor;
+            AwakePatchEvent += Handle_Crest;
+            AwakePatchEvent += Handle_CrestDoor;
 
-            AwakePatchEvent += HandleSilkNeedle;
+            AwakePatchEvent += Handle_SilkNeedle;
 
-            AwakePatchEvent += HandleSilkHeart;
+            AwakePatchEvent += Handle_SilkHeart;
 
-            AwakePatchEvent += HandleNeedolinPreMemory;
-            AwakePatchEvent += HandleNeedolinInMemory;
-            AwakePatchEvent += HandleBeastlingCall;
-            AwakePatchEvent += HandleElegyOfTheDeep;
+            AwakePatchEvent += Handle_NeedolinPreMemory;
+            AwakePatchEvent += Handle_NeedolinInMemory;
+            AwakePatchEvent += Handle_BeastlingCall;
+            AwakePatchEvent += Handle_ElegyOfTheDeep;
 
-            AwakePatchEvent += HandleFirstSinnerPersistenceAndPickup;
-            AwakePatchEvent += HandleFirstSinnerInMemory;
+            AwakePatchEvent += Handle_FirstSinnerPersistenceAndPickup;
+            AwakePatchEvent += Handle_FirstSinnerInMemory;
 
-            AwakePatchEvent += HandlePhantom;
+            AwakePatchEvent += Handle_Phantom;
 
-            AwakePatchEvent += HandleArchitectMelody;
-            AwakePatchEvent += HandleConductorMelody;
-            AwakePatchEvent += HandleLibrarianMelody;
-            AwakePatchEvent += HandleThreefoldSongLift;
+            AwakePatchEvent += Handle_ArchitectMelody;
+            AwakePatchEvent += Handle_ConductorMelody;
+            AwakePatchEvent += Handle_LibrarianMelody;
+            AwakePatchEvent += Handle_ThreefoldSongLift;
 
-            AwakePatchEvent += HandlePlinney;
+            AwakePatchEvent += Handle_Plinney;
 
-            AwakePatchEvent += HandleSeamstress;
-            AwakePatchEvent += HandleFourthChorus;
+            AwakePatchEvent += Handle_Seamstress;
+            AwakePatchEvent += Handle_FourthChorus;
 
-            AwakePatchEvent += HandlePinstress;
+            AwakePatchEvent += Handle_Pinstress;
 
-            AwakePatchEvent += HandleFaydownCloak;
+            AwakePatchEvent += Handle_FaydownCloak;
 
-            AwakePatchEvent += HandleEva;
+            AwakePatchEvent += Handle_Eva;
 
-            AwakePatchEvent += HandleNuu;
+            AwakePatchEvent += Handle_Nuu;
 
-            AwakePatchEvent += HandleGrishkin;
-            AwakePatchEvent += HandleFleaCharm;
-            AwakePatchEvent += HandleSethMemento;
+            AwakePatchEvent += Handle_Grishkin;
+            AwakePatchEvent += Handle_FleaCharm;
+            AwakePatchEvent += Handle_SethMemento;
 
-            AwakePatchEvent += HandleChef;
+            AwakePatchEvent += Handle_Chef;
 
-            AwakePatchEvent += HandleNectar;
+            AwakePatchEvent += Handle_Nectar;
 
-            AwakePatchEvent += HandleMossDruid;
+            AwakePatchEvent += Handle_MossDruid;
 
-            AwakePatchEvent += HandleSurfaceMemento;
+            AwakePatchEvent += Handle_SurfaceMemento;
 
-            AwakePatchEvent += HandleBellHermit;
-            AwakePatchEvent += HandleChurchkeeper;
+            AwakePatchEvent += Handle_BellHermit;
+            AwakePatchEvent += Handle_Churchkeeper;
 
-            AwakePatchEvent += HandleCoralHeart;
+            AwakePatchEvent += Handle_CoralHeart;
 
-            AwakePatchEvent += HandleKeyOfHeretic;
+            AwakePatchEvent += Handle_KeyOfHeretic;
 
-            AwakePatchEvent += HandleWoodWitch;
-            AwakePatchEvent += HandleDoctorFly;
-            AwakePatchEvent += HandleSteelSpines;
+            AwakePatchEvent += Handle_WoodWitch;
+            AwakePatchEvent += Handle_DoctorFly;
+            AwakePatchEvent += Handle_SteelSpines;
 
-            AwakePatchEvent += HandleBellway;
-            AwakePatchEvent += HandleVentrica;
+            AwakePatchEvent += Handle_Bellway;
+            AwakePatchEvent += Handle_Ventrica;
 
-            AwakePatchEvent += HandleCraftPickup;
+            AwakePatchEvent += Handle_CraftPickup;
 
 
             associatedChapelSceneName.Add("Spinner", "Tut_05");

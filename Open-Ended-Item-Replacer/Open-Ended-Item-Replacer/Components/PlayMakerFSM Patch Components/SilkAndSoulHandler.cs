@@ -42,7 +42,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }*/
 
         // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
-        public static void HandleBellHermit(PlayMakerFSM __instance)
+        public static void Handle_BellHermit(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Bell Hermit")
             {
@@ -63,7 +63,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
-        public static void HandleChurchkeeper(PlayMakerFSM __instance)
+        public static void Handle_Churchkeeper(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Conversation" && __instance.gameObject?.name == "Churchkeeper")
             {

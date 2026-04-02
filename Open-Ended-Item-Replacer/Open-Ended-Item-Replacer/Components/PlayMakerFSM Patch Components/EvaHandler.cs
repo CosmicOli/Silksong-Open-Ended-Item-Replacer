@@ -10,7 +10,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class EvaHandler
     {
-        public static void HandleEva(PlayMakerFSM __instance)
+        public static void Handle_Eva(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Crest Upgrade Shrine")
             {

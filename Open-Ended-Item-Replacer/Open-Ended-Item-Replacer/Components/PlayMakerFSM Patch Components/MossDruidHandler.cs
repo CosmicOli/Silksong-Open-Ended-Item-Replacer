@@ -10,7 +10,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class MossDruidHandler
     {
-        public static void HandleMossDruid(PlayMakerFSM __instance)
+        public static void Handle_MossDruid(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Conversation Control" && __instance.gameObject?.name == "Moss Creep NPC")
             {

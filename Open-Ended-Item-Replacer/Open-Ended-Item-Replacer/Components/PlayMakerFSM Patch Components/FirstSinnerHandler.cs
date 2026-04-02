@@ -10,7 +10,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
     internal class FirstSinnerHandler
     {
         private static string runeRage = "Rune Rage";
-        public static void HandleFirstSinnerPersistenceAndPickup(PlayMakerFSM __instance)
+        public static void Handle_FirstSinnerPersistenceAndPickup(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Inspection" && __instance.gameObject?.name == "Shrine First Weaver")
             {
@@ -29,7 +29,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleFirstSinnerInMemory(PlayMakerFSM __instance)
+        public static void Handle_FirstSinnerInMemory(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
             {

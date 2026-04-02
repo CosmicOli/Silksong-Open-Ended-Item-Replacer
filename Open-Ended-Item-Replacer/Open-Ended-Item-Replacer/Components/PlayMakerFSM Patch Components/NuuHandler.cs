@@ -8,7 +8,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class NuuHandler
     {
-        public static void HandleNuu(PlayMakerFSM __instance)
+        public static void Handle_Nuu(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Hunter Fan Control")
             {

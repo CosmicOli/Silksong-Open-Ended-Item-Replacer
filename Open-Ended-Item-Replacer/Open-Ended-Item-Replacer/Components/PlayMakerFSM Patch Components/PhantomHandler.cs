@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class PhantomHandler
     {
-        public static void HandlePhantom(PlayMakerFSM __instance)
+        public static void Handle_Phantom(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Phantom")
             {

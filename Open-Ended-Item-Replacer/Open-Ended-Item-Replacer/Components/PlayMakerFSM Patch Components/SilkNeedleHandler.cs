@@ -8,7 +8,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class SilkNeedleHandler
     {
-        public static void HandleSilkNeedle(PlayMakerFSM __instance)
+        public static void Handle_SilkNeedle(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Silk Needle Spell Get")
             {

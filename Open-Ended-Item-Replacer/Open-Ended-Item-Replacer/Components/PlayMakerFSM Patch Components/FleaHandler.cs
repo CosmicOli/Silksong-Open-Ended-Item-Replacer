@@ -249,7 +249,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         // Handles anything that is or contains a flea
-        public static void HandleFlea(PlayMakerFSM __instance)
+        public static void Handle_Flea(PlayMakerFSM __instance)
         {
             FsmState initState = __instance.Fsm.GetState("Init");
             FsmState checkState = __instance.Fsm.GetState("Check State");

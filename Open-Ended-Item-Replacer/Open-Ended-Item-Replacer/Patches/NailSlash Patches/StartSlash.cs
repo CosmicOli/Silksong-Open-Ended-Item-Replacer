@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using GlobalSettings;
 
 namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
 {
@@ -28,7 +27,6 @@ namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
                     logSource.LogWarning("No test transform found");
                 }
             }
-
 
             //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
             //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);

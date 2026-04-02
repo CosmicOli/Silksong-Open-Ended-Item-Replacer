@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class BrollyAndAssociatedHandler
     {
-        public static void HandleSeamstress(PlayMakerFSM __instance)
+        public static void Handle_Seamstress(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Seamstress")
             {
@@ -22,7 +22,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         // Fourth chorus additive scene loading is handled independently to the FSM handler below
-        public static void HandleFourthChorus(PlayMakerFSM __instance)
+        public static void Handle_FourthChorus(PlayMakerFSM __instance)
         {
             // Fourth Chorus; "Control" "Boss Scene" "Init 18 and 19" -> Will need a more identifying part of this fsm to avoid triggering for other bosses
 

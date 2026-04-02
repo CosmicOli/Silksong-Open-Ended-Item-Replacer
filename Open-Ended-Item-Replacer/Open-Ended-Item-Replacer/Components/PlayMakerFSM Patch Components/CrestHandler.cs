@@ -12,7 +12,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class CrestHandler
     {
-        public static void HandleCrest(PlayMakerFSM __instance)
+        public static void Handle_Crest(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Crest Get Shrine")
             {
@@ -45,7 +45,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         }
 
         public static Dictionary<string, string> associatedChapelSceneName = new Dictionary<string, string>(); // Values added on mod load
-        public static void HandleCrestDoor(PlayMakerFSM __instance)
+        public static void Handle_CrestDoor(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "chapel_door_control" && __instance.gameObject?.name == "Chapel Door Control")
             {

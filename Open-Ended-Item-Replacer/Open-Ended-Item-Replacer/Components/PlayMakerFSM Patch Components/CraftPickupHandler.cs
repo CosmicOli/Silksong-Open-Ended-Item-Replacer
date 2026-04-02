@@ -9,7 +9,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class CraftPickupHandler
     {
-        public static void HandleCraftPickup(PlayMakerFSM __instance)
+        public static void Handle_CraftPickup(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "FSM" && __instance.gameObject?.name == "Craft Pickup")
             {

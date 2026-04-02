@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class CrullAndBenjinHandler
     {
-        public static void HandleSteelSpines(PlayMakerFSM __instance)
+        public static void Handle_SteelSpines(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Dust Traders")
             {

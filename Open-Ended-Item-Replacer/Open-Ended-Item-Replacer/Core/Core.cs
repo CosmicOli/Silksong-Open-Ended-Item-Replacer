@@ -10,6 +10,7 @@ namespace Open_Ended_Item_Replacer.Core
     {
         // UniquePickup
         // association table
+        // List of defauly UniquePickups that are supported
         // dictionary of (uniqueID, UniquePickup) keyvaluepairs defined by a config
     }
 }

@@ -8,7 +8,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class FaydownHandler
     {
-        public static void HandleFaydownCloak(PlayMakerFSM __instance)
+        public static void Handle_FaydownCloak(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "DJ Get Sequence" && __instance.gameObject?.name == "DJ Get Sequence")
             {

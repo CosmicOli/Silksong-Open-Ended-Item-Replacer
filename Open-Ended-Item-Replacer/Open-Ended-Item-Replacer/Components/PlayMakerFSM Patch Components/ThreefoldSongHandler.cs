@@ -9,7 +9,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class ThreefoldSongHandler
     {
-        public static void HandleArchitectMelody(PlayMakerFSM __instance)
+        public static void Handle_ArchitectMelody(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Cylinder States" && __instance.gameObject?.name == "puzzle cylinders")
             {
@@ -32,7 +32,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleConductorMelody(PlayMakerFSM __instance)
+        public static void Handle_ConductorMelody(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Last Conductor NPC")
             {
@@ -51,7 +51,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleLibrarianMelody(PlayMakerFSM __instance)
+        public static void Handle_LibrarianMelody(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Librarian")
             {
@@ -94,7 +94,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleThreefoldSongLift(PlayMakerFSM __instance)
+        public static void Handle_ThreefoldSongLift(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Sequence" && __instance.gameObject?.name == "Boss Scene")
             {

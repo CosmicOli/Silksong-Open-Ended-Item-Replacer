@@ -13,7 +13,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class NeedolinHandler
     {
-        public static void HandleNeedolinPreMemory(PlayMakerFSM __instance)
+        public static void Handle_NeedolinPreMemory(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == "Spinner Boss")
             {
@@ -26,7 +26,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleNeedolinInMemory(PlayMakerFSM __instance)
+        public static void Handle_NeedolinInMemory(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Memory Control" && __instance.gameObject?.name == "Memory Control")
             {
@@ -64,7 +64,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
         // Defined for refencing elsewhere
         public static string BeastlingCall = "Beastling Call";
         public static string BeastlingCallGameObjectName = "Bell Beast DefeatedCentipede NPC";
-        public static void HandleBeastlingCall(PlayMakerFSM __instance)
+        public static void Handle_BeastlingCall(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Control" && __instance.gameObject?.name == BeastlingCallGameObjectName)
             {
@@ -87,7 +87,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleElegyOfTheDeep(PlayMakerFSM __instance)
+        public static void Handle_ElegyOfTheDeep(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Snail Shamans Set")
             {

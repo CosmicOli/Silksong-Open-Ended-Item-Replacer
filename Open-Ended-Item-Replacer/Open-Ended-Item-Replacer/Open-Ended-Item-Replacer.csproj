@@ -83,6 +83,10 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
@@ -103,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\Core Components\UniquePickup.cs" />
+    <Compile Include="Components\Grant Components\MaskShardGranter.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\BellwayHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\BrollyAndAssociatedHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\CraftPickupHandler.cs" />
@@ -121,6 +126,7 @@
     <Compile Include="Components\PlayMakerFSM Patch Components\CurseHandler.cs" />
     <Compile Include="Components\PlayMakerFSM Patch Components\VentricaHandler.cs" />
     <Compile Include="Core\Core.cs" />
+    <Compile Include="Core\UniquePickups.cs" />
     <Compile Include="FsmStateActions\AllowPickup.cs" />
     <Compile Include="FsmStateActions\GetCheck.cs" />
     <Compile Include="FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />
@@ -142,6 +148,7 @@
     <Compile Include="Patches\CreateUIMsgGetItem Patches\OnEnter.cs" />
     <Compile Include="Patches\FSMUtility Patches\SendEventUpwards.cs" />
     <Compile Include="Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
+    <Compile Include="Patches\GameManager Patches\RunContinueGame.cs" />
     <Compile Include="Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Patches\GameManager Patches\TimePasses.cs" />
     <Compile Include="Patches\GameManager Patches\TimePassesElsewhere.cs" />

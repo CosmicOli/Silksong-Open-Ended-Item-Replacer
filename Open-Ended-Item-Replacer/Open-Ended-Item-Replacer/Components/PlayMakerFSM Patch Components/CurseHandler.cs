@@ -9,7 +9,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
     // See CrullAndBenjinHandler for Steel Spines (seperate as giving independantly to quest)
     internal class CurseHandler
     {
-        public static void HandleWoodWitch(PlayMakerFSM __instance)
+        public static void Handle_WoodWitch(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Wood Witch")
             {
@@ -22,7 +22,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
             }
         }
 
-        public static void HandleDoctorFly(PlayMakerFSM __instance)
+        public static void Handle_DoctorFly(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Doctor Fly")
             {

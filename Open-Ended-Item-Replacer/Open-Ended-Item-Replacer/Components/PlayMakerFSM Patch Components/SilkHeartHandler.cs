@@ -7,7 +7,7 @@ namespace Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components
 {
     internal class SilkHeartHandler
     {
-        public static void HandleSilkHeart(PlayMakerFSM __instance)
+        public static void Handle_SilkHeart(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Silk Heart Memory Return" && __instance.gameObject?.name == "Silk Heart Memory Return")
             {
