@@ -149,6 +149,7 @@
     <Compile Include="Patches\FSMUtility Patches\SendEventUpwards.cs" />
     <Compile Include="Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
     <Compile Include="Patches\GameManager Patches\RunContinueGame.cs" />
+    <Compile Include="Patches\GameManager Patches\RunStartNewGame.cs" />
     <Compile Include="Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Patches\GameManager Patches\TimePasses.cs" />
     <Compile Include="Patches\GameManager Patches\TimePassesElsewhere.cs" />
@@ -180,6 +181,7 @@
     <Compile Include="Components\Replacement Components\UniqueID.cs" />
     <Compile Include="Utils\FsmStateActionUtils.cs" />
     <Compile Include="Utils\GetBoolFuncs.cs" />
+    <Compile Include="Utils\LoadSaveFileUtils.cs" />
     <Compile Include="Utils\PersistenceUtils.cs" />
     <Compile Include="Utils\Replace Utils\InfoUtils.cs" />
     <Compile Include="Utils\Replace Utils\ReplaceUtils.cs" />

@@ -11,9 +11,9 @@ using static Open_Ended_Item_Replacer.Utils.LoadSaveFileUtils;
 
 namespace Open_Ended_Item_Replacer.Patches.GameManager_Patches
 {
-    internal class RunContinueGame
+    internal class RunStartNewGame
     {
-        [HarmonyPatch(typeof(GameManager), "RunContinueGame")]
+        [HarmonyPatch(typeof(GameManager), "RunStartNewGame")]
         public static void Postfix()
         {
             DoLoadSaveFileExtras();
