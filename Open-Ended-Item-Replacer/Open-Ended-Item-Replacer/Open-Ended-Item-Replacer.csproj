@@ -148,6 +148,7 @@
     <Compile Include="Patches\PlayerData Patches\BellCentipedeLocked_Get.cs" />
     <Compile Include="Patches\PlayerData Patches\BellCentipedeWaiting_Get.cs" />
     <Compile Include="Patches\PlayMakerFSM Patches\Awake.cs" />
+    <Compile Include="Patches\QuestBoardInteractable Patches\ProcessQueuedCompletions.cs" />
     <Compile Include="Patches\SavedItemGet V1-2 Patches\OnEnter.cs" />
     <Compile Include="Patches\SavedItemGetDelayed Patches\DoGet.cs" />
     <Compile Include="Patches\SceneAdditiveLoadConditional Patches\TryTestLoad.cs" />

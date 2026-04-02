@@ -14,21 +14,21 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
+            GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
         }
 
         public GetCheck(string gameObjectName, string itemName)
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
+            GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
         }
 
         public GetCheck(GameObject gameObject, string itemName, string sceneName)
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
+            GeneratePersistentBoolSetToItem(gameObject, itemName, genericItem);
             genericItem.PersistentBoolItem.ItemData.SceneName = sceneName;
         }
 
@@ -36,7 +36,7 @@ namespace Open_Ended_Item_Replacer.FsmStateActions
         {
             genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
+            GeneratePersistentBoolSetToItem_SameScene(gameObjectName, itemName, genericItem);
             genericItem.PersistentBoolItem.ItemData.SceneName = sceneName;
         }
 

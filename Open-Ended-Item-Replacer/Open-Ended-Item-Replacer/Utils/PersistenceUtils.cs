@@ -42,6 +42,8 @@ namespace Open_Ended_Item_Replacer.Utils
             PersistentBoolItem persistent = gameObject.AddComponent<PersistentBoolItem>();
             SetGenericPersistentInfo(uniqueID, persistent);
 
+            replacementItem.PersistentBoolItem = persistent;
+
             return persistent;
         }
 

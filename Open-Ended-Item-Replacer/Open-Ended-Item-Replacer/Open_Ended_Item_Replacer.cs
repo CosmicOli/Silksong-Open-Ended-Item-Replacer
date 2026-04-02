@@ -8,6 +8,7 @@ using Open_Ended_Item_Replacer.Patches.FullQuestBase_Patches;
 using Open_Ended_Item_Replacer.Patches.GameManager_Patches;
 using Open_Ended_Item_Replacer.Patches.NailSlash_Patches;
 using Open_Ended_Item_Replacer.Patches.PlayerData_Patches;
+using Open_Ended_Item_Replacer.Patches.QuestBoardInteractable_Patches;
 using Open_Ended_Item_Replacer.Patches.SavedItemGetDelayed_Patches;
 using Open_Ended_Item_Replacer.Patches.SceneAdditiveLoadConditional_Patches;
 using UnityEngine;
@@ -133,6 +134,9 @@ namespace Open_Ended_Item_Replacer
 
             // FullQuestBase Patches
             harmony.PatchAll(typeof(RewardIcon_Get));
+
+            // QuestBoardInteractable Patches
+            harmony.PatchAll(typeof(ProcessQueuedCompletions));
 
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas

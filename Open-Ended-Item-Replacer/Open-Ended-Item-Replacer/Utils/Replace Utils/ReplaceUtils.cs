@@ -131,7 +131,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(fleaObject, GenericFleaItemName, genericItem);
+            GeneratePersistentBoolSetToItem(fleaObject, GenericFleaItemName, genericItem);
 
             // Handle actions on "Stun" state
             FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
@@ -173,7 +173,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
+            GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
 
             // Handles persistence set by new item
             if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
@@ -198,7 +198,7 @@ namespace Open_Ended_Item_Replacer.Utils.Replace_Utils
             }
 
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
+            GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
 
             // Handles persistence set by new item
             if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))

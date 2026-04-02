@@ -30,7 +30,7 @@ namespace Open_Ended_Item_Replacer.Patches.CreateObject_Patches
 
                 GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
 
-                genericItem.PersistentBoolItem = GeneratePersistentBoolSetToItem(__instance.Fsm.GameObject, itemName, genericItem);
+                GeneratePersistentBoolSetToItem(__instance.Fsm.GameObject, itemName, genericItem);
 
                 // Handles persistence set by new item
                 if (!GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
