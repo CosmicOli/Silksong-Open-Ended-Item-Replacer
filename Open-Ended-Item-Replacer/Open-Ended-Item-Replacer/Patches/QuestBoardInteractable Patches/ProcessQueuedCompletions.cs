@@ -9,31 +9,20 @@ namespace Open_Ended_Item_Replacer.Patches.QuestBoardInteractable_Patches
     [HarmonyPatch(typeof(QuestBoardInteractable), "ProcessQueuedCompletions")]
     internal class ProcessQueuedCompletions
     {
-        static bool handingIn = false;
-
         public static void Prefix(QuestBoardInteractable __instance, Queue<FullQuestBase> ___queuedCompletions)
         {
             // The point of the following is to replace the reward item while the quests are being turned in
 
-            if (!handingIn)
-            {
-                handingIn = true;
+            if (___queuedCompletions.Count == 0) { return; }
 
-                foreach (FullQuestBase quest in ___queuedCompletions)
-                {
-                    if (quest.RewardItem == null) { continue; } 
+            FullQuestBase quest = ___queuedCompletions.Peek();
 
-                    GenericSavedItem dummyPersistentItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                    GeneratePersistentBoolSetToItem_SameScene("Quest_Board", quest.RewardItem.name, dummyPersistentItem);
+            if (quest.RewardItem == null) { return; }
 
-                    Traverse.Create(quest).Field("rewardItem").SetValue(dummyPersistentItem);
-                }
-            }
+            GenericSavedItem dummyPersistentItem = ScriptableObject.CreateInstance<GenericSavedItem>();
+            GeneratePersistentBoolSetToItem_SameScene("Quest_Board", quest.RewardItem.name, dummyPersistentItem);
 
-            if (___queuedCompletions.Count == 0)
-            {
-                handingIn = false;
-            }
+            Traverse.Create(quest).Field("rewardItem").SetValue(dummyPersistentItem);
         }
     }
 }
