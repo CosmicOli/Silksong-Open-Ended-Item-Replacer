@@ -2,8 +2,9 @@
 using BepInEx.Logging;
 using GlobalSettings;
 using HarmonyLib;
-using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Core.Containers;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.FSMUtility_Patches;
@@ -58,10 +59,10 @@ namespace Open_Ended_Item_Replacer
     {
         public static GameObject HeartPieceInstant;
 
-        public static IInteractable DefaultInteractableContainer
-        public static ICollisionable DefaultCollisionContainer
-        public static ICosted DefaultCostedContainer
-
+        public static CollectableItemPickup_Container DefaultInteractableContainer
+        public static CollectableItemPickupInstant_Container DefaultCollisionContainer
+        public static Costed_CollectableItemPickup_Container DefaultCostedContainer
+            
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement
         {

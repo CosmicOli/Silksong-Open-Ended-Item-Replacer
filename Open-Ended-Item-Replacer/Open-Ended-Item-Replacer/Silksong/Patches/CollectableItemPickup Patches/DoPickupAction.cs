@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Utils.Replace_Utils.SpawnUtils;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 
 namespace Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches
 {

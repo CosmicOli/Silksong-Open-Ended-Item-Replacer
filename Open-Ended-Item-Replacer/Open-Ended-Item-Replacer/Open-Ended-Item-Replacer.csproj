@@ -129,7 +129,7 @@
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickupInstant_Container.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickup_Container.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickup_Abstract_Container.cs" />
-    <Compile Include="Silksong\Containers\Costed_CollectableItemPickup_Container.cs" />
+    <Compile Include="Silksong\Containers\CollectableItemPickup Containers\Costed_CollectableItemPickup_Container.cs" />
     <Compile Include="Core\Containers\ICollisionable.cs" />
     <Compile Include="Core\Containers\IContainer.cs" />
     <Compile Include="Core\Containers\ICosted.cs" />

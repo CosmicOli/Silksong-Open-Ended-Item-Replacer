@@ -2,7 +2,7 @@
 using TeamCherry.SharedUtils;
 using UnityEngine;
 using static SceneData;
-using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils
 {

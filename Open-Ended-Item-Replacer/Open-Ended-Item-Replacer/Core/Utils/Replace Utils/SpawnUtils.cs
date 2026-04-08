@@ -12,80 +12,28 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
     internal class SpawnUtils
     {
         // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericInteractablePickup<InteractableContainer>(InteractableContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
-            where InteractableContainer : MonoBehaviour, IContainer, IInteractable
+        public static Transform SpawnGenericPickup<Container>(Container prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
+            where Container : MonoBehaviour, IContainer
         {
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
-                // If no prefab is provided, a generic pickup prefab is used
-                if (!prefab)
-                {
-                    logSource.LogInfo("No prefab provided, using CollectableItemPickupPrefab");
-                    prefab = DefaultInteractableContainer;
-                }
-
                 // Defines the spawn location of the replacement pickup
                 Vector3 vector = spawnPoint.position + offset;
                 Vector3 position = vector;
 
-                InteractableContainer container;
+                Container container;
 
                 // Creates the new pickup and sets its position
                 container = Instantiate(prefab);
                 container.transform.position = position;
                 container.gameObject.name = uniqueID.PickupName;
 
-                // This logs where the pickup has been placed
-                logSource.LogInfo("New Pickup Placed At: " + container.transform.position);
-
-                SetGenericPickupInfo(uniqueID, container);
-
-                if (SpawningReplacement)
+                if (!(prefab is IInteractable))
                 {
-                    Open_Ended_Item_Replacer.SpawningReplacement = false;
+                    container.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
                 }
-
-                return container.transform;
-            }
-            catch (Exception e)
-            {
-                if (SpawningReplacement)
-                {
-                    Open_Ended_Item_Replacer.SpawningReplacement = false;
-                }
-                logSource.LogError(e);
-                return null;
-            }
-        }
-
-        // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericCollisionPickup<CollisionableContainer>(CollisionableContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
-            where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
-        {
-            Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
-
-            try
-            {
-                // If no prefab is provided, a generic pickup prefab is used
-                if (!prefab)
-                {
-                    logSource.LogInfo("No prefab provided, using CollectableItemPickupInstantPrefab");
-                    prefab = DefaultCollisionContainer;
-                }
-
-                // Defines the spawn location of the replacement pickup
-                Vector3 vector = spawnPoint.position + offset;
-                Vector3 position = vector;
-
-                CollisionableContainer container;
-
-                // Creates the new pickup and sets its position
-                container = Instantiate(prefab);
-                container.transform.position = position;
-                container.gameObject.name = uniqueID.PickupName;
-                container.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
 
                 // This logs where the pickup has been placed
                 logSource.LogInfo("New Pickup Placed At: " + container.transform.position);

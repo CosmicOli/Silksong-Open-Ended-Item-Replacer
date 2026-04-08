@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
-using static Open_Ended_Item_Replacer.Utils.Replace_Utils.ReplaceUtils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.ReplaceUtils;
 
 namespace Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches
 {

@@ -7,11 +7,10 @@ using TeamCherry.NestedFadeGroup;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
-using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 
-namespace Open_Ended_Item_Replacer.Silksong.Containers
+namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers
 {
-    public class Costed_CollectableItemPickup_Container : CollectableItemPickup_Abstract_Container, ICosted
+    public class Costed_CollectableItemPickup_Container : CollectableItemPickup_Abstract_Container, IInteractable, ICosted
     {
         HeroController HCinstance = HeroController.instance;
 
@@ -123,6 +122,14 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers
             DoPickup.Invoke(collectableItemPickup, new object[] { });
 
             item.Get();
+        }
+
+        public InteractEvents interactEvents
+        {
+            get
+            {
+                return Traverse.Create(CollectableItemPickupInstance).Field("interactEvents").GetValue<InteractEvents>();
+            }
         }
     }
 }

@@ -23,15 +23,19 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container>(GameObject replacedObject, string replacedItemName, bool interactable, Container replacementPrefab = null, Vector3 offset = new Vector3())
+        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(Container replacementPrefab, GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
             where Container : MonoBehaviour, IContainer
+            where InteractableContainer : MonoBehaviour, IContainer, IInteractable
+            where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
         {
-            return Core_Replace(replacedObject, replacedObject, replacedItemName, interactable, replacementPrefab, offset);
+            return Core_Replace<Container, InteractableContainer, CollisionableContainer>(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container>(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Container replacementPrefab = null, Vector3 offset = new Vector3())
+        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(Container replacementPrefab, GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
             where Container : MonoBehaviour, IContainer
+            where InteractableContainer : MonoBehaviour, IContainer, IInteractable
+            where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
         {
             try
             {
@@ -47,13 +51,17 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                if (replacementPrefab is IInteractable)
+                if (replacementPrefab is InteractableContainer)
                 {
-                    output = SpawnGenericInteractablePickup((dynamic) replacementPrefab, uniqueID, replacedObject.transform, offset);
+                    output = SpawnGenericPickup(replacementPrefab as InteractableContainer, uniqueID, replacedObject.transform, offset);
+                }
+                else if (replacementPrefab is CollisionableContainer)
+                {
+                    output = SpawnGenericPickup(replacementPrefab as CollisionableContainer, uniqueID, replacedObject.transform, offset);
                 }
                 else
                 {
-                    output = SpawnGenericCollisionPickup((dynamic) replacementPrefab, uniqueID, replacedObject.transform, offset);
+                    throw new Exception("Container not interactable or collisionable");
                 }
                 logSource.LogInfo("Pickup Drop Attempt End");
 
@@ -70,7 +78,8 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         }
 
         // Moves and replaces a given object
-        public static Transform ReplaceWithCostedPickup(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+        public static Transform Core_ReplaceWithCostedPickup<CostedContainer>(CostedContainer replacementPrefab, GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+            where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
         {
             try
             {
@@ -86,7 +95,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericCostedPickup((dynamic) DefaultCostedContainer, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
+                output = SpawnGenericCostedPickup(replacementPrefab, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, replacedObject, output);
@@ -129,91 +138,6 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
             }
 
             output.parent = activeParent.transform;
-        }
-
-        public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)
-        {
-            // Generates a generic item using the uniqueID
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-
-            GeneratePersistentBoolSetToItem(fleaObject, GenericFleaItemName, genericItem);
-
-            // Handle actions on "Stun" state
-            FsmStateAction[] stunActions = giantFleaFSM.Fsm.GetState("Stun").Actions;
-
-            FsmBool giantFleaBool = new FsmBool();
-            giantFleaBool.Value = false;
-
-            // Stops the giant flea being marked as saved in the player bools
-            HutongGames.PlayMaker.Actions.SetPlayerDataBool setGiantFleaSaved = stunActions.OfType<HutongGames.PlayMaker.Actions.SetPlayerDataBool>().ToList()[0];
-            Traverse.Create(setGiantFleaSaved).Field("value").SetValue(giantFleaBool);
-
-
-            // Handle actions on "Deactivate" state
-            FsmStateAction[] deactivateActions = giantFleaFSM.Fsm.GetState("Deactivate").Actions;
-
-            SavedItemGetV2 getFleaItem = deactivateActions.OfType<SavedItemGetV2>().ToList()[0];
-            getFleaItem.Item = genericItem;
-            getFleaItem.ShowPopup = true;
-            getFleaItem.Amount = 1;
-
-
-            // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
-            {
-                giantFlea.gameObject.SetActive(false);
-                __instance.gameObject.SetActive(false);
-            }
-        }
-
-        public static void ReplaceFsmItemGet(FsmStateAction __instance, SavedItem item)
-        {
-            GameObject gameObject = new GameObject();
-            gameObject.name = __instance.Owner?.gameObject?.name;
-            gameObject.transform.position = HeroController.instance.transform.position;
-
-            if (gameObject.name == null)
-            {
-                gameObject.name = "dummyName";
-            }
-
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            GeneratePersistentBoolSetToItem(gameObject, item.name, genericItem);
-
-            // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
-            {
-                logSource.LogInfo("Replacement set inactive: " + genericItem.PersistentBoolItem.ItemData.SceneName + "   " + genericItem.PersistentBoolItem.ItemData.ID);
-            }
-            else
-            {
-                genericItem.Get();
-            }
-        }
-
-        public static void ReplaceFsmToolGet(SetToolUnlocked __instance)
-        {
-            GameObject gameObject = new GameObject();
-            gameObject.name = __instance.Owner?.gameObject?.name;
-            gameObject.transform.position = HeroController.instance.transform.position;
-
-            if (gameObject.name == null)
-            {
-                gameObject.name = "dummyName";
-            }
-
-            GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-            GeneratePersistentBoolSetToItem(gameObject, (__instance.Tool.Value as ToolItem).name, genericItem);
-
-            // Handles persistence set by new item
-            if (GetPersistentBoolFromData(genericItem.PersistentBoolItem.ItemData))
-            {
-                logSource.LogInfo("Replacement set inactive");
-            }
-            else
-            {
-                genericItem.Get();
-            }
         }
     }
 }

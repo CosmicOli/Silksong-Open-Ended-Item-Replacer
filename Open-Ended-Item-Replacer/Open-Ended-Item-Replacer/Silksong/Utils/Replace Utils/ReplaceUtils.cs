@@ -14,8 +14,9 @@ using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
-using Open_Ended_Item_Replacer.Core.Containers;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.ReplaceUtils;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
@@ -24,112 +25,21 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container>(GameObject replacedObject, string replacedItemName, bool interactable, Container replacementPrefab = null, Vector3 offset = new Vector3())
-            where Container : MonoBehaviour, IContainer
+        public static Transform Replace(CollectableItemPickup_Abstract_Container replacementPrefab, GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
         {
-            return Core_Replace(replacedObject, replacedObject, replacedItemName, interactable, replacementPrefab, offset);
+            return Replace(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container>(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Container replacementPrefab = null, Vector3 offset = new Vector3())
-            where Container : MonoBehaviour, IContainer
+        public static Transform Replace(CollectableItemPickup_Abstract_Container replacementPrefab, GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
         {
-            try
-            {
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup: " + replacedObject.name);
-
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
-
-                UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
-
-                Transform output;
-
-                // Attempts to spawn the replacement object
-                logSource.LogInfo("Pickup Drop Attempt Start");
-                if (replacementPrefab is IInteractable)
-                {
-                    output = SpawnGenericInteractablePickup((dynamic) replacementPrefab, uniqueID, replacedObject.transform, offset);
-                }
-                else
-                {
-                    output = SpawnGenericCollisionPickup((dynamic) replacementPrefab, uniqueID, replacedObject.transform, offset);
-                }
-                logSource.LogInfo("Pickup Drop Attempt End");
-
-                HandleReplacedObject(replacedObject, activeParent, output);
-
-                return output;
-            }
-            catch (Exception e)
-            {
-                logSource.LogError("Failed to replace: " + e);
-            }
-
-            return null;
+            return Core_Replace<CollectableItemPickup_Abstract_Container, CollectableItemPickup_Container, CollectableItemPickupInstant_Container>(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform ReplaceWithCostedPickup(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+        public static Transform ReplaceWithCostedPickup(Costed_CollectableItemPickup_Container replacementPrefab, GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
         {
-            try
-            {
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup: " + replacedObject.name);
-
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
-
-                UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
-
-                Transform output;
-
-                // Attempts to spawn the replacement object
-                logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericCostedPickup((dynamic) DefaultCostedContainer, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
-                logSource.LogInfo("Pickup Drop Attempt End");
-
-                HandleReplacedObject(replacedObject, replacedObject, output);
-
-                return output;
-            }
-            catch (Exception e)
-            {
-                logSource.LogError("Failed to replace: " + e);
-            }
-
-            return null;
-        }
-
-        private static void HandleReplacedObject(GameObject replacedObject, GameObject activeParent, Transform output)
-        {
-            // Removes the original object, along with removing its gravity and collision
-            // Note that scenes in this game only extend in postive x and y, so -250 -250 should be plenty out of the way
-            replacedObject.transform.position = defaultReplacedParentLocation;
-            activeParent.transform.position = defaultReplacedParentLocation;
-
-            Rigidbody2D replacementRigidBody2D = replacedObject.GetComponent<Rigidbody2D>();
-            if (replacementRigidBody2D != null)
-            {
-                Rigidbody2D outputRigidBody2D = output.GetComponent<Rigidbody2D>();
-                if (outputRigidBody2D != null)
-                {
-                    outputRigidBody2D.gravityScale = replacementRigidBody2D.gravityScale;
-                    outputRigidBody2D.constraints = replacementRigidBody2D.constraints;
-                }
-
-                replacementRigidBody2D.gravityScale = 0;
-                replacementRigidBody2D.constraints = RigidbodyConstraints2D.FreezeAll;
-            }
-
-            Collider2D replacementCollider2D = replacedObject.GetComponent<Collider2D>();
-            if (replacementCollider2D != null)
-            {
-                replacementCollider2D.enabled = false;
-            }
-
-            output.parent = activeParent.transform;
+            return Core_ReplaceWithCostedPickup(replacementPrefab, replacedObject, replacedItemName, currencyType, currencyAmount, requiredItems, itemAmounts, offset);
         }
 
         public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)

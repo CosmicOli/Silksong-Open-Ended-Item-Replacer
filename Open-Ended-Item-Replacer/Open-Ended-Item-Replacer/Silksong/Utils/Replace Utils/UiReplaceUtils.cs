@@ -1,6 +1,6 @@
 ﻿using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.FsmStateActions;
+using Open_Ended_Item_Replacer.Silksong.FsmStateActions;
 using static Open_Ended_Item_Replacer.Silksong.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
