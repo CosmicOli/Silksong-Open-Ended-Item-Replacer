@@ -23,16 +23,16 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(Container replacementPrefab, GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
+        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(GameObject replacedObject, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
             where Container : MonoBehaviour, IContainer
             where InteractableContainer : MonoBehaviour, IContainer, IInteractable
             where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
         {
-            return Core_Replace<Container, InteractableContainer, CollisionableContainer>(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
+            return Core_Replace<Container, InteractableContainer, CollisionableContainer>(replacedObject, replacedObject, replacedItemName, interactable, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(Container replacementPrefab, GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
+        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
             where Container : MonoBehaviour, IContainer
             where InteractableContainer : MonoBehaviour, IContainer, IInteractable
             where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
@@ -51,17 +51,13 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                if (replacementPrefab is InteractableContainer)
+                if (interactable)
                 {
-                    output = SpawnGenericPickup(replacementPrefab as InteractableContainer, uniqueID, replacedObject.transform, offset);
-                }
-                else if (replacementPrefab is CollisionableContainer)
-                {
-                    output = SpawnGenericPickup(replacementPrefab as CollisionableContainer, uniqueID, replacedObject.transform, offset);
+                    output = SpawnGenericPickup<InteractableContainer>(interactable, uniqueID, replacedObject.transform, offset);
                 }
                 else
                 {
-                    throw new Exception("Container not interactable or collisionable");
+                    output = SpawnGenericPickup<InteractableContainer>(interactable, uniqueID, replacedObject.transform, offset);
                 }
                 logSource.LogInfo("Pickup Drop Attempt End");
 
@@ -78,7 +74,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         }
 
         // Moves and replaces a given object
-        public static Transform Core_ReplaceWithCostedPickup<CostedContainer>(CostedContainer replacementPrefab, GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+        public static Transform Core_ReplaceWithCostedPickup<CostedContainer>(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
             where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
         {
             try
@@ -95,7 +91,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericCostedPickup(replacementPrefab, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
+                output = SpawnGenericCostedPickup<CostedContainer>(uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, replacedObject, output);

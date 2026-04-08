@@ -2,21 +2,22 @@
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.Core.Components;
-using Open_Ended_Item_Replacer.Silksong.Components.Grant_Components;
 using Open_Ended_Item_Replacer.Core;
+using Open_Ended_Item_Replacer.Core.Components;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Core.Containers;
+using Open_Ended_Item_Replacer.Silksong.Components.Grant_Components;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.ReplaceUtils;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.ReplaceUtils;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
-using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
@@ -25,21 +26,21 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Replace(CollectableItemPickup_Abstract_Container replacementPrefab, GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
+        public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
         {
-            return Replace(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
+            return Replace(replacedObject, replacedObject, replacedItemName, interactable, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform Replace(CollectableItemPickup_Abstract_Container replacementPrefab, GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
+        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
         {
-            return Core_Replace<CollectableItemPickup_Abstract_Container, CollectableItemPickup_Container, CollectableItemPickupInstant_Container>(replacementPrefab, replacedObject, replacedObject, replacedItemName, offset);
+            return Core_Replace<CollectableItemPickup_Abstract_Container, CollectableItemPickup_Container, CollectableItemPickupInstant_Container>(replacedObject, replacedObject, replacedItemName, interactable, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform ReplaceWithCostedPickup(Costed_CollectableItemPickup_Container replacementPrefab, GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+        public static Transform ReplaceWithCostedPickup(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
         {
-            return Core_ReplaceWithCostedPickup(replacementPrefab, replacedObject, replacedItemName, currencyType, currencyAmount, requiredItems, itemAmounts, offset);
+            return Core_ReplaceWithCostedPickup<Costed_CollectableItemPickup_Container>(replacedObject, replacedItemName, currencyType, currencyAmount, requiredItems, itemAmounts, offset);
         }
 
         public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)

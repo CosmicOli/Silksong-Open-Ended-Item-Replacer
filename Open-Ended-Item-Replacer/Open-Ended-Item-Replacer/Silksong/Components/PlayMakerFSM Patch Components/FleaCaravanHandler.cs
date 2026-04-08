@@ -5,6 +5,7 @@ using UnityEngine;
 using static Open_Ended_Item_Replacer.Silksong.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.GetBoolFuncs;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
 namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components
 {

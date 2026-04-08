@@ -12,13 +12,24 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
     internal class SpawnUtils
     {
         // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericPickup<Container>(Container prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
+        public static Transform SpawnGenericPickup<Container>(bool interactable, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
             where Container : MonoBehaviour, IContainer
         {
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
+                Container prefab;
+
+                if (interactable)
+                {
+                    prefab = DefaultInteractableContainer as Container;
+                }
+                else
+                {
+                    prefab = DefaultCollisionContainer as Container;
+                }
+
                 // Defines the spawn location of the replacement pickup
                 Vector3 vector = spawnPoint.position + offset;
                 Vector3 position = vector;
@@ -58,29 +69,29 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
             }
         }
 
-        public static Transform SpawnGenericCostedPickup<CostedContainer>(CostedContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, bool SpawningReplacement = true)
+        public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, bool SpawningReplacement = true)
             where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
         {
-            return SpawnGenericCostedPickup(prefab, uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, null, null, true, true, null, SpawningReplacement: SpawningReplacement);
+            return SpawnGenericCostedPickup<CostedContainer>(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, null, null, true, true, null, SpawningReplacement: SpawningReplacement);
         }
 
-        public static Transform SpawnGenericCostedPickup<CostedContainer>(CostedContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool SpawningReplacement = true)
+        public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool SpawningReplacement = true)
             where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
         {
-            return SpawnGenericCostedPickup(prefab, uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, requiredItems, itemAmounts, true, true, null, SpawningReplacement: SpawningReplacement);
+            return SpawnGenericCostedPickup<CostedContainer>(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, requiredItems, itemAmounts, true, true, null, SpawningReplacement: SpawningReplacement);
         }
 
         // Spawns a replacement pickup, defining the item with uniqueID
         public static bool choosing;
         public static bool purchased;
-        public static Transform SpawnGenericCostedPickup<CostedContainer>(CostedContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
+        public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
             where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
         {
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
-                // GenericPickup is another good option here, but it does not have persistence built in so I am going to stick with CollectableItemPickups
+                CostedContainer prefab = DefaultCostedContainer as CostedContainer;
 
                 // Defines the spawn location of the replacement pickup
                 Vector3 vector = spawnPoint.position + offset;

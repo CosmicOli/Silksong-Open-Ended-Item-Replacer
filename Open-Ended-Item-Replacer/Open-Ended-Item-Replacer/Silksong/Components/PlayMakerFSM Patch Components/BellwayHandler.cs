@@ -2,6 +2,8 @@
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 
 namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components
 {
@@ -32,7 +34,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     return;
                 }
 
-                SpawnGenericCostedPickup(uniqueID, __instance.transform, offset, CurrencyType.Money, cost);
+                SpawnGenericCostedPickup<Costed_CollectableItemPickup_Container>(uniqueID, __instance.transform, offset, CurrencyType.Money, cost);
             }
         }
     }

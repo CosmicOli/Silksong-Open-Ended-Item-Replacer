@@ -1,5 +1,5 @@
 ﻿using System;
-using static Open_Ended_Item_Replacer.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils
 {
