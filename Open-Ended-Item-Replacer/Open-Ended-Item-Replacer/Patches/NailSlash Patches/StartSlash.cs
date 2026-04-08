@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using Open_Ended_Item_Replacer.Components.Grant_Components;
 
 namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
 {
@@ -27,6 +28,8 @@ namespace Open_Ended_Item_Replacer.Patches.NailSlash_Patches
                     logSource.LogWarning("No test transform found");
                 }
             }
+
+            MaskShardGranter.Grant_MaskShard();
 
             //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
             //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);

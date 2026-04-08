@@ -13,9 +13,10 @@ namespace Open_Ended_Item_Replacer.Utils
     {
         public static void DoLoadSaveFileExtras()
         {
-            logSource.LogWarning("TEST");
-
             HeartPieceInstant = AssetBundle.GetAllLoadedAssetBundles().Where(x => x.Contains("Assets/Prefabs/Items/Heart Piece Instant.prefab")).First().LoadAsset<GameObject>("Assets/Prefabs/Items/Heart Piece Instant.prefab");
+
+            // Make asset bundle pointing to scene
+            // Grab the scene data and pull a mask shard
         }
     }
 }
