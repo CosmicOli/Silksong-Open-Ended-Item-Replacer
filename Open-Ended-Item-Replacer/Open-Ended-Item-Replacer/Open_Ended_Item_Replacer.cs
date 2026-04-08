@@ -1,50 +1,53 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using GlobalSettings;
 using HarmonyLib;
-using Open_Ended_Item_Replacer.Patches.CollectableItemCollect_Patches;
-using Open_Ended_Item_Replacer.Patches.CollectableItemPickup_Patches;
-using Open_Ended_Item_Replacer.Patches.FSMUtility_Patches;
-using Open_Ended_Item_Replacer.Patches.FullQuestBase_Patches;
-using Open_Ended_Item_Replacer.Patches.GameManager_Patches;
-using Open_Ended_Item_Replacer.Patches.NailSlash_Patches;
-using Open_Ended_Item_Replacer.Patches.PlayerData_Patches;
-using Open_Ended_Item_Replacer.Patches.QuestBoardInteractable_Patches;
-using Open_Ended_Item_Replacer.Patches.SavedItemGetDelayed_Patches;
-using Open_Ended_Item_Replacer.Patches.SceneAdditiveLoadConditional_Patches;
+using Open_Ended_Item_Replacer.Core.Containers;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.FSMUtility_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.FullQuestBase_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.PlayerData_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.QuestBoardInteractable_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.SavedItemGetDelayed_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.SceneAdditiveLoadConditional_Patches;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.BrollyAndAssociatedHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CraftPickupHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CreigeHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrestHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.CurseHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.EvaHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FaydownHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FirstSinnerHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FleaCaravanHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.FleaHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.HeartsHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.KeyOfHereticHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.LugoliHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.MossDruidHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.NeedolinHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.NuuHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.PhantomHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.PinstressHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.PlinneyHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SilkAndSoulHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SilkHeartHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SilkNeedleHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.SurfaceMementoHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.ThreefoldSongHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.VentricaHandler;
-using static Open_Ended_Item_Replacer.Components.PlayMakerFSM_Patch_Components.WeaverStatueHandler;
-using static Open_Ended_Item_Replacer.Patches.PlayMakerFSM_Patches.Awake;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.BellwayHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.BrollyAndAssociatedHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.CraftPickupHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.CreigeHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.CrestHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.CrullAndBenjinHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.CurseHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.EvaHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FaydownHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FirstSinnerHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaCaravanHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.HeartsHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.KeyOfHereticHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.LugoliHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.MossDruidHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.NeedolinHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.NuuHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.PhantomHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.PinstressHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.PlinneyHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.SilkAndSoulHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.SilkHeartHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.SilkNeedleHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.SurfaceMementoHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.ThreefoldSongHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.VentricaHandler;
+using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.WeaverStatueHandler;
+using static Open_Ended_Item_Replacer.Silksong.Patches.PlayMakerFSM_Patches.Awake;
 
 
 namespace Open_Ended_Item_Replacer
@@ -54,6 +57,10 @@ namespace Open_Ended_Item_Replacer
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
         public static GameObject HeartPieceInstant;
+
+        public static IInteractable DefaultInteractableContainer
+        public static ICollisionable DefaultCollisionContainer
+        public static ICosted DefaultCostedContainer
 
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement
@@ -95,43 +102,43 @@ namespace Open_Ended_Item_Replacer
             harmony.PatchAll(typeof(StartSlash));
 
             // PlayMakerFsm Patches
-            harmony.PatchAll(typeof(Patches.PlayMakerFSM_Patches.Awake));
+            harmony.PatchAll(typeof(Silksong.Patches.PlayMakerFSM_Patches.Awake));
 
             // PersistentBoolItem Patches
-            harmony.PatchAll(typeof(Patches.PersistentBoolItem_Patches.Awake));
+            harmony.PatchAll(typeof(Silksong.Patches.PersistentBoolItem_Patches.Awake));
 
             // CollectableItemPickup Patches
-            harmony.PatchAll(typeof(Patches.CollectableItemPickup_Patches.Awake));
+            harmony.PatchAll(typeof(Silksong.Patches.CollectableItemPickup_Patches.Awake));
             harmony.PatchAll(typeof(CheckActivation));
             harmony.PatchAll(typeof(DoPickupAction));
             harmony.PatchAll(typeof(EndInteraction));
 
             // CountCrestUnlockPoints Patches
-            harmony.PatchAll(typeof(Patches.CountCrestUnlockPoints_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.CountCrestUnlockPoints_Patches.OnEnter));
 
             // CollectableItemCollect Patches
             harmony.PatchAll(typeof(DoAction));
 
             // SavedItemGet V1-2 Patches
-            harmony.PatchAll(typeof(Patches.SavedItemGet_V1_2_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.SavedItemGet_V1_2_Patches.OnEnter));
 
             // SavedItemGetDelayed Patches
             harmony.PatchAll(typeof(DoGet));
 
             // CreateUIMsgGetItem Patches
-            harmony.PatchAll(typeof(Patches.CreateUIMsgGetItem_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.CreateUIMsgGetItem_Patches.OnEnter));
 
             // SpawnObjectFromGlobalPool Patches
-            harmony.PatchAll(typeof(Patches.SpawnObjectFromGlobalPool_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.SpawnObjectFromGlobalPool_Patches.OnEnter));
 
             // CreateObject Patches
-            harmony.PatchAll(typeof(Patches.CreateObject_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.CreateObject_Patches.OnEnter));
 
             // SetToolUnlocked Patches
-            harmony.PatchAll(typeof(Patches.SetToolUnlocked_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.SetToolUnlocked_Patches.OnEnter));
 
             // SetToolLocked Patches
-            harmony.PatchAll(typeof(Patches.SetToolLocked_Patches.OnEnter));
+            harmony.PatchAll(typeof(Silksong.Patches.SetToolLocked_Patches.OnEnter));
 
             // PlayerData Patches
             harmony.PatchAll(typeof(BellCentipedeWaiting_Get));
