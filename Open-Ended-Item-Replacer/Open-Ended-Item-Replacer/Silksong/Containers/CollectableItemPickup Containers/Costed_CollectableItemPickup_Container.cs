@@ -1,16 +1,19 @@
 ﻿using HarmonyLib;
 using Open_Ended_Item_Replacer.Core.Containers;
-using Open_Ended_Item_Replacer.Core.Utils.Replace_Utils;
+using Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils;
 using System;
 using System.Reflection;
 using TeamCherry.NestedFadeGroup;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.SpawnUtils;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
 namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers
 {
-    public class Costed_CollectableItemPickup_Container : CollectableItemPickup_Abstract_Container, IInteractable, ICosted
+    public class Costed_CollectableItemPickup_Container : CollectableItemPickup_Abstract_Container, ICosted
     {
         HeroController HCinstance = HeroController.instance;
 
@@ -72,7 +75,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
             }
         }
 
-        private static void Purchase(CollectableItemPickup collectableItemPickup, SavedItem item)
+        private static void Purchase(CollectableItemPickup collectableItemPickup, IGenericItem item)
         {
             if (collectableItemPickup.OnPickup != null)
             {
@@ -124,7 +127,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
             item.Get();
         }
 
-        public InteractEvents interactEvents
+        public InteractEvents InteractEvents
         {
             get
             {

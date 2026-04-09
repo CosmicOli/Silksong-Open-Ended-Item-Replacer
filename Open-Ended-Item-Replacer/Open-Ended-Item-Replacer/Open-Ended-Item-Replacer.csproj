@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Components\Replacement Components\IGenericItem.cs" />
     <Compile Include="Core\Components\UniquePickup.cs" />
     <Compile Include="Silksong\Components\Grant Components\MaskShardGranter.cs" />
     <Compile Include="Silksong\Components\PlayMakerFSM Patch Components\BellwayHandler.cs" />
@@ -128,14 +129,14 @@
     <Compile Include="Silksong\Components\PlayMakerFSM Patch Components\VentricaHandler.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickupInstant_Container.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickup_Container.cs" />
-    <Compile Include="Silksong\Containers\CollectableItemPickup Containers\CollectableItemPickup_Abstract_Container.cs" />
+    <Compile Include="Silksong\Containers\CollectableItemPickup Containers\Bases\CollectableItemPickup_Abstract_Container.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\Costed_CollectableItemPickup_Container.cs" />
-    <Compile Include="Core\Containers\ICollisionable.cs" />
     <Compile Include="Core\Containers\IContainer.cs" />
-    <Compile Include="Core\Containers\ICosted.cs" />
-    <Compile Include="Core\Containers\IInteractable.cs" />
+    <Compile Include="Silksong\Containers\General Bases\ICollisionable.cs" />
+    <Compile Include="Silksong\Containers\General Bases\ICosted.cs" />
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\UniquePickups.cs" />
+    <Compile Include="Silksong\Containers\General Bases\IInteractable.cs" />
     <Compile Include="Silksong\FsmStateActions\AllowPickup.cs" />
     <Compile Include="Silksong\FsmStateActions\GetCheck.cs" />
     <Compile Include="Silksong\FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />
@@ -175,7 +176,7 @@
     <Compile Include="Silksong\Patches\SetToolUnlocked Patches\OnEnter.cs" />
     <Compile Include="Silksong\Patches\SpawnObjectFromGlobalPool Patches\OnEnter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Core\Components\Replacement Components\GenericSavedItem.cs" />
+    <Compile Include="Silksong\Components\Replacement Components\GenericSavedItem.cs" />
     <Compile Include="Silksong\Components\PlayMakerFSM Patch Components\CrestHandler.cs" />
     <Compile Include="Silksong\Components\PlayMakerFSM Patch Components\FirstSinnerHandler.cs" />
     <Compile Include="Silksong\Components\PlayMakerFSM Patch Components\FleaHandler.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="Core\Utils\Replace Utils\ReplaceUtils.cs" />
     <Compile Include="Core\Utils\Replace Utils\SpawnUtils.cs" />
     <Compile Include="Silksong\Utils\Replace Utils\ReplaceUtils.cs" />
+    <Compile Include="Silksong\Utils\Replace Utils\SpawnUtils.cs" />
     <Compile Include="Silksong\Utils\Replace Utils\UiReplaceUtils.cs" />
   </ItemGroup>
   <ItemGroup />

@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 

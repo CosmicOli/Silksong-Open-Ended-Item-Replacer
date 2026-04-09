@@ -59,9 +59,9 @@ namespace Open_Ended_Item_Replacer
     {
         public static GameObject HeartPieceInstant;
 
-        public static CollectableItemPickup_Container DefaultInteractableContainer
-        public static CollectableItemPickupInstant_Container DefaultCollisionContainer
-        public static Costed_CollectableItemPickup_Container DefaultCostedContainer
+        public static CollectableItemPickup_Container DefaultInteractableContainer;
+        public static CollectableItemPickupInstant_Container DefaultCollisionContainer;
+        public static Costed_CollectableItemPickup_Container DefaultCostedContainer;
             
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement

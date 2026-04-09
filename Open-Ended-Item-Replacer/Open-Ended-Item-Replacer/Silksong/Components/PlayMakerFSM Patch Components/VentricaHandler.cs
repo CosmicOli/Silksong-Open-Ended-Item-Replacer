@@ -1,9 +1,8 @@
 ﻿using HutongGames.PlayMaker;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
-using Open_Ended_Item_Replacer.Core.Utils.Replace_Utils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.SpawnUtils;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 
 namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components

@@ -13,13 +13,13 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.PersistentBoolItem_Patches
             if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("heart piece"))
             {
                 //logSource.LogInfo("Heart Piece");
-                Replace(__instance.gameObject, "Heart Piece", false);
+                Replace(__instance.gameObject, "Heart Piece"); // INTERACTABLE false
             }
 
             if (__instance.ItemData.ID.ToLowerInvariant().StartsWith("silk spool"))
             {
                 //logSource.LogInfo("Silk Spool");
-                Replace(__instance.gameObject, "Silk Spool", false);
+                Replace(__instance.gameObject, "Silk Spool"); // INTERACTABLE false
             }
         }
     }

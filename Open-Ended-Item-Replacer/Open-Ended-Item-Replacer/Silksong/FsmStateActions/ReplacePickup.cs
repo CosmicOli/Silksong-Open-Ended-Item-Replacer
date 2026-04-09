@@ -17,7 +17,7 @@ namespace Open_Ended_Item_Replacer.Silksong.FsmStateActions
 
         public override void OnEnter()
         {
-            Replace(gameObject, itemName, true);
+            Replace(gameObject, itemName); // INTERACTABLE true
 
             Active = false;
             Finished = true;

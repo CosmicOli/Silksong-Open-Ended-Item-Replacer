@@ -6,8 +6,10 @@ using Open_Ended_Item_Replacer.Core;
 using Open_Ended_Item_Replacer.Core.Components;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Core.Containers;
-using Open_Ended_Item_Replacer.Silksong.Components.Grant_Components;
+using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,7 @@ using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.SpawnUtils;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
@@ -26,21 +29,48 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Replace(GameObject replacedObject, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
+        public static Transform Replace(GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
         {
-            return Replace(replacedObject, replacedObject, replacedItemName, interactable, offset);
+            return Replace(replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
+        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
         {
-            return Core_Replace<CollectableItemPickup_Abstract_Container, CollectableItemPickup_Container, CollectableItemPickupInstant_Container>(replacedObject, replacedObject, replacedItemName, interactable, offset);
+            return Core_Replace<CollectableItemPickup_Abstract_Container>(replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
-        public static Transform ReplaceWithCostedPickup(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+        public static Transform ReplaceWithCostedPickup<CostedContainer>(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
+            where CostedContainer : MonoBehaviour, IContainer, ICosted
         {
-            return Core_ReplaceWithCostedPickup<Costed_CollectableItemPickup_Container>(replacedObject, replacedItemName, currencyType, currencyAmount, requiredItems, itemAmounts, offset);
+            try
+            {
+                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
+                logSource.LogInfo("Pickup: " + replacedObject.name);
+
+                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
+                logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
+
+                UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
+
+                Transform output;
+
+                // Attempts to spawn the replacement object
+                logSource.LogInfo("Pickup Drop Attempt Start");
+                output = SpawnGenericCostedPickup<CostedContainer>(uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
+                logSource.LogInfo("Pickup Drop Attempt End");
+
+                HandleReplacedObject(replacedObject, replacedObject, output);
+
+                return output;
+            }
+            catch (Exception e)
+            {
+                logSource.LogError("Failed to replace: " + e);
+            }
+
+            return null;
         }
 
         public static void ReplaceGiantFleaPickup(Transform giantFlea, PlayMakerFSM giantFleaFSM, PlayMakerFSM __instance, GameObject fleaObject)

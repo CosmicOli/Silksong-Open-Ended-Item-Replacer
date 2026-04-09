@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
 using System.Collections.Generic;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;

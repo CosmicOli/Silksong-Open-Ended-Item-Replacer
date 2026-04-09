@@ -62,7 +62,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     persistentData.SceneName = associatedChapelSceneName[itemName];
                     stateCheck.Actions[0] = new SetFsmActiveState(__instance.Fsm, stateCheck, open, GetPersistentBoolFromDataFunc(persistentData), GetFalseFunc());
                 }
-                catch (KeyNotFoundException e)
+                catch (KeyNotFoundException)
                 {
                     logSource.LogError("Chapel door unable to find crest");
                 }
@@ -97,7 +97,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     gotCrest.Actions = newActionsGotCrest;
                     gotCrest2.Actions = newActionsGotCrest2;
                 }
-                catch (KeyNotFoundException e)
+                catch (KeyNotFoundException)
                 {
                     logSource.LogError("Chapel door unable to find crest");
                 }

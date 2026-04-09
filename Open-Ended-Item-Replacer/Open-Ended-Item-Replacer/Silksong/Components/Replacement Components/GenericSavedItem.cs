@@ -1,14 +1,15 @@
 ﻿using BepInEx.Logging;
 using System;
 using UnityEngine;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
-namespace Open_Ended_Item_Replacer.Core.Components.Replacement_Components
+namespace Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components
 {
     // This object defines the item that replaces intended items
     // TODO: 
     // -> Show popup
     // -> Make functions make open ended requests
-    public class GenericSavedItem : SavedItem
+    public class GenericSavedItem : SavedItem, IGenericItem
     {
         private UniqueID uniqueID;
         public UniqueID UniqueID

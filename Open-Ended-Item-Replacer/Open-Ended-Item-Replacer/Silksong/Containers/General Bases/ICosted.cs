@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Open_Ended_Item_Replacer.Core.Containers
+namespace Open_Ended_Item_Replacer.Silksong.Containers.General_Bases
 {
-    public interface ICosted
+    public interface ICosted : IInteractable
     {
         // It is recommended to call SpawnUtils.OnCancel() in any implementation of this
         void OnCancel();

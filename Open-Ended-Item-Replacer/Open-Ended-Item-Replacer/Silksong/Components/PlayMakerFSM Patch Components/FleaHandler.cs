@@ -47,7 +47,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                         if (!containsFleaSprite)
                         {
                             fleaObject.transform.position = __instance.transform.position;
-                            Replace(fleaObject, gameObject, GenericFleaItemName, false);
+                            Replace(fleaObject, gameObject, GenericFleaItemName); // INTERACTABLE false
                             return;
                         }
                     }
@@ -56,7 +56,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     if (gameObject.name.ToLowerInvariant().Contains("flea slab cage"))
                     {
                         fleaObject.transform.position = __instance.transform.position;
-                        Replace(fleaObject, gameObject, GenericFleaItemName, true);
+                        Replace(fleaObject, gameObject, GenericFleaItemName); // INTERACTABLE true
                         return;
                     }
 
@@ -69,12 +69,12 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     if (fleaFsmGameObject.Value == null)
                     {
                         fleaObject.transform.position = __instance.transform.position;
-                        replacmentTransform = Replace(fleaObject, gameObject, GenericFleaItemName, true);
+                        replacmentTransform = Replace(fleaObject, gameObject, GenericFleaItemName); // INTERACTABLE true
                     }
                     else
                     {
                         fleaObject.transform.position = fleaFsmGameObject.Value.transform.position;
-                        replacmentTransform = Replace(fleaObject, fleaFsmGameObject.Value, GenericFleaItemName, true);
+                        replacmentTransform = Replace(fleaObject, fleaFsmGameObject.Value, GenericFleaItemName); // INTERACTABLE true
                     }
 
                     // Checks if anything enables the flea we want disabled, and then removes the ability to enable it
@@ -155,7 +155,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     // Sleeping fleas have to be on a floor, so they will be interactable
                     fleaObject.transform.position = __instance.transform.position;
                     __instance.gameObject.SetActive(false);
-                    Replace(fleaObject, GenericFleaItemName, true);
+                    Replace(fleaObject, GenericFleaItemName); // INTERACTABLE true
                     break;
 
                 default:
@@ -173,7 +173,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
 
             fleaObject.transform.position = __instance.transform.position;
             __instance.gameObject.SetActive(false);
-            Replace(fleaObject, GenericFleaItemName, true);
+            Replace(fleaObject, GenericFleaItemName); // INTERACTABLE true
         }
 
         private static void HandleGiantFlea(PlayerDataBoolTest giantFleaPersistenceChecker, PlayMakerFSM __instance, GameObject fleaObject)
@@ -205,7 +205,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
 
             fleaObject.transform.position = __instance.transform.position;
             __instance.gameObject.SetActive(false);
-            Replace(fleaObject, GenericFleaItemName, true);
+            Replace(fleaObject, GenericFleaItemName); // INTERACTABLE true
         }
 
         private static void HandleFrozenFlea(PlayMakerFSM __instance, GameObject fleaObject)
@@ -218,7 +218,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
 
                 fleaObject.transform.position = __instance.transform.position;
                 __instance.gameObject.SetActive(false);
-                Replace(fleaObject, GenericFleaItemName, false); // Note that in this case parenthood is given to the dummy object; for some reason giving it to the original flea causes random displacement
+                Replace(fleaObject, GenericFleaItemName); // INTERACTABLE false // Note that in this case parenthood is given to the dummy object; for some reason giving it to the original flea causes random displacement
             }
         }
 
@@ -243,7 +243,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
 
                     fleaObject.transform.position = __instance.transform.position;
                     __instance.gameObject.SetActive(false);
-                    Replace(fleaObject, GenericFleaItemName, false);
+                    Replace(fleaObject, GenericFleaItemName); // INTERACTABLE false
                 }
             }
         }

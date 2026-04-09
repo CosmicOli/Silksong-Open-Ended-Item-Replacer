@@ -14,7 +14,7 @@ namespace Open_Ended_Item_Replacer.Core.Containers
             get;
         }
 
-        GenericSavedItem Item
+        IGenericItem Item
         {
             get;
             set;

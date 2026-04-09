@@ -1,7 +1,7 @@
 ﻿using GlobalSettings;
 using HarmonyLib;
 using HutongGames.PlayMaker;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Silksong.FsmStateActions;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,7 +65,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
 
             List<GameObject> gameObjectsInCurrentScene = FindAllObjectsInCurrentScene();
 
-            foreach (GameObject gameObject in gameObjectsInCurrentScene)
+            /*foreach (GameObject gameObject in gameObjectsInCurrentScene)
             {
                 //logSource.LogInfo(gameObject.transform.name);
 
@@ -73,11 +73,11 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                 {
                     logSource.LogWarning(gameObject.transform.name);
 
-                    /*UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
+                    UnityEngine.Component[] components = gameObject.GetComponents<UnityEngine.Component>();
                     foreach (UnityEngine.Component component in components)
                     {
                         logSource.LogInfo(component);
-                    }*/
+                    }
 
                     PlayMakerFSM fsm = gameObject.GetComponent<PlayMakerFSM>();
 
@@ -129,7 +129,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                                 action.Event()
                             }
                         }
-                    }*/
+                    }
                 }
 
                 /*if (gameObject.transform.name == "Heart Piece")
@@ -152,8 +152,8 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                     {
                         logSource.LogInfo(component);
                     }
-                }*/
-            }
+                }
+            }*/
         }
 
         private static bool hasHarpoonDash;

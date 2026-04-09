@@ -11,7 +11,7 @@ using UnityEngine;
 using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
-using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
@@ -23,26 +23,12 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(GameObject replacedObject, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
+        public static Transform Core_Replace<Container>(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
             where Container : MonoBehaviour, IContainer
-            where InteractableContainer : MonoBehaviour, IContainer, IInteractable
-            where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
-        {
-            return Core_Replace<Container, InteractableContainer, CollisionableContainer>(replacedObject, replacedObject, replacedItemName, interactable, offset);
-        }
-
-        // Moves and replaces a given object
-        public static Transform Core_Replace<Container, InteractableContainer, CollisionableContainer>(GameObject replacedObject, GameObject activeParent, string replacedItemName, bool interactable, Vector3 offset = new Vector3())
-            where Container : MonoBehaviour, IContainer
-            where InteractableContainer : MonoBehaviour, IContainer, IInteractable
-            where CollisionableContainer : MonoBehaviour, IContainer, ICollisionable
         {
             try
             {
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
                 logSource.LogInfo("Pickup: " + replacedObject.name);
-
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
                 logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
 
                 UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
@@ -51,14 +37,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                if (interactable)
-                {
-                    output = SpawnGenericPickup<InteractableContainer>(interactable, uniqueID, replacedObject.transform, offset);
-                }
-                else
-                {
-                    output = SpawnGenericPickup<InteractableContainer>(interactable, uniqueID, replacedObject.transform, offset);
-                }
+                output = SpawnGenericPickup<Container>(uniqueID, replacedObject.transform, offset);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, activeParent, output);
@@ -73,40 +52,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
             return null;
         }
 
-        // Moves and replaces a given object
-        public static Transform Core_ReplaceWithCostedPickup<CostedContainer>(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
-            where CostedContainer : MonoBehaviour, IContainer, IInteractable, ICosted
-        {
-            try
-            {
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup: " + replacedObject.name);
-
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
-                logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
-
-                UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);
-
-                Transform output;
-
-                // Attempts to spawn the replacement object
-                logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericCostedPickup<CostedContainer>(uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
-                logSource.LogInfo("Pickup Drop Attempt End");
-
-                HandleReplacedObject(replacedObject, replacedObject, output);
-
-                return output;
-            }
-            catch (Exception e)
-            {
-                logSource.LogError("Failed to replace: " + e);
-            }
-
-            return null;
-        }
-
-        private static void HandleReplacedObject(GameObject replacedObject, GameObject activeParent, Transform output)
+        public static void HandleReplacedObject(GameObject replacedObject, GameObject activeParent, Transform output)
         {
             // Removes the original object, along with removing its gravity and collision
             // Note that scenes in this game only extend in postive x and y, so -250 -250 should be plenty out of the way

@@ -50,7 +50,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patche
                 if (__instance.gameObject.name.ToLowerInvariant().Contains("tool metal")) // Craftmetal has problems replacing the original pickup, so a dummy is used
                 {
                     GameObject dummyGameObject = new GameObject(__instance.gameObject.name + "-DummyParent");
-                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name, true);
+                    testTransform = Replace(__instance.gameObject, dummyGameObject, __instance.Item.name); // INTERACTABLE true
                 }
                 /*else if (__instance.Item.name.Contains(""))
                 {
@@ -58,7 +58,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patche
                 }*/
                 else
                 {
-                    testTransform = Replace(__instance.gameObject, __instance.Item.name, true);
+                    testTransform = Replace(__instance.gameObject, __instance.Item.name); // INTERACTABLE true
                 }
             }
         }

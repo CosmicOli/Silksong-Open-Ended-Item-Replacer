@@ -1,4 +1,4 @@
-﻿using Open_Ended_Item_Replacer.Silksong.Components;
+﻿using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
 using TeamCherry.SharedUtils;
 using UnityEngine;
 using static SceneData;
