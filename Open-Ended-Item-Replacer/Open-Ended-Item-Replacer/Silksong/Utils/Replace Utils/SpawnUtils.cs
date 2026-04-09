@@ -1,26 +1,25 @@
-﻿using Open_Ended_Item_Replacer.Core.Containers;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+﻿using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.InfoUtils;
+using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.InfoUtils;
 using static UnityEngine.Object;
 using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
-using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Core.Containers;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
     internal class SpawnUtils
     {
         public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, bool SpawningReplacement = true)
-            where CostedContainer : MonoBehaviour, IContainer, ICosted
+            where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
         {
             return SpawnGenericCostedPickup<CostedContainer>(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, null, null, true, true, null, SpawningReplacement: SpawningReplacement);
         }
 
         public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool SpawningReplacement = true)
-            where CostedContainer : MonoBehaviour, IContainer, ICosted
+            where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
         {
             return SpawnGenericCostedPickup<CostedContainer>(uniqueID, spawnPoint, offset, true, "", currencyType, currencyAmount, requiredItems, itemAmounts, true, true, null, SpawningReplacement: SpawningReplacement);
         }
@@ -29,7 +28,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         public static bool choosing;
         public static bool purchased;
         public static Transform SpawnGenericCostedPickup<CostedContainer>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
-            where CostedContainer : MonoBehaviour, IContainer, ICosted
+            where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
         {
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
@@ -51,9 +50,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
                 // This logs where the pickup has been placed
                 logSource.LogInfo("New Pickup Placed At: " + container.transform.position);
 
-                InteractEvents interactEvents = container.InteractEvents;
-
-                SetGenericPickupInfo(uniqueID, container);
+                SetGenericPickupInfo(uniqueID, container as PersistentContainer);
 
                 string itemName = text;
                 if (itemName == "")
@@ -63,6 +60,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 
                 container.SpawnSetup();
 
+                InteractEvents interactEvents = container.InteractEvents;
                 HeroController HCinstance = HeroController.instance;
 
                 interactEvents.Interacted += delegate

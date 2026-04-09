@@ -1,13 +1,9 @@
-﻿using GlobalSettings;
-using HarmonyLib;
+﻿using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.Core;
-using Open_Ended_Item_Replacer.Core.Components;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
-using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases;
 using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 using System;
@@ -15,10 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.ReplaceUtils;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
-using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.SpawnUtils;
 
@@ -37,19 +31,16 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         // Moves and replaces a given object
         public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
         {
-            return Core_Replace<CollectableItemPickup_Abstract_Container>(replacedObject, replacedObject, replacedItemName, offset);
+            return Core_Replace<PersistentContainer>(replacedObject, replacedObject, replacedItemName, offset);
         }
 
         // Moves and replaces a given object
         public static Transform ReplaceWithCostedPickup<CostedContainer>(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
-            where CostedContainer : MonoBehaviour, IContainer, ICosted
+            where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
         {
             try
             {
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
                 logSource.LogInfo("Pickup: " + replacedObject.name);
-
-                // This logs where the pickup is; placed inside the if statement as the counterpart is after the position is updated in SpawnGenericItemPickup
                 logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
 
                 UniqueID uniqueID = new UniqueID(replacedObject, replacedItemName);

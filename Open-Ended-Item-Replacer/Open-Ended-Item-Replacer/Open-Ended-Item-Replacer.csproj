@@ -137,6 +137,8 @@
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\UniquePickups.cs" />
     <Compile Include="Silksong\Containers\General Bases\IInteractable.cs" />
+    <Compile Include="Silksong\Containers\General Bases\IPersistentContainer.cs" />
+    <Compile Include="Silksong\Containers\General Bases\PersistentContainer.cs" />
     <Compile Include="Silksong\FsmStateActions\AllowPickup.cs" />
     <Compile Include="Silksong\FsmStateActions\GetCheck.cs" />
     <Compile Include="Silksong\FsmStateActions\GetPersistentBoolUsingPersistentItemBool.cs" />
@@ -193,7 +195,7 @@
     <Compile Include="Silksong\Utils\GetBoolFuncs.cs" />
     <Compile Include="Silksong\Utils\LoadSaveFileUtils.cs" />
     <Compile Include="Silksong\Utils\PersistenceUtils.cs" />
-    <Compile Include="Core\Utils\Replace Utils\InfoUtils.cs" />
+    <Compile Include="Silksong\Utils\Replace Utils\InfoUtils.cs" />
     <Compile Include="Core\Utils\Replace Utils\ReplaceUtils.cs" />
     <Compile Include="Core\Utils\Replace Utils\SpawnUtils.cs" />
     <Compile Include="Silksong\Utils\Replace Utils\ReplaceUtils.cs" />

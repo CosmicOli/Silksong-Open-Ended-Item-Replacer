@@ -3,7 +3,6 @@ using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using System;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.InfoUtils;
 using static UnityEngine.Object;
 
 namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
@@ -31,12 +30,10 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
                 container.transform.position = position;
                 container.gameObject.name = uniqueID.PickupName;
 
-                container.Setup();
+                container.Setup(uniqueID);
 
                 // This logs where the pickup has been placed
                 logSource.LogInfo("New Pickup Placed At: " + container.transform.position);
-
-                SetGenericPickupInfo(uniqueID, container);
 
                 if (SpawningReplacement)
                 {

@@ -2,15 +2,14 @@
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
-using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Silksong.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 
-namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
+namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
     internal class InfoUtils
     {
-        public static void SetGenericPickupInfo<T>(UniqueID uniqueID, T container)
-            where T : MonoBehaviour, IContainer
+        public static void SetGenericPickupInfo(UniqueID uniqueID, PersistentContainer container)
         {
             // Generates a generic item using the uniqueID
             GenericSavedItem genericItem = ScriptableObject.CreateInstance<GenericSavedItem>();

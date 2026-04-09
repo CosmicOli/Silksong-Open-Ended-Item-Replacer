@@ -1,17 +1,6 @@
-﻿using HarmonyLib;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
-using Open_Ended_Item_Replacer.Silksong.Components;
-using Open_Ended_Item_Replacer.Silksong.Components.Grant_Components;
-using Open_Ended_Item_Replacer.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using UnityEngine;
-using static Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components.FleaHandler;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches.Awake;
-using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
 using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
