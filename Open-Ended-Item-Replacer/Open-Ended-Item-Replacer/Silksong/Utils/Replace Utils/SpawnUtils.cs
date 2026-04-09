@@ -48,15 +48,13 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
                 // This logs where the pickup has been placed
                 logSource.LogInfo("New Pickup Placed At: " + container.transform.position);
 
-                SetGenericPickupInfo(uniqueID, container as PersistentContainer);
+                container.Setup(uniqueID);
 
                 string itemName = text;
                 if (itemName == "")
                 {
                     itemName = (container.Item as SavedItem).GetPopupName();
                 }
-
-                container.SpawnSetup();
 
                 InteractEvents interactEvents = container.InteractEvents;
                 HeroController HCinstance = HeroController.instance;

@@ -25,8 +25,10 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
             BlockNextFsmEventTransmition = false;
         }
 
-        public void SpawnSetup()
+        public override void Setup(UniqueID uniqueID)
         {
+            base.Setup(uniqueID);
+
             SavedItem dummyItem = ScriptableObject.CreateInstance<FakeCollectable>();
             SetCollectableItemPickupItem(dummyItem, true);
         }

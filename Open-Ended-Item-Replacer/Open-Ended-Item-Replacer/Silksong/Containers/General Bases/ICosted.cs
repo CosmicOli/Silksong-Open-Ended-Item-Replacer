@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using System;
 
 namespace Open_Ended_Item_Replacer.Silksong.Containers.General_Bases
 {
@@ -6,8 +7,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.General_Bases
     {
         // It is recommended to call SpawnUtils.OnCancel() in any implementation of this
         void OnCancel();
-
-        void SpawnSetup();
 
         void InteractSetup();
 
