@@ -1,5 +1,9 @@
-﻿using HarmonyLib;
+﻿using GlobalSettings;
+using HarmonyLib;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Core.Containers;
+using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 using Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils;
 using System;
 using System.Reflection;
@@ -7,14 +11,23 @@ using TeamCherry.NestedFadeGroup;
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.SpawnUtils;
-using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases;
-using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
 namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers
 {
     public class Costed_CollectableItemPickup_Container : CollectableItemPickup_Abstract_Container, ICosted
     {
+        public static Costed_CollectableItemPickup_Container Prefab
+        {
+            get
+            {
+                SpawningReplacement = true;
+                GameObject Costed_CollectableItemPickup_Container_GameObject = Instantiate(Gameplay.CollectableItemPickupPrefab).gameObject;
+                SpawningReplacement = false;
+                Costed_CollectableItemPickup_Container_GameObject.SetActive(false);
+                return Costed_CollectableItemPickup_Container_GameObject.AddComponent<Costed_CollectableItemPickup_Container>();
+            }
+        }
+
         HeroController HCinstance = HeroController.instance;
 
         public void OnCancel()

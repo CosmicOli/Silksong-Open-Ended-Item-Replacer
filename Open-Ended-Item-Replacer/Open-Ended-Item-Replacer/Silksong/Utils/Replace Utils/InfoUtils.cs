@@ -16,6 +16,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
             genericItem.UniqueID = uniqueID;
 
             PersistentBoolItem persistent = container.ContainerPersistentBoolItem;
+            logSource.LogInfo(persistent);
 
             SetGenericPersistentInfo(uniqueID, persistent);
 

@@ -31,7 +31,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericPickup<>(uniqueID, replacedObject.transform, offset);
+                output = SpawnGenericPickup(DefaultInteractableContainer, uniqueID, replacedObject.transform, offset);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, activeParent, output);

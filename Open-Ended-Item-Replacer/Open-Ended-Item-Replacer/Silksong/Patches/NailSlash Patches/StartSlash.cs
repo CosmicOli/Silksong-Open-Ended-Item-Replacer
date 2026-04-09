@@ -29,7 +29,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches
                 }
             }
 
-            MaskShardGranter.Grant_MaskShard();
+            //MaskShardGranter.Grant_MaskShard();
 
             //logSource.LogMessage(PlayerData.instance.HasMelodyArchitect);
             //logSource.LogMessage(PlayerData.instance.HasMelodyConductor);

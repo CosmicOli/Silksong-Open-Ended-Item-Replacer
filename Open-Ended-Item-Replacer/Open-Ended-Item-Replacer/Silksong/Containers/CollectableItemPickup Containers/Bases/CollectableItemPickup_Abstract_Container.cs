@@ -1,17 +1,17 @@
-﻿using HarmonyLib;
+﻿using GlobalSettings;
+using HarmonyLib;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
+using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers.Bases
 {
     public abstract class CollectableItemPickup_Abstract_Container : PersistentContainer
     {
-        protected CollectableItemPickup collectableItemPickupInstance;
         public CollectableItemPickup CollectableItemPickupInstance
         {
-            get { return collectableItemPickupInstance; }
-            protected set { collectableItemPickupInstance = value; }
+            get { return gameObject.GetComponent<CollectableItemPickup>(); }
         }
 
         // In this class, there are two items that represent basically the same thing
@@ -27,7 +27,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
             {
                 if (value as SavedItem)
                 {
-                    collectableItemPickupInstance.SetItem(value as SavedItem, true);
+                    CollectableItemPickupInstance.SetItem(value as SavedItem, true);
                 }
                 else
                 {
@@ -41,7 +41,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
         // This allows for desyncing Item and the collectableItemPickup.Item
         public void SetCollectableItemPickupItem(SavedItem item, bool keepPersistence = false)
         {
-            collectableItemPickupInstance.SetItem(item, keepPersistence);
+            CollectableItemPickupInstance.SetItem(item, keepPersistence);
         }
 
         public override void Setup(UniqueID uniqueID)
@@ -49,17 +49,17 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Con
             base.Setup(uniqueID);
 
             // Ignores areas that disallow replacement pickups such that it can exist anyways
-            Traverse.Create(collectableItemPickupInstance).Field("ignoreCanExist").SetValue(true);
+            Traverse.Create(CollectableItemPickupInstance).Field("ignoreCanExist").SetValue(true);
 
             // Ensures new replacements made post-pickup don't reset the persistent data
-            Traverse.Create(collectableItemPickupInstance).Field("activatedSave").SetValue(true);
+            Traverse.Create(CollectableItemPickupInstance).Field("activatedSave").SetValue(true);
         }
 
         public override PersistentBoolItem ContainerPersistentBoolItem
         {
             get
             {
-                return Traverse.Create(collectableItemPickupInstance).Field("persistent").GetValue<PersistentBoolItem>();
+                return Traverse.Create(CollectableItemPickupInstance).Field("persistent").GetValue<PersistentBoolItem>();
             }
         }
     }

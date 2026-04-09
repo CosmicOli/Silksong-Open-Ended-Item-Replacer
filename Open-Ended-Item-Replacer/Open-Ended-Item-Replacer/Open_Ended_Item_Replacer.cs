@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using GlobalSettings;
 using HarmonyLib;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches;
@@ -52,10 +53,30 @@ namespace Open_Ended_Item_Replacer
     {
         public static GameObject HeartPieceInstant;
 
-        public static CollectableItemPickup_Container DefaultInteractableContainer;
-        public static CollectableItemPickupInstant_Container DefaultCollisionContainer;
-        public static Costed_CollectableItemPickup_Container DefaultCostedContainer;
-            
+        public static CollectableItemPickup_Container DefaultInteractableContainer
+        {
+            get
+            {
+                return CollectableItemPickup_Container.Prefab;
+            }
+        }
+
+        public static CollectableItemPickupInstant_Container DefaultCollisionContainer
+        {
+            get
+            {
+                return CollectableItemPickupInstant_Container.Prefab;
+            }
+        }
+        public static Costed_CollectableItemPickup_Container DefaultCostedContainer
+        {
+            get
+            {
+                return Costed_CollectableItemPickup_Container.Prefab;
+            }
+        }
+
+
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement
         {

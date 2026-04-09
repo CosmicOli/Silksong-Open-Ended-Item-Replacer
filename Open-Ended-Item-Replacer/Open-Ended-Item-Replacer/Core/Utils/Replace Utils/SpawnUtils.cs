@@ -10,15 +10,13 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
     internal class SpawnUtils
     {
         // Spawns a replacement pickup, defining the item with uniqueID
-        public static Transform SpawnGenericPickup<Container>(UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
+        public static Transform SpawnGenericPickup<Container>(Container prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
             where Container : MonoBehaviour, IContainer
         {
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try
             {
-                Container prefab = DefaultCollisionContainer as Container;
-
                 // Defines the spawn location of the replacement pickup
                 Vector3 vector = spawnPoint.position + offset;
                 Vector3 position = vector;
@@ -26,6 +24,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
                 Container container;
 
                 // Creates the new pickup and sets its position
+                logSource.LogWarning(prefab);
                 container = Instantiate(prefab);
                 container.transform.position = position;
                 container.gameObject.name = uniqueID.PickupName;

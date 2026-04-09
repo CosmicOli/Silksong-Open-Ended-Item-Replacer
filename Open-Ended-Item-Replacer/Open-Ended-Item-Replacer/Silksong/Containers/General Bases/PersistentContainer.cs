@@ -2,6 +2,7 @@
 using Open_Ended_Item_Replacer.Core.Containers;
 using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.InfoUtils;
 using UnityEngine;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Silksong.Containers.General_Bases
 {
@@ -20,6 +21,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Containers.General_Bases
 
         public virtual void Setup(UniqueID uniqueID)
         {
+            gameObject.SetActive(true);
             SetGenericPickupInfo(uniqueID, this);
         }
     }
