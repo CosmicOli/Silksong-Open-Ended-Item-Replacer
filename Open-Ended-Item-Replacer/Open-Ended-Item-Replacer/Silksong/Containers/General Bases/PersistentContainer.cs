@@ -1,6 +1,4 @@
-﻿using BepInEx.Logging;
-using HarmonyLib;
-using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+﻿using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 using Open_Ended_Item_Replacer.Core.Containers;
 using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.InfoUtils;
 using UnityEngine;

@@ -34,7 +34,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                     return;
                 }
 
-                SpawnGenericCostedPickup<Costed_CollectableItemPickup_Container>(uniqueID, __instance.transform, offset, CurrencyType.Money, cost);
+                SpawnGenericCostedPickup(DefaultCostedContainer, uniqueID, __instance.transform, offset, CurrencyType.Money, cost);
             }
         }
     }

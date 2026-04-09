@@ -2,8 +2,8 @@
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
-using Open_Ended_Item_Replacer.Core.Containers;
 using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using Open_Ended_Item_Replacer.Silksong.Containers.General_Bases;
 
 namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 {
@@ -12,8 +12,13 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         public static string replacementFlag = "-(Replacement)";
 
         // Moves and replaces a given object
-        public static Transform Core_Replace<Container>(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
-            where Container : MonoBehaviour, IContainer
+        public static Transform Replace(GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
+        {
+            return Replace(replacedObject, replacedObject, replacedItemName, offset);
+        }
+
+        // Moves and replaces a given object
+        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
         {
             try
             {
@@ -26,7 +31,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericPickup<Container>(uniqueID, replacedObject.transform, offset);
+                output = SpawnGenericPickup<>(uniqueID, replacedObject.transform, offset);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, activeParent, output);

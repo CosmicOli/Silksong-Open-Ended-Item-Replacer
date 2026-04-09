@@ -20,20 +20,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 {
     internal class ReplaceUtils
     {
-        public static string replacementFlag = "-(Replacement)";
-
-        // Moves and replaces a given object
-        public static Transform Replace(GameObject replacedObject, string replacedItemName, Vector3 offset = new Vector3())
-        {
-            return Replace(replacedObject, replacedObject, replacedItemName, offset);
-        }
-
-        // Moves and replaces a given object
-        public static Transform Replace(GameObject replacedObject, GameObject activeParent, string replacedItemName, Vector3 offset = new Vector3())
-        {
-            return Core_Replace<PersistentContainer>(replacedObject, replacedObject, replacedItemName, offset);
-        }
-
         // Moves and replaces a given object
         public static Transform ReplaceWithCostedPickup<CostedContainer>(GameObject replacedObject, string replacedItemName, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, Vector3 offset = new Vector3())
             where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
@@ -49,7 +35,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericCostedPickup<CostedContainer>(uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
+                output = SpawnGenericCostedPickup(, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 HandleReplacedObject(replacedObject, replacedObject, output);

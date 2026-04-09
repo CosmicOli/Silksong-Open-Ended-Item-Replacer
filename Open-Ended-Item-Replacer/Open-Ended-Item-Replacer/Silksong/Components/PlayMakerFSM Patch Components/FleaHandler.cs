@@ -5,6 +5,7 @@ using UnityEngine;
 using Open_Ended_Item_Replacer.Silksong.FsmStateActions;
 using static Open_Ended_Item_Replacer.Silksong.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.ReplaceUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils.ReplaceUtils;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 

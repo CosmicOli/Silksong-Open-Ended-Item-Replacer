@@ -137,7 +137,7 @@
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\UniquePickups.cs" />
     <Compile Include="Silksong\Containers\General Bases\IInteractable.cs" />
-    <Compile Include="Silksong\Containers\General Bases\IPersistentContainer.cs" />
+    <Compile Include="Silksong\Containers\General Bases\IPersistent.cs" />
     <Compile Include="Silksong\Containers\General Bases\PersistentContainer.cs" />
     <Compile Include="Silksong\FsmStateActions\AllowPickup.cs" />
     <Compile Include="Silksong\FsmStateActions\GetCheck.cs" />
