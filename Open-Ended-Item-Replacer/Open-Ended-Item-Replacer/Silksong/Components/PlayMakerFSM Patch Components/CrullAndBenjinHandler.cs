@@ -25,8 +25,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                 pinsQuestActive.Actions[1] = new SetFsmActiveState(__instance.Fsm, pinsQuestActive, pinsState, GetPersistentBoolFromDataFunc(persistent), GetFalseFunc());
 
                 pinsState.Actions[0] = new SetFsmActiveState(__instance.Fsm, pinsState, hasPins, GetPersistentBoolFromDataFunc(persistent), GetTrueFunc());
-
-                logSource.LogMessage("FLAGGED");
             }
         }
     }

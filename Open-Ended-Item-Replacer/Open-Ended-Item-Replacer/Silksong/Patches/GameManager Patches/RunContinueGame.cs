@@ -1,11 +1,5 @@
-﻿using BepInEx.Logging;
-using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using HarmonyLib;
+using System.Collections;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using static Open_Ended_Item_Replacer.Silksong.Utils.LoadSaveFileUtils;
 
@@ -14,9 +8,10 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
     internal class RunContinueGame
     {
         [HarmonyPatch(typeof(GameManager), "RunContinueGame")]
-        public static void Postfix()
+        public static async void Postfix()
         {
-            DoLoadSaveFileExtras();
+            await DoLoadSaveFileExtras();
+            logSource.LogWarning("FINISHED");
         }
     }
 }

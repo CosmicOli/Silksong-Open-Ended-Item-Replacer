@@ -169,7 +169,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                 switch (sceneName)
                 {
                     case "Belltown_basement_03":
-                        dummyGameObject.name = "Bell Hermit";
+                        dummyGameObject.name = "Bell Hermit"; // The hermit fsm doesn't appear in act 3 to allow for spawning it in the fsm flagging
                         dummyGameObject.transform.position = new Vector3(99, 105, 0);
                         uniqueID = new UniqueID(dummyGameObject, "Snare Soul Bell Hermit");
                         SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyGameObject.transform, Vector3.zero);
