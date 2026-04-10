@@ -159,17 +159,25 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
 
         // The following is not intended as a preferred solution to handling placing replacements
         // Where possible, move whatever is in the following to a seperate handler
-        private static void HandleMissables(string sceneName)
+        private static void HandleAct3Missables(string sceneName)
         {
             if (PlayerData.instance.blackThreadWorld)
             {
+                GameObject dummyGameObject = new GameObject();
+                UniqueID uniqueID;
+
                 switch (sceneName)
                 {
                     case "Belltown_basement_03":
-                        GameObject dummyBellHermit = new GameObject("Bell Hermit");
-                        dummyBellHermit.transform.position = new Vector3(99, 105, 0);
-                        UniqueID uniqueID = new UniqueID(dummyBellHermit, "Snare Soul Bell Hermit");
-                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyBellHermit.transform, Vector3.zero);
+                        dummyGameObject.name = "Bell Hermit";
+                        dummyGameObject.transform.position = new Vector3(99, 105, 0);
+                        uniqueID = new UniqueID(dummyGameObject, "Snare Soul Bell Hermit");
+                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyGameObject.transform, Vector3.zero);
+                        break;
+                    case "Cog_Dancers":
+                        uniqueID = new UniqueID("puzzle cylinders", "Cog_09", "Citadel Ascent Melody Architect");
+                        dummyGameObject.transform.position = new Vector3(20, 31, 0);
+                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyGameObject.transform, Vector3.zero);
                         break;
                     default:
                         break;
@@ -199,7 +207,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                 LevelActivatedDebugging();
             }
 
-            HandleMissables(sceneName);
+            HandleAct3Missables(sceneName);
 
             // Stops softlocking in memories
             PlayerData playerData = PlayerData.instance;
