@@ -1,7 +1,6 @@
-﻿using GlobalSettings;
-using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils
@@ -12,16 +11,13 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
         {
             HeartPieceInstant = AssetBundle.GetAllLoadedAssetBundles().Where(x => x.Contains("Assets/Prefabs/Items/Heart Piece Instant.prefab")).First().LoadAsset<GameObject>("Assets/Prefabs/Items/Heart Piece Instant.prefab");
 
-            // Make asset bundle pointing to scene
-            // Grab the scene data and pull a mask shard
-
-            //GameObject DefaultCollisionContainer_GameObject = Object.Instantiate(Gameplay.CollectableItemPickupPrefab).gameObject;
-            //DefaultCollisionContainer_GameObject.SetActive(false);
-            //DefaultCollisionContainer = DefaultCollisionContainer_GameObject.AddComponent<CollectableItemPickupInstant_Container>();
-
-            //GameObject DefaultCostedContainer_GameObject = Object.Instantiate(Gameplay.CollectableItemPickupPrefab).gameObject;
-            //DefaultCostedContainer_GameObject.SetActive(false);
-            //DefaultCostedContainer = DefaultCostedContainer_GameObject.gameObject.AddComponent<Costed_CollectableItemPickup_Container>();
+            string address = "Assets/Scenes/Hornet/Bone_East_05.unity";
+            LoadSceneParameters loadSceneParameters = new LoadSceneParameters();
+            Scene scene = SceneManager.LoadScene(address, loadSceneParameters);
+            foreach (GameObject rootGameObject in scene.GetRootGameObjects())
+            {
+                // pick barrel flea, see if I can unload the scene and keep the object
+            }
         }
     }
 }

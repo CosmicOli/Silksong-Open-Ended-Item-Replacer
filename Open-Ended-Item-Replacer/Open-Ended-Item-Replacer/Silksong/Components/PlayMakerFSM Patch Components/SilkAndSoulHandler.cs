@@ -4,6 +4,10 @@ using Open_Ended_Item_Replacer.Silksong.FsmStateActions;
 using static Open_Ended_Item_Replacer.Silksong.Utils.FsmStateActionUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
 using static Open_Ended_Item_Replacer.Silksong.Utils.GetBoolFuncs;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
+using UnityEngine;
 
 namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Components
 {
@@ -41,7 +45,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
             }
         }*/
 
-        // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
+        // Commented out code that was intended to allow the soul to be obtained at any point
+        // The bell hermit dialogue FSM disappears in act 3, so instead a replacement is placed in LevelActivated
+        /*// This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
         public static void Handle_BellHermit(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Dialogue" && __instance.gameObject?.name == "Bell Hermit")
@@ -60,14 +66,15 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                 snareSoulDlg.Actions[4].Enabled = false;
                 (snareSoulDlg.Actions[5] as ConvertBoolToString).trueString = (snareSoulDlg.Actions[5] as ConvertBoolToString).falseString;
             }
-        }
+        }*/
 
         // This is an instance of getting an item specifically while in a quest; hence, it is made accessible at any point
         public static void Handle_Churchkeeper(PlayMakerFSM __instance)
         {
             if (__instance.Fsm.Name == "Conversation" && __instance.gameObject?.name == "Churchkeeper")
             {
-                FsmState snare = __instance.Fsm.GetState("Snare?");
+                // Commented out code that was intended to allow the soul to be obtained at any point
+                /*FsmState snare = __instance.Fsm.GetState("Snare?");
                 FsmState snareSoulDlg = __instance.Fsm.GetState("Snare Soul Dlg");
                 FsmState talk = __instance.Fsm.GetState("Talk?");
                 if (snare == null || snareSoulDlg == null || talk == null) { return; }
@@ -78,7 +85,13 @@ namespace Open_Ended_Item_Replacer.Silksong.Components.PlayMakerFSM_Patch_Compon
                 snareSoulDlg.Actions[0].Enabled = false;
                 snareSoulDlg.Actions[1].Enabled = false;
                 snareSoulDlg.Actions[2].Enabled = false;
-                (snareSoulDlg.Actions[3] as ConvertBoolToString).trueString = (snareSoulDlg.Actions[3] as ConvertBoolToString).falseString;
+                (snareSoulDlg.Actions[3] as ConvertBoolToString).trueString = (snareSoulDlg.Actions[3] as ConvertBoolToString).falseString;*/
+
+                if (PlayerData.instance.blackThreadWorld)
+                {
+                    UniqueID uniqueID = new UniqueID(__instance.gameObject, "Snare Soul Churchkeeper");
+                    SpawnGenericPickup(DefaultInteractableContainer, uniqueID, __instance.transform, Vector3.zero);
+                }
             }
         }
     }

@@ -24,7 +24,6 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
                 Container container;
 
                 // Creates the new pickup and sets its position
-                logSource.LogWarning(prefab);
                 container = Instantiate(prefab);
                 container.transform.position = position;
                 container.gameObject.name = uniqueID.PickupName;

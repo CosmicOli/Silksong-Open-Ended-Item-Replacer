@@ -2,6 +2,7 @@
 using UnityEngine;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 using Open_Ended_Item_Replacer.Silksong.Components.Grant_Components;
+using UnityEngine.SceneManagement;
 
 namespace Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches
 {
@@ -28,6 +29,8 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches
                     logSource.LogWarning("No test transform found");
                 }
             }
+
+            logSource.LogInfo(SceneManager.GetActiveScene().path);
 
             //MaskShardGranter.Grant_MaskShard();
 

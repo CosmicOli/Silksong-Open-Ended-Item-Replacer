@@ -53,8 +53,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.SavedItemGet_V1_2_Patches
                 return false;
             }
 
-            logSource.LogWarning("TEST");
-
             ReplaceFsmItemGet(__instance, __instance.Item.Value as SavedItem);
 
             __instance.Finish();

@@ -8,7 +8,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Silksong.Utils.PersistenceUtils;
+using static Open_Ended_Item_Replacer.Core.Utils.Replace_Utils.SpawnUtils;
+using Open_Ended_Item_Replacer.Core.Components.Replacement_Components;
 
 namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
 {
@@ -156,6 +157,26 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
             }*/
         }
 
+        // The following is not intended as a preferred solution to handling placing replacements
+        // Where possible, move whatever is in the following to a seperate handler
+        private static void HandleMissables(string sceneName)
+        {
+            if (PlayerData.instance.blackThreadWorld)
+            {
+                switch (sceneName)
+                {
+                    case "Belltown_basement_03":
+                        GameObject dummyBellHermit = new GameObject("Bell Hermit");
+                        dummyBellHermit.transform.position = new Vector3(99, 105, 0);
+                        UniqueID uniqueID = new UniqueID(dummyBellHermit, "Snare Soul Bell Hermit");
+                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyBellHermit.transform, Vector3.zero);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         private static bool hasHarpoonDash;
         private static bool hasNeedolin;
         private static bool hasDash;
@@ -178,22 +199,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                 LevelActivatedDebugging();
             }
 
-            // On entering act 3, get missables
-            if (sceneName == "Song_Tower_Destroyed" && PlayerData.instance.blackThreadWorld)
-            {
-                PersistentItemData<bool> ChurchkeeperSoul = GeneratePersistentBoolData_SameScene("", "");
-                PersistentItemData<bool> BellHermitSoul = GeneratePersistentBoolData_SameScene("", "");
-                PersistentItemData<bool> ArchitectMelody = GeneratePersistentBoolData_SameScene("", "");
-                PersistentItemData<bool> SteelSpines = GeneratePersistentBoolData_SameScene("", "");
-
-                GenericSavedItem genericSavedItem = ScriptableObject.CreateInstance<GenericSavedItem>();
-                if (GetPersistentBoolFromData(ChurchkeeperSoul))
-                {
-                    //GetCheck
-                    //genericSavedItem.PersistentBoolItem = ChurchkeeperSoul;
-                    //genericSavedItem.Get();
-                }
-            }
+            HandleMissables(sceneName);
 
             // Stops softlocking in memories
             PlayerData playerData = PlayerData.instance;

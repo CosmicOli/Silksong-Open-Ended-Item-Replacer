@@ -52,6 +52,7 @@ namespace Open_Ended_Item_Replacer
     public class Open_Ended_Item_Replacer : BaseUnityPlugin
     {
         public static GameObject HeartPieceInstant;
+        public static GameObject Flea_Barrel;
 
         public static CollectableItemPickup_Container DefaultInteractableContainer
         {
@@ -222,7 +223,7 @@ namespace Open_Ended_Item_Replacer
 
             AwakePatchEvent += Handle_SurfaceMemento;
 
-            AwakePatchEvent += Handle_BellHermit;
+            //AwakePatchEvent += Handle_BellHermit; // Replaced with being handled in LevelActivated
             AwakePatchEvent += Handle_Churchkeeper;
 
             AwakePatchEvent += Handle_CoralHeart;
