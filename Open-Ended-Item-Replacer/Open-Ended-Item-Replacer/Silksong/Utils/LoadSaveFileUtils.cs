@@ -87,8 +87,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
                 //logSource.LogWarning(rootGameObject.name);
             }
 
-            await Task.Delay(1000);
-
             AsyncOperation sceneUnload = SceneManager.UnloadSceneAsync(scene);
             await sceneUnload;
 
