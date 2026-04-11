@@ -77,6 +77,10 @@
     <Reference Include="TeamCherry.TK2D">
       <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\TeamCherry.TK2D.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Addressables, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Unity.Addressables.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Unity.ResourceManager.dll</HintPath>
@@ -160,7 +164,8 @@
     <Compile Include="Silksong\Patches\CreateUIMsgGetItem Patches\OnEnter.cs" />
     <Compile Include="Silksong\Patches\FSMUtility Patches\SendEventUpwards.cs" />
     <Compile Include="Silksong\Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
-    <Compile Include="Silksong\Patches\GameManager Patches\RunContinueGame.cs" />
+    <Compile Include="Silksong\Patches\GameManager Patches\ContinueGame.cs" />
+    <Compile Include="Silksong\Patches\GameManager Patches\LoadGlobalPoolPrefab.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\RunStartNewGame.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\TimePasses.cs" />
