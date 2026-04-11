@@ -38,6 +38,8 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
                 output = SpawnGenericCostedPickup(DefaultCostedContainer, uniqueID, replacedObject.transform, offset, currencyType, currencyAmount, requiredItems, itemAmounts);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
+                if (output == null) { return output; }
+
                 HandleReplacedObject(replacedObject, replacedObject, output);
 
                 return output;

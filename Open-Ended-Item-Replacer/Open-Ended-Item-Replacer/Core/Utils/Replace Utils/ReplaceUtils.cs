@@ -34,6 +34,8 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
                 output = SpawnGenericPickup(DefaultInteractableContainer, uniqueID, replacedObject.transform, offset);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
+                if (output == null) { return output; }
+
                 HandleReplacedObject(replacedObject, activeParent, output);
 
                 return output;

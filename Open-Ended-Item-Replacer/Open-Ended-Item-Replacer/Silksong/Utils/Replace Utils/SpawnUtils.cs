@@ -30,6 +30,12 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         public static Transform SpawnGenericCostedPickup<CostedContainer>(CostedContainer prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool returnHud, string text, CurrencyType currencyType, int currencyAmount, IReadOnlyList<SavedItem> requiredItems, IReadOnlyList<int> itemAmounts, bool displayHudPopup, bool consumeCurrency, SavedItem willGetItem, TakeItemTypes takeItemType = TakeItemTypes.Silent, YesNoAction.DisplayType displayType = YesNoAction.DisplayType.RequiredItems, bool SpawningReplacement = true)
             where CostedContainer : MonoBehaviour, IContainer, IPersistent, ICosted
         {
+            if (!LoadGameRunPatched)
+            {
+                logSource.LogInfo("!LoadGameRunPatched, returning null");
+                return null;
+            }
+
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try

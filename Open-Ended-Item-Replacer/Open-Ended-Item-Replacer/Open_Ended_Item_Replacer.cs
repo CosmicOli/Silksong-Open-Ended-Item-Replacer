@@ -85,6 +85,13 @@ namespace Open_Ended_Item_Replacer
             set { spawningReplacement = value; }
         }
 
+        public static bool loadGameRunPatched = true;
+        public static bool LoadGameRunPatched
+        {
+            get { return loadGameRunPatched; }
+            set { loadGameRunPatched = value; }
+        }
+
         // Currently only implemented to block FSMUtility.SendEventUpwards();
         public static bool blockNextFsmEventTransmition;
         public static bool BlockNextFsmEventTransmition

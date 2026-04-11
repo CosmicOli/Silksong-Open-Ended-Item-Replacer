@@ -13,6 +13,12 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         public static Transform SpawnGenericPickup<Container>(Container prefab, UniqueID uniqueID, Transform spawnPoint, Vector3 offset, bool SpawningReplacement = true)
             where Container : MonoBehaviour, IContainer
         {
+            if (!LoadGameRunPatched)
+            {
+                logSource.LogInfo("!LoadGameRunPatched, returning null");
+                return null;
+            }
+
             Open_Ended_Item_Replacer.SpawningReplacement = SpawningReplacement;
 
             try

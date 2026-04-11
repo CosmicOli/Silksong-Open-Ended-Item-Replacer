@@ -18,39 +18,39 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
     {
         public static async Task DoLoadSaveFileExtras()
         {
-            logSource.LogWarning("STARTED");
+            //logSource.LogWarning("STARTED");
+
+            // Wait to fade to black before loading to avoid visual stuttering and potentially assets popping into view
+            await Task.Delay(2600);
+            //logSource.LogWarning("WAITED FOR FADE TO BLACK");
 
             IEnumerable<AssetBundle> preLoadedBundles = AssetBundle.GetAllLoadedAssetBundles();
 
-            HeartPieceInstant = preLoadedBundles.Where(x => x.Contains("Assets/Prefabs/Items/Heart Piece Instant.prefab")).First().LoadAsset<GameObject>("Assets/Prefabs/Items/Heart Piece Instant.prefab");
+            AssetBundleRequest heartPieceInstantRequest = preLoadedBundles.Where(x => x.Contains("Assets/Prefabs/Items/Heart Piece Instant.prefab")).First().LoadAssetAsync<GameObject>("Assets/Prefabs/Items/Heart Piece Instant.prefab");
+
+            await heartPieceInstantRequest;
+            HeartPieceInstant = heartPieceInstantRequest.asset as GameObject;
 
             await LoadScene("Bone_East_05");
 
-            logSource.LogWarning("FINISHED");
+            //logSource.LogWarning("FINISHED");
 
-            RunContinueGamePatched = false;
+            LoadGameRunPatched = true;
             GameManager gameManager = GameManager.instance;
-            gameManager.StartCoroutine(gameManager.RunContinueGame(gameManager.IsMenuScene()));
+            gameManager.StartCoroutine(gameManager.RunContinueGame(false));
         }
 
         // Issues: Need to pause the game loading halfway through the continue game function to allow for the correct scene to load first to establish hero controller and also for the loading screen to show
 
         public static async Task LoadScene(string sceneName)
         {
-            // Ensure all of these are successfully loaded by other async/co before continueing
-            //while (HeroController.instance == null || GameManager.instance == null || GameCameras.instance == null || PlayerData.instance == null)
-            {
-                //Traverse.Create<HeroController>().Field("_instance").SetValue(new HeroController());
-                //await Task.Delay(100);
-            }
-
+            // Ensure hero controller and others are correctly loaded
             AsyncOperationHandle<GameObject> handle2 = GameManager.instance.LoadGlobalPoolPrefab();
             await handle2.Task;
             Instantiate(handle2.Result);
             ObjectPool.CreateStartupPools();
             handle2 = GameManager.instance.LoadHeroPrefab();
             await handle2.Task;
-            logSource.LogWarning("MOVED");
             Instantiate(handle2.Result);
 
             //await Task.Delay(5000);
@@ -68,18 +68,6 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             await sceneLoad;
 
             Scene scene = SceneManager.GetSceneByName(sceneName);
-
-
-            /*(SetupSceneRefs(refreshTilemapInfo: false);
-            yield return null;
-            yield return null;
-            Platform.Current.SetSceneLoadState(isInProgress: false);
-            needFirstFadeIn = true;
-            isLoading = false;
-            if (hero_ctrl == null)
-            {
-                SetupHeroRefs();
-            }*/
 
             foreach (GameObject rootGameObject in scene.GetRootGameObjects())
             {
