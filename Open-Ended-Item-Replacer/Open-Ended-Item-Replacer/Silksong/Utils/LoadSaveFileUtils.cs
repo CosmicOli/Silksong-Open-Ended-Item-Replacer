@@ -23,7 +23,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
                 LoadGameRunPatched = false;
 
                 // Starts the async function without awaiting as you cannot await a prefix to halt the continuation of the function from the looks of it
+                #pragma warning disable CS4014
                 DoLoadSaveFileExtras(startNewSave);
+                #pragma warning restore CS4014
 
                 if (GameManager.instance.IsMenuScene())
                 {
@@ -53,7 +55,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             await heartPieceInstantRequest;
             HeartPieceInstant = heartPieceInstantRequest.asset as GameObject;
 
-            await LoadScene("Bone_East_05");
+            Flea_Barrel = await LoadSceneGameObject("Bone_East_05", "flea rescue barrel");
 
             //logSource.LogWarning("FINISHED");
 
@@ -71,13 +73,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             }
         }
 
-        public static async Task LoadScene(string sceneName)
+        public static async Task<GameObject> LoadSceneGameObject(string sceneName, string gameObjectName)
         {
-            // Ensure hero controller and others are correctly loaded
-            //AsyncOperationHandle<GameObject> handle = GameManager.instance.LoadGlobalPoolPrefab();
-            //await handle.Task;
-            //Instantiate(handle.Result);
-            //ObjectPool.CreateStartupPools();
+            // Ensure hero controller is loaded correctly temporarily to avoid errors
             AsyncOperationHandle<GameObject> handle2 = GameManager.instance.LoadHeroPrefab();
             await handle2.Task;
             GameObject dummyHero = Instantiate(handle2.Result);
@@ -96,12 +94,10 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             Scene scene = SceneManager.GetSceneByName(sceneName);
 
-            //await Task.Delay(5000);
-
+            GameObject targetObject = null;
             foreach (GameObject rootGameObject in scene.GetRootGameObjects())
             {
-                // pick barrel flea, see if I can unload the scene and keep the object
-                if (rootGameObject.name.ToLowerInvariant().Contains("flea rescue barrel"))
+                if (rootGameObject.name.ToLowerInvariant().Contains(gameObjectName))
                 {
                     /*logSource.LogWarning(rootGameObject.name);
                     foreach (var component in rootGameObject.GetComponents<Component>())
@@ -109,10 +105,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
                         logSource.LogWarning(component);
                     }*/
 
-                    Flea_Barrel = Instantiate(rootGameObject);
-                    Flea_Barrel.SetActive(false);
-                    DontDestroyOnLoad(Flea_Barrel);
-                    // RAHHHH WHAT DO YOU MEAN IF I AM TOO FAST? I HAVE NO ISSUES AND TOO SLOW? I HAVE NO ISSUES BUT IN THE MIDDLE??? THERE IS????
+                    targetObject = Instantiate(rootGameObject);
+                    targetObject.SetActive(false);
+                    DontDestroyOnLoad(targetObject);
                 }
             }
 
@@ -124,6 +119,8 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             Destroy(dummyHero);
             GameManager.instance.UnloadHeroPrefab();
+
+            return targetObject;
         }
 
         public static IEnumerator MoveToLoading()
