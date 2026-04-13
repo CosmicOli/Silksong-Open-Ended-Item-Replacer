@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GlobalEnums;
+using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,14 +10,35 @@ using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
-using static Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches.ContinueGame;
 
 
 namespace Open_Ended_Item_Replacer.Silksong.Utils
 {
-    internal class LoadSaveFileUtils : MonoBehaviour
+    public class LoadSaveFileUtils : MonoBehaviour
     {
-        public static async Task DoLoadSaveFileExtras()
+        public static bool HandleLoadSave(bool startNewSave)
+        {
+            if (LoadGameRunPatched)
+            {
+                LoadGameRunPatched = false;
+
+                // Starts the async function without awaiting as you cannot await a prefix to halt the continuation of the function from the looks of it
+                DoLoadSaveFileExtras(startNewSave);
+
+                if (GameManager.instance.IsMenuScene())
+                {
+                    GameManager.instance.StartCoroutine(MoveToLoading());
+                }
+
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        public static async Task DoLoadSaveFileExtras(bool startNewSave)
         {
             //logSource.LogWarning("STARTED");
 
@@ -37,7 +59,16 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             LoadGameRunPatched = true; // Set up the next time the game loads to run patched; set before running the following coroutine as it doesn't effect it but it may cause issues with patching CustomSceneManager and GradeMarker if this is not set prior
             GameManager gameManager = GameManager.instance;
-            gameManager.StartCoroutine(gameManager.RunContinueGame(false));
+
+            if (startNewSave)
+            {
+                gameManager.StartCoroutine(gameManager.RunStartNewGame());
+
+            }
+            else
+            {
+                gameManager.StartCoroutine(gameManager.RunContinueGame(false));
+            }
         }
 
         public static async Task LoadScene(string sceneName)
@@ -93,6 +124,24 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             Destroy(dummyHero);
             GameManager.instance.UnloadHeroPrefab();
+        }
+
+        public static IEnumerator MoveToLoading()
+        {
+            GameManager gameManager = GameManager.instance;
+
+            Platform.Current.SetSceneLoadState(isInProgress: true, isHighPriority: true);
+            Traverse.Create(gameManager).Field("isLoading").SetValue(true);
+            gameManager.SetState(GameState.LOADING);
+
+            gameManager.ui.FadeScreenOut();
+            gameManager.noMusicSnapshot.TransitionToSafe(2f);
+            gameManager.noAtmosSnapshot.TransitionToSafe(2f);
+            yield return new WaitForSeconds(1f);
+            gameManager.ui.FadeOutBlackThreadLoop();
+            yield return new WaitForSeconds(1.6f);
+            gameManager.AudioManager.ApplyMusicCue(gameManager.noMusicCue, 0f, 0f, applySnapshot: false);
+            gameManager.ui.MakeMenuLean();
         }
     }
 }

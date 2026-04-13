@@ -130,7 +130,7 @@ namespace Open_Ended_Item_Replacer
             harmony.PatchAll(typeof(LevelActivated));
             harmony.PatchAll(typeof(TimePasses));
             harmony.PatchAll(typeof(TimePassesElsewhere));
-            harmony.PatchAll(typeof(RunStartNewGame));
+            harmony.PatchAll(typeof(StartNewGame));
             harmony.PatchAll(typeof(ContinueGame));
 
             // SceneAdditiveLoadConditional Patches

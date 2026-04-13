@@ -31,7 +31,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches
                 }
             }
 
-            //logSource.LogInfo(Flea_Barrel);
+            logSource.LogInfo(Flea_Barrel);
 
             //logSource.LogInfo(SceneManager.GetActiveScene().path);
 

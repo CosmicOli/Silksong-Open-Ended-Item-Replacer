@@ -171,7 +171,7 @@
     <Compile Include="Silksong\Patches\FSMUtility Patches\SendEventUpwards.cs" />
     <Compile Include="Silksong\Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\ContinueGame.cs" />
-    <Compile Include="Silksong\Patches\GameManager Patches\RunStartNewGame.cs" />
+    <Compile Include="Silksong\Patches\GameManager Patches\StartNewGame.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\TimePasses.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\TimePassesElsewhere.cs" />
