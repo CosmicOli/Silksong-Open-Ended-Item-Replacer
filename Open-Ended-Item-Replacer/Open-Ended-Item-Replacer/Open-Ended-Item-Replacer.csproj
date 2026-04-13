@@ -166,6 +166,8 @@
     <Compile Include="Silksong\Patches\CountCrestUnlockPoints Patches\OnEnter.cs" />
     <Compile Include="Silksong\Patches\CreateObject Patches\OnEnter.cs" />
     <Compile Include="Silksong\Patches\CreateUIMsgGetItem Patches\OnEnter.cs" />
+    <Compile Include="Silksong\Patches\CustomSceneManager Patches\Start.cs" />
+    <Compile Include="Silksong\Patches\CustomSceneManager Patches\Update.cs" />
     <Compile Include="Silksong\Patches\FSMUtility Patches\SendEventUpwards.cs" />
     <Compile Include="Silksong\Patches\FullQuestBase Patches\RewardIcon_Get.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\ContinueGame.cs" />
@@ -173,6 +175,8 @@
     <Compile Include="Silksong\Patches\GameManager Patches\LevelActivated.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\TimePasses.cs" />
     <Compile Include="Silksong\Patches\GameManager Patches\TimePassesElsewhere.cs" />
+    <Compile Include="Silksong\Patches\GradeMarker Patches\Start.cs" />
+    <Compile Include="Silksong\Patches\GradeMarker Patches\Update.cs" />
     <Compile Include="Silksong\Patches\NailSlash Patches\StartSlash.cs" />
     <Compile Include="Silksong\Patches\PersistentBoolItem Patches\Awake.cs" />
     <Compile Include="Silksong\Patches\PlayerData Patches\BellCentipedeLocked_Get.cs" />

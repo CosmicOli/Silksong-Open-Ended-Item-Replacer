@@ -35,25 +35,21 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             //logSource.LogWarning("FINISHED");
 
-            LoadGameRunPatched = true;
+            LoadGameRunPatched = true; // Set up the next time the game loads to run patched; set before running the following coroutine as it doesn't effect it but it may cause issues with patching CustomSceneManager and GradeMarker if this is not set prior
             GameManager gameManager = GameManager.instance;
             gameManager.StartCoroutine(gameManager.RunContinueGame(false));
         }
 
-        // Issues: Need to pause the game loading halfway through the continue game function to allow for the correct scene to load first to establish hero controller and also for the loading screen to show
-
         public static async Task LoadScene(string sceneName)
         {
             // Ensure hero controller and others are correctly loaded
-            AsyncOperationHandle<GameObject> handle2 = GameManager.instance.LoadGlobalPoolPrefab();
+            //AsyncOperationHandle<GameObject> handle = GameManager.instance.LoadGlobalPoolPrefab();
+            //await handle.Task;
+            //Instantiate(handle.Result);
+            //ObjectPool.CreateStartupPools();
+            AsyncOperationHandle<GameObject> handle2 = GameManager.instance.LoadHeroPrefab();
             await handle2.Task;
-            Instantiate(handle2.Result);
-            ObjectPool.CreateStartupPools();
-            handle2 = GameManager.instance.LoadHeroPrefab();
-            await handle2.Task;
-            Instantiate(handle2.Result);
-
-            //await Task.Delay(5000);
+            GameObject dummyHero = Instantiate(handle2.Result);
 
             // Should do a check first whether the asset bundle has already been loaded, in the case where you either spawn in a given room or a different mod keeps the scene loaded
             AssetBundleCreateRequest assetBundleCreateRequest = AssetBundle.LoadFromFileAsync(Path.Combine(Application.streamingAssetsPath, "aa/StandaloneWindows64/scenes_scenes_scenes/" + sceneName + ".bundle"));
@@ -69,17 +65,34 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
             Scene scene = SceneManager.GetSceneByName(sceneName);
 
+            //await Task.Delay(5000);
+
             foreach (GameObject rootGameObject in scene.GetRootGameObjects())
             {
                 // pick barrel flea, see if I can unload the scene and keep the object
-                //logSource.LogWarning(rootGameObject.name);
+                if (rootGameObject.name.ToLowerInvariant().Contains("flea rescue barrel"))
+                {
+                    /*logSource.LogWarning(rootGameObject.name);
+                    foreach (var component in rootGameObject.GetComponents<Component>())
+                    {
+                        logSource.LogWarning(component);
+                    }*/
+
+                    Flea_Barrel = Instantiate(rootGameObject);
+                    Flea_Barrel.SetActive(false);
+                    DontDestroyOnLoad(Flea_Barrel);
+                    // RAHHHH WHAT DO YOU MEAN IF I AM TOO FAST? I HAVE NO ISSUES AND TOO SLOW? I HAVE NO ISSUES BUT IN THE MIDDLE??? THERE IS????
+                }
             }
 
             AsyncOperation sceneUnload = SceneManager.UnloadSceneAsync(scene);
             await sceneUnload;
 
-            AsyncOperation assetBundleUnload = assetBundle.UnloadAsync(false);
+            AsyncOperation assetBundleUnload = assetBundle.UnloadAsync(true);
             await assetBundleUnload;
+
+            Destroy(dummyHero);
+            GameManager.instance.UnloadHeroPrefab();
         }
     }
 }

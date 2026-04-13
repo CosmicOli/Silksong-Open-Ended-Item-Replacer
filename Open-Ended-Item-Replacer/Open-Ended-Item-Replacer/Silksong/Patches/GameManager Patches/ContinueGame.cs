@@ -15,6 +15,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
     {
         public static bool Prefix()
         {
+            //Object.Destroy(GameObject.Find("_SceneManager"));
+            //logSource.LogInfo();
+
             if (LoadGameRunPatched)
             {
                 LoadGameRunPatched = false;

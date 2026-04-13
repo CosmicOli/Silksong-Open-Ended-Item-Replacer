@@ -30,7 +30,9 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches
                     logSource.LogWarning("No test transform found");
                 }
             }
-            
+
+            //logSource.LogInfo(Flea_Barrel);
+
             //logSource.LogInfo(SceneManager.GetActiveScene().path);
 
             //MaskShardGranter.Grant_MaskShard();

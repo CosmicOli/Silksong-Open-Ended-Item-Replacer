@@ -177,7 +177,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
                     case "Cog_Dancers":
                         uniqueID = new UniqueID("puzzle cylinders", "Cog_09", "Citadel Ascent Melody Architect");
                         dummyGameObject.transform.position = new Vector3(20, 31, 0);
-                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyGameObject.transform, Vector3.zero);
+                        SpawnGenericPickup(DefaultInteractableContainer, uniqueID, dummyGameObject.transform, Vector3.zero   );
                         break;
                     default:
                         break;

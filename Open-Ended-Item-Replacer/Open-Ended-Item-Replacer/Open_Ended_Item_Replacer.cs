@@ -5,9 +5,11 @@ using HarmonyLib;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.CustomSceneManager_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.FSMUtility_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.FullQuestBase_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches;
+using Open_Ended_Item_Replacer.Silksong.Patches.GradeMarker_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.NailSlash_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.PlayerData_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.QuestBoardInteractable_Patches;
@@ -74,6 +76,19 @@ namespace Open_Ended_Item_Replacer
             get
             {
                 return Costed_CollectableItemPickup_Container.Prefab;
+            }
+        }
+
+        private static GameObject barrelFleaContainer;
+        public static GameObject BarrelFleaContainer
+        {
+            get
+            {
+                return barrelFleaContainer;
+            }
+            set
+            {
+                barrelFleaContainer = value;
             }
         }
 
@@ -175,6 +190,14 @@ namespace Open_Ended_Item_Replacer
 
             // QuestBoardInteractable Patches
             harmony.PatchAll(typeof(ProcessQueuedCompletions));
+
+            // CustomSceneManager Patches
+            harmony.PatchAll(typeof(Silksong.Patches.CustomSceneManager_Patches.Start));
+            harmony.PatchAll(typeof(Silksong.Patches.CustomSceneManager_Patches.Update));
+
+            // GradeMarker Patches
+            harmony.PatchAll(typeof(Silksong.Patches.GradeMarker_Patches.Start));
+            harmony.PatchAll(typeof(Silksong.Patches.GradeMarker_Patches.Update));
 
 
             // If this were c# 9.0, I would shove this responsibility onto the handler classes themselves with a ModuleInitializer, but alas
