@@ -32,7 +32,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         {
             if (!LoadGameRunPatched)
             {
-                logSource.LogInfo("!LoadGameRunPatched, returning null");
+                logSource.LogInfo("Attempted to spawn while !LoadGameRunPatched, returning null");
                 return null;
             }
 

@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using GlobalSettings;
 using HarmonyLib;
 using Open_Ended_Item_Replacer.Silksong.Containers.CollectableItemPickup_Containers;
+using Open_Ended_Item_Replacer.Silksong.Containers.Flea_Containers;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemCollect_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.CollectableItemPickup_Patches;
 using Open_Ended_Item_Replacer.Silksong.Patches.CustomSceneManager_Patches;
@@ -79,19 +80,13 @@ namespace Open_Ended_Item_Replacer
             }
         }
 
-        private static GameObject barrelFleaContainer;
-        public static GameObject BarrelFleaContainer
+        public static Flea_Barrel_Container BarrelFleaContainer
         {
             get
             {
-                return barrelFleaContainer;
-            }
-            set
-            {
-                barrelFleaContainer = value;
+                return Flea_Barrel_Container.Prefab;
             }
         }
-
 
         private static bool spawningReplacement = false;
         public static bool SpawningReplacement

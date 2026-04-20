@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System;
+using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 namespace Open_Ended_Item_Replacer.Silksong.Patches.PlayMakerFSM_Patches
 {
@@ -22,7 +23,10 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.PlayMakerFSM_Patches
 
         private static void Postfix(PlayMakerFSM __instance)
         {
-            AwakePatchEvent?.Invoke(__instance);
+            if (!SpawningReplacement)
+            {
+                //AwakePatchEvent?.Invoke(__instance);
+            }
         }
     }
 }

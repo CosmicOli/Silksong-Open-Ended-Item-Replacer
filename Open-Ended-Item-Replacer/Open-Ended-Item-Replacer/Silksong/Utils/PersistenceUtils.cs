@@ -28,13 +28,13 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             return GameManager.instance.GetPlayerDataBool(playerDataBool);
         }
 
-        public static PersistentBoolItem GeneratePersistentBoolSetToItem_SameScene(string gameObjectName, string originalItemName, GenericSavedItem replacementItem)
+        public static PersistentBoolItem GeneratePersistentBoolSetToItem_SameScene(string gameObjectName, string originalItemName, IGenericItem replacementItem)
         {
             GameObject gameObject = new GameObject(gameObjectName);
             return GeneratePersistentBoolSetToItem(gameObject, originalItemName, replacementItem);
         }
 
-        public static PersistentBoolItem GeneratePersistentBoolSetToItem(GameObject gameObject, string originalItemName, GenericSavedItem replacementItem)
+        public static PersistentBoolItem GeneratePersistentBoolSetToItem(GameObject gameObject, string originalItemName, IGenericItem replacementItem)
         {
             UniqueID uniqueID = new UniqueID(gameObject, originalItemName);
             replacementItem.UniqueID = uniqueID;

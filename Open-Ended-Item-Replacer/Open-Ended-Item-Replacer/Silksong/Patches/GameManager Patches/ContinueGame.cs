@@ -10,5 +10,10 @@ namespace Open_Ended_Item_Replacer.Silksong.Patches.GameManager_Patches
         {
             return HandleLoadSave(false);
         }
+
+        //public static void Postfix()
+        //{
+          //  HandleLoadSave(false);
+        //}
     }
 }

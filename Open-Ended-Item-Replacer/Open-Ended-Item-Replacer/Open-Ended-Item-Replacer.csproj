@@ -140,6 +140,8 @@
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\Bases\CollectableItemPickup_Abstract_Container.cs" />
     <Compile Include="Silksong\Containers\CollectableItemPickup Containers\Costed_CollectableItemPickup_Container.cs" />
     <Compile Include="Core\Containers\IContainer.cs" />
+    <Compile Include="Silksong\Containers\Flea Containers\Bases\Flea_Abstract_Container.cs" />
+    <Compile Include="Silksong\Containers\Flea Containers\Flea_Barrel_Container.cs" />
     <Compile Include="Silksong\Containers\General Bases\ICollisionable.cs" />
     <Compile Include="Silksong\Containers\General Bases\ICosted.cs" />
     <Compile Include="Core\Core.cs" />

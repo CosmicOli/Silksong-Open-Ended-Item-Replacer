@@ -7,8 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
+using static CutsceneHelper;
+using static GameManager;
 using static Open_Ended_Item_Replacer.Open_Ended_Item_Replacer;
 
 
@@ -29,6 +33,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
 
                 if (GameManager.instance.IsMenuScene())
                 {
+                    // NEED THIS TO WAIT A SEC
                     GameManager.instance.StartCoroutine(MoveToLoading());
                 }
 
@@ -55,7 +60,7 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             await heartPieceInstantRequest;
             HeartPieceInstant = heartPieceInstantRequest.asset as GameObject;
 
-            Flea_Barrel = await LoadSceneGameObject("Bone_East_05", "flea rescue barrel");
+            Flea_Barrel = await LoadSceneGameObject("Bone_East_05", "Flea Rescue Barrel");
 
             //logSource.LogWarning("FINISHED");
 
@@ -81,41 +86,99 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils
             GameObject dummyHero = Instantiate(handle2.Result);
 
             // Should do a check first whether the asset bundle has already been loaded, in the case where you either spawn in a given room or a different mod keeps the scene loaded
-            AssetBundleCreateRequest assetBundleCreateRequest = AssetBundle.LoadFromFileAsync(Path.Combine(Application.streamingAssetsPath, "aa/StandaloneWindows64/scenes_scenes_scenes/" + sceneName + ".bundle"));
+            /*AssetBundleCreateRequest assetBundleCreateRequest = AssetBundle.LoadFromFileAsync(Path.Combine(Application.streamingAssetsPath, "aa/StandaloneWindows64/scenes_scenes_scenes/" + sceneName + ".bundle"));
 
             await assetBundleCreateRequest;
             AssetBundle assetBundle = assetBundleCreateRequest.assetBundle;
+
+            //GameManager.instance.LoadScene(sceneName);
 
             LoadSceneParameters loadSceneParameters = new LoadSceneParameters(LoadSceneMode.Additive);
             string path = assetBundle.GetAllScenePaths()[0];
             AsyncOperation sceneLoad = SceneManager.LoadSceneAsync(path, loadSceneParameters);
 
-            await sceneLoad;
+            await sceneLoad;*/
 
-            Scene scene = SceneManager.GetSceneByName(sceneName);
+            AsyncOperationHandle<SceneInstance> addressablesLoadScene = Addressables.LoadSceneAsync("Scenes/" + sceneName, LoadSceneMode.Additive);
+            //addressablesLoadScene.ReleaseHandleOnCompletion();
+
+            SceneLoad lastSceneLoad = new SceneLoad(addressablesLoadScene, new SceneLoadInfo
+            {
+                SceneName = sceneName
+            });
+
+            //SceneLoad LastSceneLoad = GameManager.instance.LastSceneLoad;
+
+            //GameManager.instance.LoadScene(sceneName);
+
+            //logSource.LogInfo(path);
+
+            // It seems to be the case that this is *either* loading to early such that the Library isn't available, or the Library is only available on a non additive load which I have been so far unable to test independantly as it seems to hang every time
+            // The one other situation (although unlikely imo) is that the surrounding seemingly unrelated code in LoadScene(string destScene) is somehow loading the Library
+            // Not sure how to test this, because attempting to load assets later would mean needing to allow the correct scene to load first but the game not "start" until the additive load happens
+            // -> Perhaps worth it for testing, as if this is the case then whatever is done to make the Library load correctly can be handled prior
+
+            // Running both single and additive in post does not fix the issue in either case :(
+            // That being said, loading it in as single has some problems as it doesn't unload the current scene
+
+            // Using GameManager.instance.LoadScene(); DOES fix it
+
+            SceneInstance sceneInstance = await addressablesLoadScene.Task;
+            Scene scene = sceneInstance.Scene;
+
+            //Scene scene = SceneManager.GetSceneByName(sceneName);
+
+            //Scene scene = (await a.Task).Scene;
+
+            logSource.LogInfo(scene.name);
+            logSource.LogInfo(scene.GetRootGameObjects().Length);
 
             GameObject targetObject = null;
+            tk2dSpriteAnimator[] animators = null;
             foreach (GameObject rootGameObject in scene.GetRootGameObjects())
             {
-                if (rootGameObject.name.ToLowerInvariant().Contains(gameObjectName))
-                {
-                    /*logSource.LogWarning(rootGameObject.name);
-                    foreach (var component in rootGameObject.GetComponents<Component>())
-                    {
-                        logSource.LogWarning(component);
-                    }*/
+                //logSource.LogInfo(rootGameObject.name);
 
+                if (rootGameObject.name.Equals(gameObjectName))
+                {
                     targetObject = Instantiate(rootGameObject);
                     targetObject.SetActive(false);
                     DontDestroyOnLoad(targetObject);
+
+                    animators = targetObject.GetComponentsInChildren<tk2dSpriteAnimator>();
+                    foreach (tk2dSpriteAnimator animator in animators)
+                    {
+                        GameObject replacementLibrary = Instantiate(animator.Library.gameObject);
+                        //logSource.LogWarning(replacementLibrary);
+                        DontDestroyOnLoad(replacementLibrary);
+                        animator.Library = replacementLibrary.GetComponent<tk2dSpriteAnimation>();
+
+                        foreach (var clip in animator.Library.clips)
+                        {
+                            //logSource.LogInfo(clip.name);
+                        }
+                    }
+                    //logSource.LogWarning(targetObject.GetComponent<tk2dSpriteAnimator>().Library);
                 }
             }
 
-            AsyncOperation sceneUnload = SceneManager.UnloadSceneAsync(scene);
-            await sceneUnload;
+            //AsyncOperation sceneUnload = SceneManager.UnloadSceneAsync(scene);
+            //await sceneUnload;
 
-            AsyncOperation assetBundleUnload = assetBundle.UnloadAsync(true);
-            await assetBundleUnload;
+            addressablesLoadScene.Release();
+
+            foreach (tk2dSpriteAnimator animator in animators)
+            {
+                foreach (var clip in animator.Library.clips)
+                {
+                    //logSource.LogInfo(clip.name);
+                }
+            }
+
+            //AsyncOperation assetBundleUnload = assetBundle.UnloadAsync(true);
+            //await assetBundleUnload;
+
+            //GameManager.instance.BeginSceneTransition(LastSceneLoad.SceneLoadInfo);
 
             Destroy(dummyHero);
             GameManager.instance.UnloadHeroPrefab();

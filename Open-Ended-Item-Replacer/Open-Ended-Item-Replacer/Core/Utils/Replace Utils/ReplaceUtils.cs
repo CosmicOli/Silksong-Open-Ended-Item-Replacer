@@ -22,6 +22,12 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
         {
             try
             {
+                if (!LoadGameRunPatched)
+                {
+                    logSource.LogInfo("Attempted to replace while !LoadGameRunPatched, returning null");
+                    return null;
+                }
+
                 logSource.LogInfo("Pickup: " + replacedObject.name);
                 logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
 
@@ -31,7 +37,7 @@ namespace Open_Ended_Item_Replacer.Core.Utils.Replace_Utils
 
                 // Attempts to spawn the replacement object
                 logSource.LogInfo("Pickup Drop Attempt Start");
-                output = SpawnGenericPickup(DefaultInteractableContainer, uniqueID, replacedObject.transform, offset);
+                output = SpawnGenericPickup(BarrelFleaContainer, uniqueID, replacedObject.transform, offset);
                 logSource.LogInfo("Pickup Drop Attempt End");
 
                 if (output == null) { return output; }

@@ -26,6 +26,12 @@ namespace Open_Ended_Item_Replacer.Silksong.Utils.Replace_Utils
         {
             try
             {
+                if (!LoadGameRunPatched)
+                {
+                    logSource.LogInfo("Attempted to replace while !LoadGameRunPatched, returning null");
+                    return null;
+                }
+
                 logSource.LogInfo("Pickup: " + replacedObject.name);
                 logSource.LogInfo("Pickup At: " + replacedObject.transform.position);
 
